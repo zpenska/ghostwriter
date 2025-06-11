@@ -1,177 +1,141 @@
 'use client';
 
+import { useEffect, useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { useState, useRef, useEffect } from 'react';
-import { ChevronRightIcon } from 'lucide-react';
-import { buttonStyles } from '@/lib/utils/button-styles';
+import { healthcarePrompts } from '@/lib/tiptap/ai-config';
 import { classNames } from '@/lib/utils/cn';
 
-interface AiMenuProps {
+interface AiAgentMenuProps {
   editor: Editor;
+  onClose?: () => void;
 }
 
-const aiActions = [
-  { label: 'Improve writing', action: 'improve' },
-  { label: 'Fix spelling & grammar', action: 'fixGrammar' },
-  { label: 'Make shorter', action: 'shorter' },
-  { label: 'Make longer', action: 'longer' },
-  { label: 'Simplify', action: 'simplify' },
-];
-
-const toneOptions = [
-  { label: 'Professional', action: 'professional' },
-  { label: 'Friendly', action: 'friendly' },
-  { label: 'Formal', action: 'formal' },
-  { label: 'Casual', action: 'casual' },
-];
-
-export default function AiMenu({ editor }: AiMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showToneMenu, setShowToneMenu] = useState(false);
+export default function AiAgentMenu({ editor, onClose }: AiAgentMenuProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setShowToneMenu(false);
+        onClose?.();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [onClose]);
 
-  const handleAiAction = async (action: string) => {
-    const selection = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(selection.from, selection.to, ' ');
+  const filteredPrompts = healthcarePrompts.filter(
+    prompt =>
+      prompt.label.toLowerCase().includes(search.toLowerCase()) ||
+      prompt.description.toLowerCase().includes(search.toLowerCase())
+  );
 
-    if (!selectedText && action !== 'custom') {
-      alert('Please select some text first');
-      return;
-    }
+  const categories = Array.from(new Set(filteredPrompts.map(p => p.category)));
 
-    // Here you would integrate with your AI service
-    // For now, we'll insert placeholder text
-    let result = selectedText;
+  const promptsByCategory = selectedCategory
+    ? filteredPrompts.filter(p => p.category === selectedCategory)
+    : filteredPrompts;
+
+  const handlePromptSelect = (prompt: typeof healthcarePrompts[0]) => {
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to);
     
-    switch (action) {
-      case 'improve':
-        result = `[AI: Improved version of "${selectedText}"]`;
-        break;
-      case 'fixGrammar':
-        result = `[AI: Grammar-corrected version of "${selectedText}"]`;
-        break;
-      case 'shorter':
-        result = `[AI: Shorter version of "${selectedText}"]`;
-        break;
-      case 'longer':
-        result = `[AI: Expanded version of "${selectedText}"]`;
-        break;
-      case 'simplify':
-        result = `[AI: Simplified version of "${selectedText}"]`;
-        break;
-      case 'professional':
-      case 'friendly':
-      case 'formal':
-      case 'casual':
-        result = `[AI: ${action} tone version of "${selectedText}"]`;
-        break;
-      case 'custom':
-        const prompt = window.prompt('Enter your custom AI prompt:');
-        if (prompt) {
-          result = `[AI response to: "${prompt}"]`;
-        }
-        break;
-    }
-
-    if (result !== selectedText) {
-      editor.chain().focus().deleteRange({ from: selection.from, to: selection.to }).insertContent(result).run();
-    }
-
-    setIsOpen(false);
-    setShowToneMenu(false);
+    const fullPrompt = prompt.prompt.replace('{selectedText}', selectedText || '');
+    
+    // Insert AI response placeholder
+    editor.chain()
+      .focus()
+      .insertContent(`<p class="ai-response">AI: ${fullPrompt}</p>`)
+      .run();
+    
+    onClose?.();
   };
 
   return (
-    <div className="relative" ref={menuRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={buttonStyles.text}
-        title="AI Assistant"
-      >
-        <span className="text-sm font-medium">AI</span>
-      </button>
+    <div
+      ref={menuRef}
+      className="absolute z-50 mt-2 w-96 rounded-lg bg-white shadow-lg ring-1 ring-gray-200 overflow-hidden"
+    >
+      {/* Search */}
+      <div className="p-3 border-b border-gray-100">
+        <input
+          ref={searchInputRef}
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search AI actions..."
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8a7fae] focus:border-transparent"
+        />
+      </div>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-          <div className="py-1" role="menu">
-            {aiActions.map((item) => (
+      {/* Categories */}
+      {!selectedCategory && categories.length > 1 && (
+        <div className="p-2 border-b border-gray-100">
+          <div className="flex flex-wrap gap-1">
+            {categories.map((category) => (
               <button
-                key={item.action}
-                onClick={() => handleAiAction(item.action)}
-                className={classNames(
-                  buttonStyles.text,
-                  'w-full text-left justify-start px-4 py-2 text-sm hover:bg-gray-50'
-                )}
-                role="menuitem"
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className="px-3 py-1 text-xs font-medium text-[#44474F] bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
               >
-                {item.label}
+                {category}
               </button>
             ))}
-            
-            <div className="border-t border-gray-100 my-1" />
-            
-            <div className="relative">
-              <button
-                onMouseEnter={() => setShowToneMenu(true)}
-                onMouseLeave={() => setShowToneMenu(false)}
-                className={classNames(
-                  buttonStyles.text,
-                  'w-full text-left justify-between px-4 py-2 text-sm hover:bg-gray-50'
-                )}
-                role="menuitem"
-              >
-                Change tone
-                <ChevronRightIcon className="w-4 h-4" />
-              </button>
-              
-              {showToneMenu && (
-                <div className="absolute left-full top-0 ml-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1" role="menu">
-                    {toneOptions.map((option) => (
-                      <button
-                        key={option.action}
-                        onClick={() => handleAiAction(option.action)}
-                        className={classNames(
-                          buttonStyles.text,
-                          'w-full text-left justify-start px-4 py-2 text-sm hover:bg-gray-50'
-                        )}
-                        role="menuitem"
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="border-t border-gray-100 my-1" />
-            
-            <button
-              onClick={() => handleAiAction('custom')}
-              className={classNames(
-                buttonStyles.text,
-                'w-full text-left justify-start px-4 py-2 text-sm hover:bg-gray-50'
-              )}
-              role="menuitem"
-            >
-              Custom prompt...
-            </button>
           </div>
         </div>
       )}
+
+      {/* Prompts List */}
+      <div className="max-h-96 overflow-y-auto">
+        {selectedCategory && (
+          <div className="px-3 py-2 border-b border-gray-100">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="text-sm text-[#8a7fae] hover:underline"
+            >
+              ← Back to all
+            </button>
+          </div>
+        )}
+        
+        {promptsByCategory.length === 0 ? (
+          <div className="p-4 text-center text-sm text-gray-500">
+            No AI actions found
+          </div>
+        ) : (
+          <div className="p-2">
+            {promptsByCategory.map((prompt) => (
+              <button
+                key={prompt.label}
+                onClick={() => handlePromptSelect(prompt)}
+                className={classNames(
+                  'w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 transition-colors',
+                  'group'
+                )}
+              >
+                <div className="flex items-start space-x-3">
+                  <span className="mt-0.5 text-[#8a7fae]">{prompt.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#2E4A3F]">
+                      {prompt.label}
+                    </p>
+                    <p className="text-xs text-[#44474F] mt-0.5">
+                      {prompt.description}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

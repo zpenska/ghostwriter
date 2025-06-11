@@ -16,377 +16,395 @@ import {
   MinusIcon,
   UndoIcon,
   RedoIcon,
-  LinkIcon,
-  ImageIcon,
   TableIcon,
+  ImageIcon,
+  LinkIcon,
+  AlignLeftIcon,
+  AlignCenterIcon,
+  AlignRightIcon,
+  AlignJustifyIcon,
   HighlighterIcon,
-  PaletteIcon,
-  CheckSquareIcon,
+  ChevronDownIcon,
 } from 'lucide-react';
-import { Fragment, useState } from 'react';
-import { Menu, Transition } from '@headlessui/react';
-import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { useState, useRef, useEffect } from 'react';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { classNames } from '@/lib/utils/cn';
 
 interface EditorToolbarProps {
-  editor: Editor;
+  editor: Editor | null;
+  onOpenAiChat?: () => void;
 }
 
-const textColors = [
-  { name: 'Default', color: null },
-  { name: 'Deep Forest', color: '#3a4943' },
-  { name: 'Muted Lavender', color: '#8a7fae' },
-  { name: 'Warm Beige', color: '#a88868' },
-  { name: 'Slate Gray', color: '#3d3d3c' },
-];
+export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarProps) {
+  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
+  const [showTableMenu, setShowTableMenu] = useState(false);
+  const highlightMenuRef = useRef<HTMLDivElement>(null);
+  const tableMenuRef = useRef<HTMLDivElement>(null);
 
-const highlightColors = [
-  { name: 'None', color: null },
-  { name: 'Swift', color: '#DFFC95' },
-  { name: 'Neural', color: '#D3C5E8' },
-  { name: 'Scrub', color: '#BAE5D6' },
-  { name: 'Muted Yellow', color: '#d4c57f' },
-  { name: 'Pale Mint', color: '#b9cab3' },
-];
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (highlightMenuRef.current && !highlightMenuRef.current.contains(event.target as Node)) {
+        setShowHighlightMenu(false);
+      }
+      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
+        setShowTableMenu(false);
+      }
+    };
 
-export default function EditorToolbar({ editor }: EditorToolbarProps) {
-  const [showLinkInput, setShowLinkInput] = useState(false);
-  const [linkUrl, setLinkUrl] = useState('');
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const addLink = () => {
-    if (linkUrl) {
-      editor.chain().focus().setLink({ href: linkUrl }).run();
-      setLinkUrl('');
-      setShowLinkInput(false);
-    }
-  };
+  if (!editor) {
+    return null;
+  }
 
-  const addImage = () => {
-    const url = window.prompt('Enter image URL:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  };
-
-  const insertTable = () => {
-    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
-  };
-
-  const triggerAiCompletion = () => {
-    editor.chain().focus().insertContent('++').run();
-  };
+  const highlightColors = [
+    { name: 'Swift', color: '#E3F2FD' },
+    { name: 'Neural', color: '#FFEBEE' },
+    { name: 'Scrub', color: '#C8E6C9' },
+    { name: 'Yellow', color: '#d4c57f' },
+    { name: 'Clear', color: 'transparent' },
+  ];
 
   return (
-    <div className="flex items-center space-x-1 flex-wrap">
-      {/* Text Formatting */}
-      <div className="flex items-center space-x-1">
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('bold') && buttonStyles.toolbarActive
-          )}
-          title="Bold (Cmd+B)"
-        >
-          <BoldIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('italic') && buttonStyles.toolbarActive
-          )}
-          title="Italic (Cmd+I)"
-        >
-          <ItalicIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('underline') && buttonStyles.toolbarActive
-          )}
-          title="Underline (Cmd+U)"
-        >
-          <UnderlineIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('strike') && buttonStyles.toolbarActive
-          )}
-          title="Strikethrough"
-        >
-          <StrikethroughIcon className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="w-px h-6 bg-gray-300" />
-
-      {/* Headings */}
-      <div className="flex items-center space-x-1">
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('heading', { level: 1 }) && buttonStyles.toolbarActive
-          )}
-          title="Heading 1"
-        >
-          <Heading1Icon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('heading', { level: 2 }) && buttonStyles.toolbarActive
-          )}
-          title="Heading 2"
-        >
-          <Heading2Icon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('heading', { level: 3 }) && buttonStyles.toolbarActive
-          )}
-          title="Heading 3"
-        >
-          <Heading3Icon className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="w-px h-6 bg-gray-300" />
-
-      {/* Lists */}
-      <div className="flex items-center space-x-1">
-        <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('bulletList') && buttonStyles.toolbarActive
-          )}
-          title="Bullet List"
-        >
-          <ListIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('orderedList') && buttonStyles.toolbarActive
-          )}
-          title="Numbered List"
-        >
-          <ListOrderedIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-          className={classNames(
-            buttonStyles.toolbar,
-            editor.isActive('taskList') && buttonStyles.toolbarActive
-          )}
-          title="Task List"
-        >
-          <CheckSquareIcon className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="w-px h-6 bg-gray-300" />
-
-      {/* Colors */}
-      <div className="flex items-center space-x-1">
-        <Menu as="div" className="relative">
-          <Menu.Button className={buttonStyles.toolbar}>
-            <PaletteIcon className="w-4 h-4" />
-            <ChevronDownIcon className="w-3 h-3 ml-1" />
-          </Menu.Button>
-          <Transition
-            as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
-          >
-            <Menu.Items className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-              <div className="py-1">
-                {textColors.map((color) => (
-                  <Menu.Item key={color.name}>
-                    {({ active }) => (
-                      <button
-                        onClick={() =>
-                          color.color
-                            ? editor.chain().focus().setColor(color.color).run()
-                            : editor.chain().focus().unsetColor().run()
-                        }
-                        className={classNames(
-                          'flex items-center px-4 py-2 text-sm w-full transition-colors',
-                          active ? 'bg-gray-100' : ''
-                        )}
-                      >
-                        <span
-                          className="w-4 h-4 rounded mr-2 border border-gray-300"
-                          style={{ backgroundColor: color.color || 'white' }}
-                        />
-                        {color.name}
-                      </button>
-                    )}
-                  </Menu.Item>
-                ))}
-              </div>
-            </Menu.Items>
-          </Transition>
-        </Menu>
-
-        <Menu as="div" className="relative">
-          <Menu.Button className={buttonStyles.toolbar}>
-            <HighlighterIcon className="w-4 h-4" />
-            <ChevronDownIcon className="w-3 h-3 ml-1" />
-          </Menu.Button>
-          <Transition
-            as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
-          >
-            <Menu.Items className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-              <div className="py-1">
-                {highlightColors.map((highlight) => (
-                  <Menu.Item key={highlight.name}>
-                    {({ active }) => (
-                      <button
-                        onClick={() =>
-                          highlight.color
-                            ? editor.chain().focus().toggleHighlight({ color: highlight.color }).run()
-                            : editor.chain().focus().unsetHighlight().run()
-                        }
-                        className={classNames(
-                          'flex items-center px-4 py-2 text-sm w-full transition-colors',
-                          active ? 'bg-gray-100' : ''
-                        )}
-                      >
-                        <span
-                          className="w-4 h-4 rounded mr-2 border border-gray-300"
-                          style={{ backgroundColor: highlight.color || 'white' }}
-                        />
-                        {highlight.name}
-                      </button>
-                    )}
-                  </Menu.Item>
-                ))}
-              </div>
-            </Menu.Items>
-          </Transition>
-        </Menu>
-      </div>
-
-      <div className="w-px h-6 bg-gray-300" />
-
-      {/* Insert */}
-      <div className="flex items-center space-x-1">
-        {showLinkInput ? (
-          <div className="flex items-center gap-1">
-            <input
-              type="text"
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  addLink();
-                } else if (e.key === 'Escape') {
-                  setShowLinkInput(false);
-                  setLinkUrl('');
-                }
-              }}
-              placeholder="Enter URL"
-              className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8a7fae] focus:border-transparent"
-              autoFocus
-            />
-            <button
-              onClick={addLink}
-              className={buttonStyles.primary}
-              style={{ padding: '0.25rem 0.5rem' }}
-            >
-              Add
-            </button>
-          </div>
-        ) : (
+    <div className="border-b border-gray-200 bg-white p-2">
+      <div className="flex items-center space-x-1 flex-wrap">
+        {/* Text Formatting */}
+        <div className="flex items-center space-x-1">
           <button
-            onClick={() => setShowLinkInput(true)}
+            onClick={() => editor.chain().focus().toggleBold().run()}
             className={classNames(
               buttonStyles.toolbar,
-              editor.isActive('link') && buttonStyles.toolbarActive
+              editor.isActive('bold') ? 'bg-gray-200' : ''
             )}
-            title="Add Link"
+            title="Bold"
           >
-            <LinkIcon className="w-4 h-4" />
+            <BoldIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('italic') ? 'bg-gray-200' : ''
+            )}
+            title="Italic"
+          >
+            <ItalicIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('underline') ? 'bg-gray-200' : ''
+            )}
+            title="Underline"
+          >
+            <UnderlineIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('strike') ? 'bg-gray-200' : ''
+            )}
+            title="Strikethrough"
+          >
+            <StrikethroughIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('code') ? 'bg-gray-200' : ''
+            )}
+            title="Code"
+          >
+            <Code2Icon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300" />
+
+        {/* Headings */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('heading', { level: 1 }) ? 'bg-gray-200' : ''
+            )}
+            title="Heading 1"
+          >
+            <Heading1Icon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('heading', { level: 2 }) ? 'bg-gray-200' : ''
+            )}
+            title="Heading 2"
+          >
+            <Heading2Icon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('heading', { level: 3 }) ? 'bg-gray-200' : ''
+            )}
+            title="Heading 3"
+          >
+            <Heading3Icon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300" />
+
+        {/* Lists */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('bulletList') ? 'bg-gray-200' : ''
+            )}
+            title="Bullet List"
+          >
+            <ListIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('orderedList') ? 'bg-gray-200' : ''
+            )}
+            title="Numbered List"
+          >
+            <ListOrderedIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('blockquote') ? 'bg-gray-200' : ''
+            )}
+            title="Quote"
+          >
+            <QuoteIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+            className={buttonStyles.toolbar}
+            title="Horizontal Rule"
+          >
+            <MinusIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300" />
+
+        {/* Alignment */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''
+            )}
+            title="Align Left"
+          >
+            <AlignLeftIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''
+            )}
+            title="Align Center"
+          >
+            <AlignCenterIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''
+            )}
+            title="Align Right"
+          >
+            <AlignRightIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''
+            )}
+            title="Justify"
+          >
+            <AlignJustifyIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300" />
+
+        {/* Highlight */}
+        <div className="relative" ref={highlightMenuRef}>
+          <button
+            onClick={() => setShowHighlightMenu(!showHighlightMenu)}
+            className={classNames(
+              buttonStyles.toolbar,
+              'flex items-center space-x-1'
+            )}
+            title="Highlight"
+          >
+            <HighlighterIcon className="h-4 w-4" />
+            <ChevronDownIcon className="h-3 w-3" />
+          </button>
+          {showHighlightMenu && (
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+              <div className="p-2 space-y-1">
+                {highlightColors.map((color) => (
+                  <button
+                    key={color.name}
+                    onClick={() => {
+                      if (color.color === 'transparent') {
+                        editor.chain().focus().unsetHighlight().run();
+                      } else {
+                        editor.chain().focus().toggleHighlight({ color: color.color }).run();
+                      }
+                      setShowHighlightMenu(false);
+                    }}
+                    className="flex items-center space-x-2 w-full px-3 py-1 text-sm text-left hover:bg-gray-100 rounded"
+                  >
+                    <div 
+                      className="w-4 h-4 rounded border border-gray-300"
+                      style={{ backgroundColor: color.color }}
+                    />
+                    <span>{color.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Table */}
+        <div className="relative" ref={tableMenuRef}>
+          <button
+            onClick={() => setShowTableMenu(!showTableMenu)}
+            className={classNames(
+              buttonStyles.toolbar,
+              'flex items-center space-x-1'
+            )}
+            title="Table"
+          >
+            <TableIcon className="h-4 w-4" />
+            <ChevronDownIcon className="h-3 w-3" />
+          </button>
+          {showTableMenu && (
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+              <div className="p-2 space-y-1">
+                <button
+                  onClick={() => {
+                    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+                    setShowTableMenu(false);
+                  }}
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-gray-100 rounded"
+                >
+                  Insert Table
+                </button>
+                <button
+                  onClick={() => {
+                    editor.chain().focus().addColumnAfter().run();
+                    setShowTableMenu(false);
+                  }}
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-gray-100 rounded"
+                >
+                  Add Column
+                </button>
+                <button
+                  onClick={() => {
+                    editor.chain().focus().addRowAfter().run();
+                    setShowTableMenu(false);
+                  }}
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-gray-100 rounded"
+                >
+                  Add Row
+                </button>
+                <button
+                  onClick={() => {
+                    editor.chain().focus().deleteColumn().run();
+                    setShowTableMenu(false);
+                  }}
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-gray-100 rounded"
+                >
+                  Delete Column
+                </button>
+                <button
+                  onClick={() => {
+                    editor.chain().focus().deleteRow().run();
+                    setShowTableMenu(false);
+                  }}
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-gray-100 rounded"
+                >
+                  Delete Row
+                </button>
+                <button
+                  onClick={() => {
+                    editor.chain().focus().deleteTable().run();
+                    setShowTableMenu(false);
+                  }}
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-gray-100 rounded text-red-600"
+                >
+                  Delete Table
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="w-px h-6 bg-gray-300" />
+
+        {/* Undo/Redo */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            className={buttonStyles.toolbar}
+            title="Undo"
+          >
+            <UndoIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            className={buttonStyles.toolbar}
+            title="Redo"
+          >
+            <RedoIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300" />
+
+        {/* AI Button */}
+        {onOpenAiChat && (
+          <button
+            onClick={onOpenAiChat}
+            className={classNames(
+              buttonStyles.purple,
+              'text-xs px-3 py-1'
+            )}
+            title="AI Assistant"
+          >
+            AI
           </button>
         )}
-        <button
-          onClick={addImage}
-          className={buttonStyles.toolbar}
-          title="Add Image"
-        >
-          <ImageIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={insertTable}
-          className={buttonStyles.toolbar}
-          title="Insert Table"
-        >
-          <TableIcon className="w-4 h-4" />
-        </button>
       </div>
-
-      <div className="w-px h-6 bg-gray-300" />
-
-      {/* Undo/Redo */}
-      <div className="flex items-center space-x-1">
-        <button
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          className={classNames(
-            buttonStyles.toolbar,
-            'disabled:opacity-50 disabled:cursor-not-allowed'
-          )}
-          title="Undo (Cmd+Z)"
-        >
-          <UndoIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          className={classNames(
-            buttonStyles.toolbar,
-            'disabled:opacity-50 disabled:cursor-not-allowed'
-          )}
-          title="Redo (Cmd+Shift+Z)"
-        >
-          <RedoIcon className="w-4 h-4" />
-        </button>
-      </div>
-
-      <div className="w-px h-6 bg-gray-300" />
-
-      {/* AI Button */}
-      <button
-        onClick={triggerAiCompletion}
-        className={classNames(
-          buttonStyles.toolbar,
-          'text-[#8a7fae] hover:text-[#8a7fae]/90 hover:bg-[#8a7fae]/10'
-        )}
-        title="AI Suggestion (or type ++)"
-      >
-        <span className="text-sm font-medium">AI</span>
-      </button>
     </div>
   );
 }

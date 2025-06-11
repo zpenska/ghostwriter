@@ -1,146 +1,101 @@
-import AI from '@tiptap-pro/extension-ai';
-import AiChanges from '@tiptap-pro/extension-ai-changes';
-import AiSuggestion from '@tiptap-pro/extension-ai-suggestion';
-import AiAgent, { AiAgentProvider } from '@tiptap-pro/extension-ai-agent';
-
-// Create the AI Agent Provider
-export const createAiAgentProvider = () => {
-  return new AiAgentProvider({
-    appId: 'jkver1dm',
-    token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
-  });
-};
-
-// Configure Tiptap Content AI with all features
-export const configureTiptapAI = () => {
-  return AI.configure({
-    appId: 'jkver1dm',
-    token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
-    baseUrl: 'https://api.tiptap.dev/v1',
-    autocompletion: true,
-    defaultModel: 'gpt-4',
-    
-    // AI Generation capabilities
-    generation: {
-      endpoint: '/generate',
-      defaultOptions: {
-        temperature: 0.7,
-        maxTokens: 1000,
-      },
-    },
-  });
-};
-
-// Configure AI Agent
-export const configureAiAgent = (provider: AiAgentProvider) => {
-  return AiAgent.configure({
-    provider,
-    // Optional: Add custom commands
-    commands: {
-      // Healthcare-specific commands
-      priorAuth: {
-        label: 'Generate Prior Authorization',
-        prompt: healthcarePrompts.priorAuth.prompt,
-      },
-      appealLetter: {
-        label: 'Generate Appeal Letter',
-        prompt: healthcarePrompts.appealLetter.prompt,
-      },
-    },
-  });
-};
-
-// Configure AI Changes for tracking AI modifications
-export const configureAiChanges = () => {
-  return AiChanges.configure({
-    authorId: 'ai-assistant',
-    authorName: 'AI Assistant',
-    trackChanges: true,
-  });
-};
-
-// Configure AI Suggestions
-export const configureAiSuggestion = () => {
-  return AiSuggestion.configure({
-    suggestion: {
-      char: '++',
-      startOfLine: false,
-      decorationClass: 'ai-suggestion',
-      command: ({ editor, range, props }) => {
-        // Delete the trigger chars
-        editor
-          .chain()
-          .focus()
-          .deleteRange(range)
-          .run();
-        
-        // The AI suggestion will appear automatically
-      },
-    },
-  });
-};
-
-// Healthcare-specific AI prompts
-export const healthcarePrompts = {
-  priorAuth: {
-    title: 'Prior Authorization Letter',
-    prompt: `Generate a professional prior authorization letter for medical services. Include:
-    - Patient information section with placeholders
-    - Medical necessity statement
-    - Clinical justification with evidence
-    - Treatment plan details
-    - Expected outcomes
-    - Provider credentials
-    Use variables like {{PatientName}}, {{DOB}}, {{MemberID}}, {{Diagnosis}}, {{Treatment}}`,
+// Healthcare-specific AI prompts for Ghostwriter
+export const healthcarePrompts = [
+  {
+    label: 'Professional Tone',
+    category: 'Tone',
+    icon: '📝',
+    description: 'Rewrite in professional clinical tone',
+    prompt: 'Rewrite the following text in a professional clinical tone suitable for healthcare correspondence: {selectedText}'
   },
-  appealLetter: {
-    title: 'Appeal Letter',
-    prompt: `Create a comprehensive appeal letter template including:
-    - Reference to denial ({{DenialDate}}, {{DenialNumber}})
-    - Strong medical necessity argument
-    - Supporting clinical evidence and guidelines
-    - Patient impact statement
-    - Request for reconsideration
-    - Contact information for follow-up`,
+  {
+    label: 'Patient-Friendly',
+    category: 'Tone',
+    icon: '👥',
+    description: 'Simplify for patient understanding',
+    prompt: 'Rewrite the following text to be easily understood by patients, avoiding medical jargon: {selectedText}'
   },
-  benefitExplanation: {
-    title: 'Member Benefit Explanation',
-    prompt: `Write a clear member benefit explanation including:
-    - Coverage details in simple language
-    - Cost-sharing breakdown (deductible, copay, coinsurance)
-    - In-network vs out-of-network benefits
-    - How to access covered services
-    - Important limitations and exclusions`,
+  {
+    label: 'Add Empathy',
+    category: 'Tone',
+    icon: '💚',
+    description: 'Add empathetic language',
+    prompt: 'Add empathetic and compassionate language to the following text while maintaining professionalism: {selectedText}'
   },
-  clinicalNotes: {
-    title: 'Clinical Documentation',
-    prompt: `Generate clinical documentation template with:
-    - Chief complaint: {{ChiefComplaint}}
-    - History of present illness
-    - Review of systems
-    - Physical examination findings
-    - Assessment and plan
-    - Follow-up instructions`,
+  {
+    label: 'HIPAA Review',
+    category: 'Compliance',
+    icon: '🔒',
+    description: 'Check for HIPAA compliance',
+    prompt: 'Review the following text for HIPAA compliance and identify any potential PHI that should be removed or generalized: {selectedText}'
   },
-  providerCommunication: {
-    title: 'Provider Communication',
-    prompt: `Create a professional provider-to-provider communication template including:
-    - Patient identification ({{PatientName}}, {{MRN}})
-    - Reason for communication
-    - Clinical summary
-    - Requested action or consultation
-    - Supporting documentation references
-    - Contact information for questions`,
+  {
+    label: 'Regulatory Check',
+    category: 'Compliance',
+    icon: '📋',
+    description: 'Check regulatory compliance',
+    prompt: 'Review this text for healthcare regulatory compliance and suggest any necessary modifications: {selectedText}'
   },
-  memberNotice: {
-    title: 'Member Notice Letter',
-    prompt: `Generate a member-friendly notice letter with:
-    - Clear subject line
-    - Action required (if any)
-    - Important dates and deadlines
-    - Step-by-step instructions
-    - Resources for assistance
-    - Contact information
-    Use simple, non-medical language`,
+  {
+    label: 'Denial Explanation',
+    category: 'Templates',
+    icon: '❌',
+    description: 'Generate denial explanation',
+    prompt: 'Generate a clear and compliant explanation for a coverage denial based on: {selectedText}'
   },
-};
+  {
+    label: 'Appeal Response',
+    category: 'Templates',
+    icon: '📨',
+    description: 'Draft appeal response',
+    prompt: 'Draft a professional response to an appeal regarding: {selectedText}'
+  },
+  {
+    label: 'Prior Auth',
+    category: 'Templates',
+    icon: '✅',
+    description: 'Prior authorization letter',
+    prompt: 'Create a prior authorization approval letter for: {selectedText}'
+  },
+  {
+    label: 'Summarize',
+    category: 'Editing',
+    icon: '📄',
+    description: 'Create concise summary',
+    prompt: 'Provide a concise summary of the following text: {selectedText}'
+  },
+  {
+    label: 'Expand Details',
+    category: 'Editing',
+    icon: '➕',
+    description: 'Add more detail',
+    prompt: 'Expand on the following text with more relevant clinical details: {selectedText}'
+  },
+  {
+    label: 'Fix Grammar',
+    category: 'Editing',
+    icon: '✏️',
+    description: 'Correct grammar and spelling',
+    prompt: 'Fix any grammar, spelling, or punctuation errors in: {selectedText}'
+  },
+  {
+    label: 'Medical Accuracy',
+    category: 'Review',
+    icon: '🏥',
+    description: 'Check medical accuracy',
+    prompt: 'Review the following text for medical accuracy and suggest corrections if needed: {selectedText}'
+  },
+  {
+    label: 'ICD-10 Codes',
+    category: 'Coding',
+    icon: '🔢',
+    description: 'Suggest relevant ICD-10 codes',
+    prompt: 'Suggest relevant ICD-10 codes for the conditions mentioned in: {selectedText}'
+  },
+  {
+    label: 'CPT Codes',
+    category: 'Coding',
+    icon: '💉',
+    description: 'Suggest relevant CPT codes',
+    prompt: 'Suggest relevant CPT/HCPCS codes for the procedures mentioned in: {selectedText}'
+  },
+];

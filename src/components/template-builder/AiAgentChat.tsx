@@ -1,33 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { 
-  SparklesIcon, 
-  PaperAirplaneIcon,
-  XMarkIcon,
-  DocumentTextIcon,
-  CheckCircleIcon,
-  PencilSquareIcon,
-  MagnifyingGlassIcon,
-  ChartBarIcon,
-  ChatBubbleLeftRightIcon
-} from '@heroicons/react/24/outline';
+import { useEffect, useRef, useState } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { healthcarePrompts } from '@/lib/tiptap/ai-config';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { classNames } from '@/lib/utils/cn';
 
-interface AiAgentChatProps {
-  provider: any;
-  editor: any;
+export interface AiAgentChatProps {
+  onInsertText?: (text: string) => void;
   onClose?: () => void;
+  selectedText?: string;
 }
 
-export default function AiAgentChat({ provider, editor, onClose }: AiAgentChatProps) {
-  const [messages, setMessages] = useState<any[]>([]);
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export default function AiAgentChat({ onInsertText, onClose, selectedText }: AiAgentChatProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -38,95 +33,58 @@ export default function AiAgentChat({ provider, editor, onClose }: AiAgentChatPr
   }, [messages]);
 
   useEffect(() => {
-    if (!provider) return;
+    textareaRef.current?.focus();
+  }, []);
 
-    // Subscribe to state changes
-    const handleStateChange = (newState) => {
-      setMessages(newState.messages || []);
-      setIsLoading(newState.isLoading || false);
-    };
-
-    provider.on('stateChange', handleStateChange);
-
-    // Focus input on mount
-    inputRef.current?.focus();
-
-    return () => {
-      provider.off('stateChange', handleStateChange);
-    };
-  }, [provider]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !provider || isLoading) return;
+    if (!input.trim() || isLoading) return;
 
-    // Add user message and run AI
-    provider.addUserMessage(input);
-    provider.run();
+    const userMessage = input.trim();
     setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      // Simulate AI response (replace with actual AI integration)
+      setTimeout(() => {
+        const response = `I understand you'd like help with: "${userMessage}". ${
+          selectedText ? `Based on the selected text: "${selectedText.substring(0, 50)}..."` : ''
+        } Here's a professional response for your clinical letter...`;
+        
+        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      setIsLoading(false);
+    }
   };
 
   const handleQuickAction = (action: string) => {
-    if (!provider || isLoading) return;
-    provider.addUserMessage(action);
-    provider.run();
+    setInput(action);
+    textareaRef.current?.focus();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   };
 
   const quickActions = [
-    {
-      icon: CheckCircleIcon,
-      label: 'Fix Grammar',
-      action: 'Correct all spelling and grammar mistakes in the document.',
-      color: 'text-green-600',
-    },
-    {
-      icon: DocumentTextIcon,
-      label: 'Make Professional',
-      action: 'Make the text more professional and formal.',
-      color: 'text-blue-600',
-    },
-    {
-      icon: PencilSquareIcon,
-      label: 'Improve Writing',
-      action: 'Improve the writing style, clarity, and flow.',
-      color: 'text-purple-600',
-    },
-    {
-      icon: MagnifyingGlassIcon,
-      label: 'Summarize',
-      action: 'Create a concise summary of the main points.',
-      color: 'text-orange-600',
-    },
-  ];
-
-  const healthcareActions = [
-    {
-      icon: DocumentTextIcon,
-      label: 'Prior Auth Letter',
-      action: healthcarePrompts.priorAuth.prompt,
-      color: 'text-indigo-600',
-    },
-    {
-      icon: ChatBubbleLeftRightIcon,
-      label: 'Appeal Letter',
-      action: healthcarePrompts.appealLetter.prompt,
-      color: 'text-red-600',
-    },
-    {
-      icon: ChartBarIcon,
-      label: 'Clinical Notes',
-      action: healthcarePrompts.clinicalNotes.prompt,
-      color: 'text-teal-600',
-    },
+    { label: 'Professional tone', action: 'Rewrite this text in a professional clinical tone' },
+    { label: 'Simplify language', action: 'Simplify this text for patient understanding' },
+    { label: 'Add empathy', action: 'Add empathetic language while maintaining professionalism' },
+    { label: 'HIPAA compliance', action: 'Review for HIPAA compliance and suggest improvements' },
   ];
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-[#F5F5F1]">
-        <div className="flex items-center">
-          <h3 className="text-lg font-semibold text-gray-900">AI Agent Assistant</h3>
-        </div>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-[#2E4A3F]">AI Assistant</h3>
         {onClose && (
           <button
             onClick={onClose}
@@ -138,143 +96,87 @@ export default function AiAgentChat({ provider, editor, onClose }: AiAgentChatPr
       </div>
 
       {/* Quick Actions */}
-      <div className="p-4 border-b bg-gray-50">
-        <p className="text-sm font-medium text-gray-700 mb-3">Quick Actions</p>
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.label}
-                onClick={() => handleQuickAction(action.action)}
-                disabled={isLoading}
-                className={classNames(
-                  buttonStyles.secondary,
-                  'flex-1 justify-start'
-                )}
-              >
-                <Icon className={`w-4 h-4 mr-2 ${action.color}`} />
-                <span className="text-sm">{action.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        
-        <p className="text-sm font-medium text-gray-700 mb-2">Healthcare Templates</p>
+      <div className="px-4 py-2 border-b border-gray-200">
         <div className="flex flex-wrap gap-2">
-          {healthcareActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.label}
-                onClick={() => handleQuickAction(action.action)}
-                disabled={isLoading}
-                className={classNames(
-                  buttonStyles.ghost,
-                  'text-xs px-2 py-1'
-                )}
-              >
-                <Icon className={`w-3 h-3 mr-1 ${action.color}`} />
-                {action.label}
-              </button>
-            );
-          })}
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => handleQuickAction(action.action)}
+              disabled={isLoading}
+              className={classNames(
+                buttonStyles.text,
+                'text-xs px-2 py-1'
+              )}
+            >
+              {action.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-8">
-            <p className="text-sm">Start a conversation with the AI Agent</p>
-            <p className="text-xs mt-2">Try asking it to help with your document</p>
+          <div className="text-center text-[#44474F] py-8">
+            <p className="text-sm">Ask me to help improve your clinical letter.</p>
+            {selectedText && (
+              <p className="text-xs mt-2 text-gray-500">
+                Selected text: "{selectedText.substring(0, 100)}..."
+              </p>
+            )}
           </div>
         )}
         
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            }`}
+            className={classNames(
+              'px-4 py-2 rounded-lg max-w-[80%]',
+              message.role === 'user'
+                ? 'ml-auto bg-[#8a7fae] text-white'
+                : 'mr-auto bg-gray-100 text-[#44474F]'
+            )}
           >
-            <div className={`flex max-w-[85%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              <div className={`flex-shrink-0 ${message.role === 'user' ? 'ml-2' : 'mr-2'}`}>
-                {message.role === 'user' ? (
-                  <div className="w-8 h-8 rounded-full bg-[#8a7fae] flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">U</span>
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-[#3a4943] flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">AI</span>
-                  </div>
-                )}
-              </div>
-              <div
-                className={`px-4 py-2 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-[#8a7fae] text-white'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                {message.role === 'assistant' && message.timestamp && (
-                  <p className="text-xs opacity-70 mt-1">
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </p>
-                )}
-              </div>
-            </div>
+            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
           </div>
         ))}
         
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="flex max-w-xs">
-              <div className="w-8 h-8 rounded-full bg-[#3a4943] flex items-center justify-center mr-2">
-                <span className="text-white text-sm font-medium animate-pulse">AI</span>
-              </div>
-              <div className="bg-gray-100 px-4 py-2 rounded-lg">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center space-x-2 text-[#44474F]">
+            <div className="w-2 h-2 bg-[#8a7fae] rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-[#8a7fae] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+            <div className="w-2 h-2 bg-[#8a7fae] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
           </div>
         )}
         
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t bg-gray-50">
+      {/* Input Form */}
+      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
         <div className="flex space-x-2">
-          <input
-            ref={inputRef}
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask AI to help with your document..."
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message..."
+            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8a7fae] focus:border-transparent resize-none"
+            rows={1}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent disabled:opacity-50 disabled:bg-gray-100"
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className={buttonStyles.primary}
+            className={buttonStyles.purple}
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
-              <PaperAirplaneIcon className="w-5 h-5" />
+              'Send'
             )}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Tip: Type "/" in the editor for quick AI commands
-        </p>
       </form>
     </div>
   );

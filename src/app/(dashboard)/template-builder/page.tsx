@@ -2,39 +2,24 @@
 
 import { useState } from 'react';
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/16/solid';
-import { SparklesIcon } from '@heroicons/react/24/outline';
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
 import TemplateEditor from '@/components/template-builder/TemplateEditor';
 import VariablePanel from '@/components/template-builder/VariablePanel';
 import AiAgentChat from '@/components/template-builder/AiAgentChat';
+import { Editor } from '@tiptap/react';
 import { buttonStyles } from '@/lib/utils/button-styles';
-
-const tabs = [
-  { name: 'Builder', href: '#', current: true },
-  { name: 'Logic', href: '#', current: false },
-  { name: 'Properties', href: '#', current: false },
-  { name: 'Preview', href: '#', current: false },
-];
-
-function classNames(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}
+import { classNames } from '@/lib/utils/cn';
 
 export default function TemplateBuilderPage() {
   const [activeTab, setActiveTab] = useState('Builder');
-  const [variablePanelCollapsed, setVariablePanelCollapsed] = useState(false);
-  const [editorRef, setEditorRef] = useState<any>(null);
-  const [aiAgentProvider, setAiAgentProvider] = useState<any>(null);
   const [showAiChat, setShowAiChat] = useState(false);
+  const [variablePanelCollapsed, setVariablePanelCollapsed] = useState(false);
+  const [editorRef, setEditorRef] = useState<Editor | null>(null);
 
-  const handleTabChange = (tabName: string) => {
-    setActiveTab(tabName);
-  };
+  const tabs = ['Builder', 'Logic', 'Properties', 'Preview'];
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
-    console.log('Drag ended:', { active: active.id, over: over?.id }); // Debug log
     
     if (over && over.id === 'editor-droppable' && editorRef) {
       const variable = active.data.current;
@@ -46,48 +31,54 @@ export default function TemplateBuilderPage() {
     }
   };
 
-  const handleEditorReady = (editor: any, aiProvider: any) => {
-    setEditorRef(editor);
-    setAiAgentProvider(aiProvider);
-  };
-
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="flex h-full bg-page-nimbus">
-        {/* Variable Panel - Only show on Builder tab */}
-        {activeTab === 'Builder' && (
-          <aside className={classNames(
-            'relative border-r bg-white shadow-sm transition-all duration-300',
-            variablePanelCollapsed ? 'w-12' : 'w-64'
-          )}>
-            {/* Collapse button */}
-            <button
-              onClick={() => setVariablePanelCollapsed(!variablePanelCollapsed)}
-              className="absolute -right-3 top-20 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-gray-300 shadow-sm hover:bg-gray-50"
-            >
-              {variablePanelCollapsed ? (
-                <ChevronRightIcon className="h-4 w-4 text-gray-600" />
-              ) : (
-                <ChevronLeftIcon className="h-4 w-4 text-gray-600" />
-              )}
-            </button>
-            
-            {!variablePanelCollapsed && <VariablePanel />}
-          </aside>
-        )}
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar */}
+        <div className={classNames(
+          'bg-white border-r border-gray-200 transition-all duration-300',
+          variablePanelCollapsed ? 'w-12' : 'w-80'
+        )}>
+          <div className="p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className={classNames(
+                'text-lg font-semibold text-gray-900',
+                variablePanelCollapsed ? 'hidden' : ''
+              )}>
+                Template Builder
+              </h2>
+              <button
+                onClick={() => setVariablePanelCollapsed(!variablePanelCollapsed)}
+                className={buttonStyles.icon}
+              >
+                {variablePanelCollapsed ? (
+                  <ChevronRightIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronLeftIcon className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+          {!variablePanelCollapsed && (
+            <div className="p-4">
+              <VariablePanel />
+            </div>
+          )}
+        </div>
 
-        {/* Main Content Area */}
+        {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          {/* Header with Tabs */}
-          <div className="bg-white border-b border-gray-200 px-6">
-            <div className="flex items-center justify-between py-4">
-              <h1 className="text-2xl font-semibold text-gray-900">Template Builder</h1>
+          {/* Header */}
+          <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-semibold text-gray-900">
+                New Template
+              </h1>
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowAiChat(!showAiChat)}
                   type="button"
-                  className={showAiChat ? buttonStyles.primary : buttonStyles.secondary}
-                  title="Toggle AI Assistant"
+                  className={showAiChat ? buttonStyles.purple : buttonStyles.secondary}
                 >
                   AI Assistant
                 </button>
@@ -99,120 +90,90 @@ export default function TemplateBuilderPage() {
                 </button>
                 <button
                   type="button"
-                  className={buttonStyles.yellow}
+                  className={buttonStyles.primary}
                 >
-                  Publish Template
+                  Save & Close
                 </button>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="mt-2">
-              <div className="grid grid-cols-1 sm:hidden">
-                <select
-                  value={activeTab}
-                  onChange={(e) => handleTabChange(e.target.value)}
-                  aria-label="Select a tab"
-                  className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-accent-lavender"
-                >
-                  {tabs.map((tab) => (
-                    <option key={tab.name}>{tab.name}</option>
-                  ))}
-                </select>
-                <ChevronDownIcon
-                  aria-hidden="true"
-                  className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end fill-gray-500"
-                />
-              </div>
-              <div className="hidden sm:block">
-                <nav className="-mb-px flex space-x-8">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.name}
-                      onClick={() => handleTabChange(tab.name)}
-                      aria-current={tab.name === activeTab ? 'page' : undefined}
-                      className={classNames(
-                        tab.name === activeTab
-                          ? 'border-accent-lavender text-accent-lavender'
-                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'border-b-2 px-1 pb-4 text-sm font-medium whitespace-nowrap'
-                      )}
-                    >
-                      {tab.name}
-                    </button>
-                  ))}
-                </nav>
               </div>
             </div>
           </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-hidden">
-            {activeTab === 'Builder' && (
-              <div className="h-full flex">
-                <div className={classNames(
-                  "flex-1 p-6 transition-all duration-300",
-                  showAiChat && aiAgentProvider ? "pr-0" : ""
-                )}>
-                  <TemplateEditor onEditorReady={handleEditorReady} />
-                </div>
-                
-                {/* AI Chat Panel */}
-                {showAiChat && aiAgentProvider && (
-                  <div className="w-[400px] border-l bg-white shadow-lg animate-slide-in-right">
-                    <AiAgentChat 
-                      provider={aiAgentProvider} 
-                      editor={editorRef}
-                      onClose={() => setShowAiChat(false)}
-                    />
+          {/* Tabs */}
+          <div className="bg-white border-b border-gray-200">
+            <nav className="flex space-x-8 px-6" aria-label="Tabs">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={classNames(
+                    tab === activeTab
+                      ? 'border-[#8a7fae] text-[#8a7fae]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                    'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors'
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 p-6 overflow-hidden">
+            <div className="h-full flex gap-6">
+              {/* Editor Area */}
+              <div className="flex-1">
+                {activeTab === 'Builder' && (
+                  <div className="h-full">
+                    <TemplateEditor onEditorReady={setEditorRef} />
+                  </div>
+                )}
+                {activeTab === 'Logic' && (
+                  <div className="h-full bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Template Logic
+                    </h3>
+                    <p className="text-gray-500">
+                      Configure conditional logic and rules for your template.
+                    </p>
+                  </div>
+                )}
+                {activeTab === 'Properties' && (
+                  <div className="h-full bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Template Properties
+                    </h3>
+                    <p className="text-gray-500">
+                      Set template metadata and configuration.
+                    </p>
+                  </div>
+                )}
+                {activeTab === 'Preview' && (
+                  <div className="h-full bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Template Preview
+                    </h3>
+                    <p className="text-gray-500">
+                      Preview your template with sample data.
+                    </p>
                   </div>
                 )}
               </div>
-            )}
-            {activeTab === 'Logic' && (
-              <div className="p-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-lg font-medium mb-4">Template Logic</h2>
-                  <p className="text-gray-600">Configure conditional logic and rules for your template.</p>
-                  <div className="mt-6 space-y-4">
-                    <div className="border rounded-lg p-4">
-                      <p className="text-sm text-gray-500">Logic configuration coming soon...</p>
-                    </div>
-                  </div>
+
+              {/* AI Chat Panel */}
+              {showAiChat && (
+                <div className="w-96 h-full">
+                  <AiAgentChat 
+                    onClose={() => setShowAiChat(false)}
+                    onInsertText={(text) => {
+                      if (editorRef) {
+                        editorRef.chain().focus().insertContent(text).run();
+                      }
+                    }}
+                  />
                 </div>
-              </div>
-            )}
-            {activeTab === 'Properties' && (
-              <div className="p-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-lg font-medium mb-4">Template Properties</h2>
-                  <p className="text-gray-600">Set template metadata and properties.</p>
-                  <div className="mt-6 space-y-4">
-                    <div className="border rounded-lg p-4">
-                      <p className="text-sm text-gray-500">Template properties coming soon...</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {activeTab === 'Preview' && (
-              <div className="p-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-lg font-medium mb-4">Template Preview</h2>
-                  <p className="text-gray-600">Preview your template with sample data.</p>
-                  {editorRef && (
-                    <div className="mt-6 prose prose-sm max-w-none border rounded-lg p-6">
-                      <div dangerouslySetInnerHTML={{ __html: editorRef.getHTML() }} />
-                    </div>
-                  )}
-                  {!editorRef && (
-                    <div className="mt-6 border rounded-lg p-4">
-                      <p className="text-sm text-gray-500">No content to preview yet.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
