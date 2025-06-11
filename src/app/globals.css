@@ -1,9 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Radio+Canada:wght@300;400;500;600;700&display=swap');
-/* @tailwind base; */
+
 @tailwind base;
-/* @tailwind components; */
 @tailwind components;
-/* @tailwind utilities; */
 @tailwind utilities;
 
 @layer base {
@@ -11,86 +9,6 @@
     --foreground-rgb: 0, 0, 0;
     --background-start-rgb: 214, 219, 220;
     --background-end-rgb: 255, 255, 255;
-  /* Drag handle styles */
-  .drag-handle {
-    position: absolute;
-    left: -2rem;
-    top: 0.25rem;
-    width: 1.5rem;
-    height: 1.5rem;
-    cursor: grab;
-    opacity: 0;
-    transition: opacity 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.25rem;
-  }
-
-  .drag-handle:hover {
-    background-color: #f3f4f6;
-  }
-
-  .drag-handle:active {
-    cursor: grabbing;
-  }
-
-  .ProseMirror:hover .drag-handle,
-  .drag-handle:hover {
-    opacity: 1;
-  }
-
-  /* AI loading states */
-  .ProseMirror .ai-loading {
-    background-color: #f3f4f6;
-    border-radius: 0.25rem;
-    padding: 0.125rem 0.25rem;
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: .5;
-    }
-  }
-
-  /* Emoji picker styles */
-  .tippy-box[data-theme~='emoji'] {
-    background-color: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Mathematics styles */
-  .ProseMirror .math-inline {
-    background-color: #f9fafb;
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
-    font-family: 'JetBrainsMono', monospace;
-  }
-
-  .ProseMirror .math-block {
-    background-color: #f9fafb;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    margin: 1rem 0;
-    overflow-x: auto;
-  }
-
-  /* Collaboration history styles */
-  .collaboration-history-item {
-    padding: 0.5rem;
-    border-left: 2px solid transparent;
-    transition: all 0.2s;
-  }
-
-  .collaboration-history-item:hover {
-    background-color: #f9fafb;
-    border-left-color: #8a7fae;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -131,6 +49,15 @@
 
   .template-editor .ProseMirror:focus {
     outline: none;
+  }
+
+  /* Placeholder styles */
+  .template-editor .is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
   }
 
   /* Table styles */
@@ -184,12 +111,9 @@
     margin-right: -1px;
     pointer-events: none;
     position: relative;
-    word-break: normal;
   }
 
   .collaboration-cursor__label {
-    border-radius: 3px 3px 3px 0;
-    color: white;
     font-size: 12px;
     font-weight: 600;
     left: -1px;
@@ -199,43 +123,7 @@
     top: -1.4em;
     user-select: none;
     white-space: nowrap;
-  }
-
-  /* Placeholder styles */
-  .template-editor .is-empty::before {
-    color: #9ca3af;
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-
-  /* Link styles */
-  .template-editor a {
-    color: #8a7fae;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-
-  .template-editor a:hover {
-    color: #7c6fa0;
-  }
-
-  /* Code block styles */
-  .template-editor pre {
-    background: #1e1e1e;
-    border-radius: 0.5rem;
-    color: #d4d4d4;
-    font-family: 'JetBrainsMono', monospace;
-    padding: 0.75rem 1rem;
-  }
-
-  .template-editor code {
-    background: #f3f4f6;
-    border-radius: 0.25rem;
-    color: #374151;
-    font-size: 0.875rem;
-    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
   }
 
   /* Drag handle styles */
@@ -245,104 +133,210 @@
     top: 0.25rem;
     width: 1.5rem;
     height: 1.5rem;
-    cursor: grab;
-    opacity: 0;
-    transition: opacity 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: grab;
+    color: #9ca3af;
+    font-size: 14px;
     border-radius: 0.25rem;
+    transition: all 0.2s;
   }
 
   .drag-handle:hover {
     background-color: #f3f4f6;
+    color: #6b7280;
   }
 
   .drag-handle:active {
     cursor: grabbing;
   }
 
-  .ProseMirror:hover .drag-handle,
-  .drag-handle:hover {
-    opacity: 1;
+  /* Details/Summary styles */
+  .details {
+    margin: 1rem 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    overflow: hidden;
   }
-}
-/* Add this to your existing globals.css file */
 
-/* AI Chat Panel Animation */
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+  .details summary {
+    padding: 0.75rem 1rem;
+    background-color: #f9fafb;
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+
+  .details summary:hover {
+    background-color: #f3f4f6;
   }
-}
 
-.animate-slide-in-right {
-  animation: slide-in-right 0.3s ease-out;
-}
+  .details[open] summary {
+    border-bottom: 1px solid #e5e7eb;
+  }
 
-/* Add to your globals.css */
+  .details-content {
+    padding: 1rem;
+  }
 
-/* Drag handle styles */
-.drag-handle {
-  position: absolute;
-  left: -2rem;
-  top: 0.25rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: grab;
-  color: #9ca3af;
-  font-size: 14px;
-  border-radius: 0.25rem;
-  transition: all 0.2s;
-}
+  /* Invisible characters */
+  .invisible-characters .ProseMirror-widget {
+    color: #d1d5db;
+    font-family: monospace;
+  }
 
-.drag-handle:hover {
-  background-color: #f3f4f6;
-  color: #6b7280;
-}
+  /* Highlight styles */
+  .highlight {
+    background-color: #fef3c7;
+    padding: 0.125rem 0;
+    border-radius: 0.125rem;
+  }
 
-.drag-handle:active {
-  cursor: grabbing;
-}
+  /* Variable badge styles */
+  .variable-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    background-color: #e9d5ff;
+    color: #6b21a8;
+    border: 1px solid #c084fc;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.875rem;
+    user-select: none;
+  }
 
-/* Details/Summary styles */
-.details {
-  margin: 1rem 0;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  overflow: hidden;
-}
+  /* LanguageTool styles */
+  .language-tool-error {
+    background-color: #fef3c7;
+    border-bottom: 2px dotted #f59e0b;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
 
-.details summary {
-  padding: 0.75rem 1rem;
-  background-color: #f9fafb;
-  cursor: pointer;
-  font-weight: 500;
-  user-select: none;
-}
+  .language-tool-error:hover {
+    background-color: #fed7aa;
+  }
 
-.details summary:hover {
-  background-color: #f3f4f6;
-}
+  .language-tool-popup {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    max-width: 400px;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
 
-.details[open] summary {
-  border-bottom: 1px solid #e5e7eb;
-}
+  .language-tool-popup-content {
+    padding: 0;
+  }
 
-.details-content {
-  padding: 1rem;
-}
+  .language-tool-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
 
-/* Invisible characters */
-.invisible-characters .ProseMirror-widget {
-  color: #d1d5db;
-  font-family: monospace;
+  .language-tool-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .language-tool-title::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: #111827;
+    border-radius: 4px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>');
+    background-size: 14px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .language-tool-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .language-tool-close:hover {
+    color: #111827;
+  }
+
+  .language-tool-message {
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .language-tool-error-type {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 0 0 4px 0;
+  }
+
+  .language-tool-description {
+    font-size: 14px;
+    color: #111827;
+    margin: 0;
+  }
+
+  .language-tool-suggestions {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .language-tool-suggestion {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s;
+  }
+
+  .language-tool-suggestion:hover {
+    background: #2563eb;
+  }
+
+  .language-tool-ignore {
+    background: white;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .language-tool-ignore:hover {
+    background: #f9fafb;
+    color: #111827;
+  }
+
+  /* Spell check popup styles - remove old implementation */
+  .spell-check-popup {
+    display: none;
+  }
 }

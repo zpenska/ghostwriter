@@ -4,6 +4,22 @@ import { useEffect, useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { healthcarePrompts } from '@/lib/tiptap/ai-config';
 import { classNames } from '@/lib/utils/cn';
+import { 
+  FileTextIcon, 
+  UsersIcon, 
+  HeartIcon, 
+  ShieldCheckIcon, 
+  ClipboardCheckIcon,
+  XCircleIcon,
+  MessageSquareIcon,
+  CheckCircleIcon,
+  FileIcon,
+  PlusIcon,
+  EditIcon,
+  ActivityIcon,
+  HashIcon,
+  SyringeIcon
+} from 'lucide-react';
 
 interface AiAgentMenuProps {
   editor: Editor;
@@ -30,6 +46,28 @@ export default function AiAgentMenu({ editor, onClose }: AiAgentMenuProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
+
+  const getIcon = (iconName: string) => {
+    const iconMap: { [key: string]: any } = {
+      FileTextIcon,
+      UsersIcon,
+      HeartIcon,
+      ShieldCheckIcon,
+      ClipboardCheckIcon,
+      XCircleIcon,
+      MessageSquareIcon,
+      CheckCircleIcon,
+      FileIcon,
+      PlusIcon,
+      EditIcon,
+      ActivityIcon,
+      HashIcon,
+      SyringeIcon
+    };
+    
+    const Icon = iconMap[iconName];
+    return Icon ? <Icon className="h-4 w-4" /> : null;
+  };
 
   const filteredPrompts = healthcarePrompts.filter(
     prompt =>
@@ -121,7 +159,7 @@ export default function AiAgentMenu({ editor, onClose }: AiAgentMenuProps) {
                 )}
               >
                 <div className="flex items-start space-x-3">
-                  <span className="mt-0.5 text-[#8a7fae]">{prompt.icon}</span>
+                  <span className="mt-0.5 text-[#8a7fae]">{getIcon(prompt.icon)}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[#2E4A3F]">
                       {prompt.label}

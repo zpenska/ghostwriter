@@ -30,6 +30,7 @@ import EditorToolbar from './EditorToolbar';
 import AiMenu from './AiMenu';
 import AiAgentMenu from './AiAgentMenu';
 import { buttonStyles } from '@/lib/utils/button-styles';
+import { LanguageTool } from '@/lib/tiptap/extensions/languagetool';
 import 'katex/dist/katex.min.css';
 
 interface TemplateEditorProps {
@@ -97,15 +98,22 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       TableHeader,
       TableCell,
       FileHandler.configure({
-        allowBase64: true,
-        acceptedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
-        onPaste: () => {
-          // Images are handled automatically by the extension
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
+        onDrop: (currentEditor: any, files: File[], pos: number) => {
+          files.forEach((file: File) => {
+            const fileReader = new FileReader();
+            fileReader.readAsDataURL(file);
+            fileReader.onload = () => {
+              currentEditor.chain().insertContentAt(pos, {
+                type: 'image',
+                attrs: {
+                  src: fileReader.result,
+                },
+              }).focus().run();
+            };
+          });
         },
-        onDrop: () => {
-          // Images are handled automatically by the extension
-        },
-      }),
+      } as any),
       Emoji.configure({
         enableEmoticons: true,
         emojis: gitHubEmojis,
@@ -126,19 +134,7 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
           return element;
         },
       }),
-      Snapshot.configure({
-        onSnapshot: ({ editor, doc }: { editor: any; doc: any }) => {
-          // Store snapshot
-          const snapshots = JSON.parse(localStorage.getItem('template-snapshots') || '[]');
-          snapshots.push({
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-            content: editor.getHTML(),
-          });
-          if (snapshots.length > 20) snapshots.shift();
-          localStorage.setItem('template-snapshots', JSON.stringify(snapshots));
-        },
-      }),
+      Snapshot,
       Details.configure({
         persist: true,
         HTMLAttributes: {
@@ -238,11 +234,18 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   }, [editor]);
 
   if (!editor) {
-    return null;
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8a7fae] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading editor...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="template-editor-container flex flex-col h-full bg-white rounded-lg shadow-sm">
+    <div className="template-editor-container flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Toolbar */}
       <EditorToolbar 
         editor={editor} 
@@ -250,8 +253,8 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       />
 
       {/* Editor */}
-      <div ref={editorRef} className="flex-1 overflow-y-auto relative">
-        <EditorContent editor={editor} className="template-editor" />
+      <div ref={editorRef} className="flex-1 overflow-y-auto relative bg-white">
+        <EditorContent editor={editor} className="template-editor h-full" />
         
         {/* AI Agent Menu */}
         {showAiAgentMenu && (

@@ -1,4 +1,4 @@
-// Spell and Grammar Check Service
+// src/lib/services/spell-check.ts
 import { Editor } from '@tiptap/react';
 
 interface SpellCheckMatch {
@@ -27,21 +27,28 @@ export class SpellCheckService {
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey;
-    // Use the free API endpoint or premium if API key is provided
     this.baseUrl = apiKey 
       ? 'https://api.languagetoolplus.com/v2/check'
       : 'https://api.languagetool.org/v2/check';
   }
 
   async checkText(text: string, language: string = 'en-US'): Promise<SpellCheckResponse> {
+    // LanguageTool requires at least 3 characters
+    if (text.trim().length < 3) {
+      return { matches: [] };
+    }
+
     const params = new URLSearchParams({
       text,
       language,
       enabledOnly: 'false',
+      // Add required parameters for LanguageTool
+      disabledRules: 'WHITESPACE_RULE',
     });
 
-    if (this.apiKey) {
+    if (this.apiKey && this.username) {
       params.append('apiKey', this.apiKey);
+      params.append('username', this.username);
     }
 
     try {
@@ -49,11 +56,14 @@ export class SpellCheckService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
         },
-        body: params,
+        body: params.toString(),
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('LanguageTool error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -64,9 +74,21 @@ export class SpellCheckService {
     }
   }
 
-  // Apply spell check to editor
   async checkEditor(editor: Editor): Promise<void> {
-    const text = editor.getText();
+    // Store editor reference globally for popup to use
+    (window as any).currentEditor = editor;
+    
+    // Try different methods to get text
+    const text = editor.state.doc.textContent || editor.getText() || '';
+    
+    console.log('Editor text content:', text);
+    console.log('Text length:', text.length);
+    
+    // Check if there's enough text
+    if (text.trim().length < 3) {
+      alert('Please type at least a few words before checking spelling.');
+      return;
+    }
     
     try {
       const result = await this.checkText(text);
@@ -76,47 +98,45 @@ export class SpellCheckService {
         return;
       }
 
-      // Store matches for highlighting
       this.highlightErrors(editor, result.matches);
       
       alert(`Found ${result.matches.length} potential issues. Click on highlighted text for suggestions.`);
     } catch (error) {
       console.error('Spell check failed:', error);
-      alert('Spell check failed. Please try again.');
+      // Provide helpful error message
+      if (error instanceof Error && error.message.includes('400')) {
+        alert('Spell check failed. Please make sure you have some text in the editor.');
+      } else {
+        alert('Spell check service is temporarily unavailable. Please try again later.');
+      }
     }
   }
 
   private highlightErrors(editor: Editor, matches: SpellCheckMatch[]) {
-    // Clear previous highlights
     editor.chain().focus().unsetMark('highlight').run();
 
-    // Sort matches by offset (descending) to avoid position shifts
     const sortedMatches = [...matches].sort((a, b) => b.offset - a.offset);
 
     sortedMatches.forEach((match) => {
-      const from = match.offset + 1; // Tiptap positions are 1-indexed
+      const from = match.offset + 1;
       const to = from + match.length;
 
-      // Add highlight with error data
       editor
         .chain()
         .focus()
         .setTextSelection({ from, to })
-        .setHighlight({ color: '#fee2e2' }) // Light red for errors
+        .setHighlight({ color: '#fee2e2' })
         .run();
 
-      // Store match data for later use
       editor.storage.spellcheck = editor.storage.spellcheck || {};
       editor.storage.spellcheck[`${from}-${to}`] = match;
     });
   }
 
-  // Get suggestions for a specific position
   getSuggestionsAtPosition(editor: Editor, pos: number): SpellCheckMatch | null {
     const storage = editor.storage.spellcheck;
     if (!storage) return null;
 
-    // Find match at position
     for (const key of Object.keys(storage)) {
       const [from, to] = key.split('-').map(Number);
       if (pos >= from && pos <= to) {
@@ -128,7 +148,6 @@ export class SpellCheckService {
   }
 }
 
-// Create a singleton instance
 export const spellCheckService = new SpellCheckService(
   process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY
 );

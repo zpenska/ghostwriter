@@ -119,10 +119,13 @@ export default function TemplateBuilderPage() {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 p-6 overflow-hidden">
+          <div className="flex-1 p-6 overflow-hidden bg-gray-50">
             <div className="h-full flex gap-6">
               {/* Editor Area */}
-              <div className="flex-1">
+              <div className={classNames(
+                "flex-1 bg-white rounded-lg shadow-sm",
+                showAiChat ? "mr-0" : ""
+              )}>
                 {activeTab === 'Builder' && (
                   <div className="h-full">
                     <TemplateEditor onEditorReady={setEditorRef} />

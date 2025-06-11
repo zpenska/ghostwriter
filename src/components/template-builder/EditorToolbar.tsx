@@ -374,18 +374,40 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Undo/Redo */}
         <div className="flex items-center space-x-1">
           <button
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
+            onClick={() => {
+              try {
+                // Try to use undo if available
+                if (editor.commands.undo) {
+                  editor.commands.undo();
+                } else {
+                  console.log('Undo not available - using CollaborationHistory');
+                }
+              } catch (e) {
+                console.log('Undo error:', e);
+              }
+            }}
+            disabled={false}
             className={buttonStyles.toolbar}
-            title="Undo"
+            title="Undo (Ctrl/Cmd+Z)"
           >
             <UndoIcon className="h-4 w-4" />
           </button>
           <button
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo()}
+            onClick={() => {
+              try {
+                // Try to use redo if available
+                if (editor.commands.redo) {
+                  editor.commands.redo();
+                } else {
+                  console.log('Redo not available - using CollaborationHistory');
+                }
+              } catch (e) {
+                console.log('Redo error:', e);
+              }
+            }}
+            disabled={false}
             className={buttonStyles.toolbar}
-            title="Redo"
+            title="Redo (Ctrl/Cmd+Shift+Z)"
           >
             <RedoIcon className="h-4 w-4" />
           </button>
