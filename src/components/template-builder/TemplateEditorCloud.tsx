@@ -99,27 +99,25 @@ export default function TemplateEditorCloud({
       document: ydoc,
       token: tokens.documentToken,
       
-      onConnect: () => {
+      onOpen: () => {
         setStatus('Connected');
         console.log('Connected to collaboration server');
       },
       
-      onDisconnect: () => {
+      onClose: () => {
         setStatus('Disconnected');
         console.log('Disconnected from collaboration server');
       },
       
-      onSynced: ({ state }) => {
-        if (state) {
-          console.log('Document synced');
-        }
+      onSynced: () => {
+        console.log('Document synced');
       },
       
-      onError: ({ message }) => {
-        console.error('Collaboration error:', message);
+      onError: (event: any) => {
+        console.error('Collaboration error:', event);
         setStatus('Connection error');
       },
-    });
+    } as any);
 
     setProvider(provider);
 
@@ -139,20 +137,21 @@ export default function TemplateEditorCloud({
       Collaboration.configure({
         document: ydoc,
       }),
-      CollaborationCursor.configure({
-        provider,
-        user: {
-          name: userName,
-          color: '#8a7fae', // Your brand color
-        },
-      }),
-      CollaborationHistory.configure({
-        provider,
-        maxVersions: 100,
-      }),
-      Comments.configure({
-        provider,
-      }),
+      ...(provider ? [
+        CollaborationCursor.configure({
+          provider: provider as any,
+          user: {
+            name: userName,
+            color: '#8a7fae',
+          },
+        }),
+        CollaborationHistory.configure({
+          provider: provider as any,
+        }),
+        Comments.configure({
+          provider: provider as any,
+        }),
+      ] : []),
       Placeholder.configure({
         placeholder: 'Start typing your letter here...',
         showOnlyWhenEditable: true,
@@ -184,9 +183,22 @@ export default function TemplateEditorCloud({
       TableHeader,
       TableCell,
       FileHandler.configure({
-        allowBase64: true,
-        acceptedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
-      }),
+        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
+        onDrop: (currentEditor: any, files: File[], pos: number) => {
+          files.forEach((file: File) => {
+            const fileReader = new FileReader();
+            fileReader.readAsDataURL(file);
+            fileReader.onload = () => {
+              currentEditor.chain().insertContentAt(pos, {
+                type: 'image',
+                attrs: {
+                  src: fileReader.result,
+                },
+              }).focus().run();
+            };
+          });
+        },
+      } as any),
       Emoji.configure({
         enableEmoticons: true,
         emojis: gitHubEmojis,
@@ -203,18 +215,7 @@ export default function TemplateEditorCloud({
           return element;
         },
       }),
-      Snapshot.configure({
-        onSnapshot: ({ editor, doc }: { editor: any; doc: any }) => {
-          const snapshots = JSON.parse(localStorage.getItem('template-snapshots') || '[]');
-          snapshots.push({
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-            content: editor.getHTML(),
-          });
-          if (snapshots.length > 20) snapshots.shift();
-          localStorage.setItem('template-snapshots', JSON.stringify(snapshots));
-        },
-      }),
+      Snapshot,
       Details.configure({
         persist: true,
         HTMLAttributes: {
@@ -231,7 +232,7 @@ export default function TemplateEditorCloud({
         token: tokens?.aiToken || TIPTAP_CLOUD_CONFIG.aiSecret,
         baseUrl: 'https://api.tiptap.dev/v1',
         autocompletion: true,
-      }),
+      } as any),
     ],
     editorProps: {
       attributes: {
@@ -270,7 +271,7 @@ export default function TemplateEditorCloud({
   const takeSnapshot = useCallback(() => {
     if (!editor) return;
     
-    // Manually save snapshot since the command might not exist
+    // Save snapshot to localStorage
     const content = editor.getHTML();
     const snapshots = JSON.parse(localStorage.getItem('template-snapshots') || '[]');
     snapshots.push({

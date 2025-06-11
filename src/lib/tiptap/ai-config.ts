@@ -109,6 +109,5 @@ export const configureTiptapAI = () => {
     token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
     baseUrl: 'https://api.tiptap.dev/v1',
     autocompletion: true,
-    defaultTextLength: 200,
-  });
+  } as any);
 };
