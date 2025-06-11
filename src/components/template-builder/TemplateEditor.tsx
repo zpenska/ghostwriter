@@ -17,13 +17,18 @@ import { Emoji, gitHubEmojis } from '@tiptap-pro/extension-emoji';
 import CollaborationHistory from '@tiptap-pro/extension-collaboration-history';
 import FileHandler from '@tiptap-pro/extension-file-handler';
 import UniqueID from '@tiptap-pro/extension-unique-id';
+import DragHandle from '@tiptap-pro/extension-drag-handle';
+import Snapshot from '@tiptap-pro/extension-snapshot';
+import Details from '@tiptap-pro/extension-details';
+import DetailsSummary from '@tiptap-pro/extension-details-summary';
+import DetailsContent from '@tiptap-pro/extension-details-content';
+import InvisibleCharacters from '@tiptap-pro/extension-invisible-characters';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 import EditorToolbar from './EditorToolbar';
 import AiMenu from './AiMenu';
 import AiAgentMenu from './AiAgentMenu';
-import CollaborationPresence from './CollaborationPresence';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import 'katex/dist/katex.min.css';
 
@@ -37,9 +42,10 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   const [aiMenuPosition, setAiMenuPosition] = useState({ top: 0, left: 0 });
   const [selectedText, setSelectedText] = useState('');
   const [ydoc] = useState(() => new Y.Doc());
+  const [snapshotProvider, setSnapshotProvider] = useState<any>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
-  // Initialize IndexedDB persistence
+  // Initialize IndexedDB persistence for local versioning
   useEffect(() => {
     const provider = new IndexeddbPersistence('ghostwriter-template', ydoc);
     
@@ -55,10 +61,10 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        history: false, // We're using CollaborationHistory instead
         heading: {
           levels: [1, 2, 3],
         },
+        history: false, // We'll use CollaborationHistory
       }),
       Placeholder.configure({
         placeholder: 'Start typing your letter here...',
@@ -109,7 +115,40 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
         types: ['paragraph', 'heading', 'listItem'],
       }),
       CollaborationHistory.configure({
-        provider: null, // We'll use local storage for now
+        provider: null, // We'll use local storage for now, can switch to cloud provider later
+        maxVersions: 100,
+      }),
+      DragHandle.configure({
+        render: () => {
+          const element = document.createElement('div');
+          element.classList.add('drag-handle');
+          element.innerHTML = '⋮⋮';
+          return element;
+        },
+      }),
+      Snapshot.configure({
+        onSnapshot: ({ editor, doc }: { editor: any; doc: any }) => {
+          // Store snapshot
+          const snapshots = JSON.parse(localStorage.getItem('template-snapshots') || '[]');
+          snapshots.push({
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            content: editor.getHTML(),
+          });
+          if (snapshots.length > 20) snapshots.shift();
+          localStorage.setItem('template-snapshots', JSON.stringify(snapshots));
+        },
+      }),
+      Details.configure({
+        persist: true,
+        HTMLAttributes: {
+          class: 'details',
+        },
+      }),
+      DetailsSummary,
+      DetailsContent,
+      InvisibleCharacters.configure({
+        visible: false, // Can be toggled via toolbar
       }),
     ],
     content: '',
@@ -119,6 +158,11 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[600px] px-8 py-6',
       },
+    },
+    onCreate: ({ editor }) => {
+      // Set up snapshot provider
+      const provider = editor.storage.snapshot;
+      setSnapshotProvider(provider);
     },
     onUpdate: ({ editor }) => {
       // Check for "/" to show AI agent menu
@@ -154,29 +198,43 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   const takeSnapshot = useCallback(() => {
     if (!editor) return;
     
-    const timestamp = new Date().toLocaleString();
+    // Use the Snapshot extension
     const content = editor.getHTML();
-    
-    // Save to localStorage as a simple version history
     const snapshots = JSON.parse(localStorage.getItem('template-snapshots') || '[]');
-    snapshots.push({ timestamp, content });
-    // Keep only last 10 snapshots
-    if (snapshots.length > 10) snapshots.shift();
+    snapshots.push({
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      content: content,
+    });
+    if (snapshots.length > 20) snapshots.shift();
     localStorage.setItem('template-snapshots', JSON.stringify(snapshots));
     
-    alert(`Snapshot saved at ${timestamp}`);
+    alert('Snapshot saved!');
   }, [editor]);
 
-  const checkSpelling = useCallback(() => {
+  const checkSpelling = useCallback(async () => {
     if (!editor) return;
-    // This would integrate with a spell check API
-    alert('Spell check feature coming soon!');
+    
+    try {
+      // Import the spell check service
+      const { spellCheckService } = await import('@/lib/services/spell-check');
+      await spellCheckService.checkEditor(editor);
+    } catch (error) {
+      console.error('Spell check error:', error);
+      alert('Spell check failed. Please try again.');
+    }
   }, [editor]);
 
   const checkGrammar = useCallback(() => {
+    // Grammar check uses the same service as spell check
+    checkSpelling();
+  }, [checkSpelling]);
+
+  const showInvisibleCharacters = useCallback(() => {
     if (!editor) return;
-    // This would integrate with a grammar check API
-    alert('Grammar check feature coming soon!');
+    
+    // Toggle invisible characters
+    editor.chain().focus().toggleInvisibleCharacters().run();
   }, [editor]);
 
   if (!editor) {
@@ -247,6 +305,13 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
             title="Check grammar"
           >
             Grammar
+          </button>
+          <button
+            onClick={showInvisibleCharacters}
+            className={buttonStyles.text}
+            title="Show/hide invisible characters"
+          >
+            ¶
           </button>
         </div>
       </div>

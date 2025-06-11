@@ -126,6 +126,52 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
 
         <div className="w-px h-6 bg-gray-300" />
 
+        {/* Alignment */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''
+            )}
+            title="Align Left"
+          >
+            <AlignLeftIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''
+            )}
+            title="Align Center"
+          >
+            <AlignCenterIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''
+            )}
+            title="Align Right"
+          >
+            <AlignRightIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''
+            )}
+            title="Justify"
+          >
+            <AlignJustifyIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-gray-300" />
+
         {/* Headings */}
         <div className="flex items-center space-x-1">
           <button
@@ -203,51 +249,7 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
           </button>
         </div>
 
-        <div className="w-px h-6 bg-gray-300" />
 
-        {/* Alignment */}
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={classNames(
-              buttonStyles.toolbar,
-              editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''
-            )}
-            title="Align Left"
-          >
-            <AlignLeftIcon className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={classNames(
-              buttonStyles.toolbar,
-              editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''
-            )}
-            title="Align Center"
-          >
-            <AlignCenterIcon className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={classNames(
-              buttonStyles.toolbar,
-              editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''
-            )}
-            title="Align Right"
-          >
-            <AlignRightIcon className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-            className={classNames(
-              buttonStyles.toolbar,
-              editor.isActive({ textAlign: 'justify' }) ? 'bg-gray-200' : ''
-            )}
-            title="Justify"
-          >
-            <AlignJustifyIcon className="h-4 w-4" />
-          </button>
-        </div>
 
         <div className="w-px h-6 bg-gray-300" />
 

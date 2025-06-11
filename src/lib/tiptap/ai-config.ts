@@ -99,3 +99,16 @@ export const healthcarePrompts = [
     prompt: 'Suggest relevant CPT/HCPCS codes for the procedures mentioned in: {selectedText}'
   },
 ];
+
+// Tiptap AI configuration for AI extension
+import AI from '@tiptap-pro/extension-ai';
+
+export const configureTiptapAI = () => {
+  return AI.configure({
+    appId: 'jkver1dm',
+    token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
+    baseUrl: 'https://api.tiptap.dev/v1',
+    autocompletion: true,
+    defaultTextLength: 200,
+  });
+};

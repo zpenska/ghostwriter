@@ -26,3 +26,16 @@ export const TIPTAP_CLOUD_CONFIG = {
     // For now, you can use the example JWTs provided
     return 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...';
   }
+
+    // Collaboration endpoints
+    collaborationUrl: 'wss://j9yd36p9.collab.tiptap.cloud',
+    apiUrl: 'https://j9yd36p9.collab.tiptap.cloud/api',
+    
+    
+    // Default collaboration settings
+    defaultCollaboration: {
+      maxVersions: 100,
+      throttle: 500,
+      clientId: 'ghostwriter',
+    }
+  };
