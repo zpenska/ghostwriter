@@ -46,6 +46,7 @@ export const LanguageTool = Extension.create<LanguageToolOptions>({
     const options = this.options;
     let timeoutId: NodeJS.Timeout | null = null;
     let currentMatches: LanguageToolMatch[] = [];
+    let editorView: any = null;
 
     const checkText = async (text: string) => {
       if (text.trim().length < 3) return { matches: [] };
@@ -125,11 +126,13 @@ export const LanguageTool = Extension.create<LanguageToolOptions>({
                 const result = await checkText(text);
                 currentMatches = result.matches || [];
 
-                // Update decorations
-                const decorations = createDecorations(tr.doc, currentMatches);
-                this.editor.view.dispatch(
-                  this.editor.view.state.tr.setMeta(languageToolPluginKey, { decorations })
-                );
+                // Update decorations - use the stored view reference
+                if (editorView) {
+                  const decorations = createDecorations(editorView.state.doc, currentMatches);
+                  editorView.dispatch(
+                    editorView.state.tr.setMeta(languageToolPluginKey, { decorations })
+                  );
+                }
               }, options.debounceWait);
 
               return old;
@@ -163,14 +166,15 @@ export const LanguageTool = Extension.create<LanguageToolOptions>({
           },
         },
         view: (view) => {
-          // Store editor reference
-          (this as any).editor = view;
+          // Store editor view reference
+          editorView = view;
           
           return {
             destroy: () => {
               if (timeoutId) {
                 clearTimeout(timeoutId);
               }
+              editorView = null;
             },
           };
         },
