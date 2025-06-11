@@ -1,7 +1,6 @@
 // src/lib/tiptap/ai-config.ts
 import AI from '@tiptap-pro/extension-ai';
 import AiAgent from '@tiptap-pro/extension-ai-agent';
-import { AiAgentProvider } from '@tiptap-pro/extension-ai-agent';
 
 // Healthcare-specific AI prompts for Ghostwriter
 export const healthcarePrompts = [
@@ -105,75 +104,16 @@ export const healthcarePrompts = [
   },
 ];
 
-// Get JWT token for authentication
-async function getJwtToken() {
-  try {
-    const response = await fetch('/api/tiptap-jwt');
-    const data = await response.json();
-    return data.token;
-  } catch (error) {
-    console.error('Failed to get JWT token:', error);
-    return null;
-  }
-}
-
-// Tiptap AI configuration for AI extension
+// Configure AI extension for use with Cloud
 export const configureTiptapAI = () => {
   return AI.configure({
-    appId: 'jkver1dm',
-    token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
-    baseUrl: 'https://api.tiptap.dev/v1',
-    autocompletion: true,
-  } as any);
+    // Configuration for cloud setup - the provider handles authentication
+  });
 };
 
-// For now, let's just export placeholder functions for the AI extensions
-// that aren't working with the current version
-export const configureAiChanges = () => {
-  // Placeholder - the extension might not support these options
-  return null;
-};
-
-export const configureAiSuggestion = () => {
-  // Placeholder - the extension might not support these options
-  return null;
-};
-
-// Create AI Agent Provider
-export const createAiAgentProvider = async () => {
-  try {
-    // Get JWT token
-    const token = await getJwtToken();
-    if (!token) {
-      console.error('Failed to get JWT token');
-      return null;
-    }
-
-    return new AiAgentProvider({
-      appId: 'jkver1dm',
-      token: token, // Use the JWT token
-      baseUrl: 'https://api.tiptap.dev/v1', // Correct base URL
-      modelName: 'gpt-4o',
-      autoAccept: 'never',
-      autoSaveCheckpoints: true,
-      onStateChange: (newState: any, previousState: any, context: any) => {
-        console.log('AI Agent state changed:', newState);
-      },
-      onLoadingError: (error: any, context: any) => {
-        console.error('AI Agent error:', error);
-      },
-    });
-  } catch (error) {
-    console.error('Failed to create AI Agent Provider:', error);
-    return null;
-  }
-};
-
-// Configure AI Agent Extension
-export const configureAiAgent = (provider: any) => {
-  if (!provider) return null;
-  
+// Configure AI Agent extension for use with Cloud
+export const configureAiAgent = () => {
   return AiAgent.configure({
-    provider,
+    // The agent will use the cloud provider's authentication
   });
 };

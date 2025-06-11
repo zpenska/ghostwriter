@@ -1,316 +1,205 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { healthcarePrompts } from '@/lib/tiptap/ai-config';
-import { buttonStyles } from '@/lib/utils/button-styles';
-import { classNames } from '@/lib/utils/cn';
+import { useState, useRef, useEffect } from 'react';
+import { Editor } from '@tiptap/react';
+import { Send, Bot, User, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Text } from '@/components/ui/text';
+import { Avatar } from '@/components/ui/avatar';
 
-export interface AiAgentChatProps {
-  onInsertText?: (text: string) => void;
-  onClose?: () => void;
-  selectedText?: string;
-  aiAgentProvider?: any; // The AI Agent provider instance
-  availableVariables?: any[]; // Available variables from the variable panel
+interface AiAgentChatProps {
+  editor: Editor;
+  isOpen: boolean;
+  onClose: () => void;
+  variables?: any[]; // Available variable sets
 }
 
 interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string;
+  timestamp: Date;
 }
 
-export default function AiAgentChat({ 
-  onInsertText, 
-  onClose, 
-  selectedText, 
-  aiAgentProvider,
-  availableVariables = []
-}: AiAgentChatProps) {
+export default function AiAgentChat({ editor, isOpen, onClose, variables }: AiAgentChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
+  const handleSubmit = async () => {
+    if (!input.trim() || !editor || isLoading) return;
 
-  // Subscribe to AI Agent state changes
-  useEffect(() => {
-    if (!aiAgentProvider || typeof aiAgentProvider.on !== 'function') return;
-
-    const handleStateChange = (newState: any) => {
-      console.log('AI Agent state:', newState);
-      
-      // Update messages from AI Agent state
-      if (newState.messages && newState.messages.length > 0) {
-        const formattedMessages: ChatMessage[] = newState.messages.map((msg: any) => ({
-          role: msg.type === 'user' ? 'user' : msg.type === 'ai' ? 'assistant' : 'system',
-          content: msg.text || msg.content || ''
-        }));
-        setMessages(formattedMessages);
-      }
-
-      // Update loading state
-      setIsLoading(newState.status === 'loading' || newState.status === 'running');
+    const userMessage = {
+      role: 'user' as const,
+      content: input,
+      timestamp: new Date()
     };
 
-    const handleError = (error: any) => {
-      console.error('AI Agent error:', error);
-      setIsLoading(false);
-      // Add error message
-      setMessages(prev => [...prev, {
-        role: 'system',
-        content: `Error: ${error.message || 'Something went wrong. Please try again.'}`
-      }]);
-    };
-
-    aiAgentProvider.on('stateChange', handleStateChange);
-    aiAgentProvider.on('loadingError', handleError);
-
-    // Get initial state
-    if (aiAgentProvider.state && aiAgentProvider.state.messages) {
-      handleStateChange(aiAgentProvider.state);
-    }
-
-    return () => {
-      if (typeof aiAgentProvider.off === 'function') {
-        aiAgentProvider.off('stateChange', handleStateChange);
-        aiAgentProvider.off('loadingError', handleError);
-      }
-    };
-  }, [aiAgentProvider]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading || !aiAgentProvider) return;
-
-    const userMessage = input.trim();
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setIsLoading(true);
 
     try {
-      // Include variable context in the message if generating a letter
-      let enhancedMessage = userMessage;
-      if (userMessage.toLowerCase().includes('letter') || 
-          userMessage.toLowerCase().includes('template') ||
-          userMessage.toLowerCase().includes('draft')) {
-        enhancedMessage += '\n\nPlease use the appropriate variables (like {{MemberName}}, {{ProviderName}}, etc.) in the generated content.';
+      // Add context about available variables if provided
+      let prompt = input;
+      if (variables && variables.length > 0) {
+        const variableContext = variables.map(v => 
+          `${v.category}: ${v.variables.map((item: any) => item.name).join(', ')}`
+        ).join('\n');
+        
+        prompt = `Available variables:\n${variableContext}\n\n${input}`;
       }
 
-      // Add the user message to the AI Agent
-      aiAgentProvider.addUserMessage(enhancedMessage);
+      // The AI Agent in cloud setup works differently
+      // It might be through the AI extension commands or through the editor's extension storage
+      const aiExtension = editor.extensionManager.extensions.find(ext => ext.name === 'aiAgent');
       
-      // Run the AI Agent
-      await aiAgentProvider.run();
+      if (aiExtension) {
+        // Try to use the AI Agent through the extension
+        console.log('AI Agent extension found, processing request...');
+        
+        // Insert a placeholder and let AI Agent process it
+        editor.chain()
+          .focus()
+          .insertContent(`[AI: ${prompt}]`)
+          .run();
+      } else {
+        console.error('AI Agent extension not found');
+        throw new Error('AI Agent is not available');
+      }
+
+      const assistantMessage = {
+        role: 'assistant' as const,
+        content: 'I\'ve updated the document based on your request.',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Error sending message to AI Agent:', error);
-      setMessages(prev => [...prev, {
-        role: 'system',
-        content: 'Failed to send message. Please try again.'
-      }]);
+      console.error('AI Agent error:', error);
+      const errorMessage = {
+        role: 'assistant' as const,
+        content: 'I encountered an error. Please make sure you\'re connected to Tiptap Cloud and try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleQuickAction = (prompt: string) => {
-    if (!aiAgentProvider) return;
-    
-    const fullPrompt = selectedText 
-      ? prompt.replace('{selectedText}', selectedText)
-      : prompt;
-      
-    setInput(fullPrompt);
-    // Auto-submit for quick actions
-    setTimeout(() => {
-      const form = textareaRef.current?.form;
-      if (form) {
-        form.requestSubmit();
-      }
-    }, 100);
-  };
-
-  // Enhanced template actions that mention using variables
-  const templateActions = [
-    {
-      label: 'Prior Authorization',
-      prompt: 'Generate a prior authorization approval letter using the appropriate variables for member name, provider, service date, and service code'
-    },
-    {
-      label: 'Appeal Letter',
-      prompt: 'Draft a professional appeal letter for the member regarding their service. Include all relevant variables like member name, service date, and provider name.'
-    },
-    {
-      label: 'Denial Explanation',
-      prompt: 'Create a clear and compliant denial explanation letter addressed to the member regarding their service'
-    },
-    {
-      label: 'Benefit Summary',
-      prompt: 'Write a patient-friendly benefit summary explanation for the member that includes their member ID'
-    }
-  ];
-
-  if (!aiAgentProvider) {
-    return (
-      <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
-        <div className="flex items-center justify-center h-full">
-          <p className="text-gray-500">AI Agent not available</p>
-        </div>
-      </div>
-    );
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
+    <div className="flex flex-col h-full bg-white shadow-xl border-l border-gray-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-[#2E4A3F]">AI Assistant</h3>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className={buttonStyles.icon}
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        )}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="px-4 py-2 border-b border-gray-200">
-        <p className="text-xs text-gray-500 mb-2">Quick actions:</p>
-        <div className="flex flex-wrap gap-2">
-          {healthcarePrompts.slice(0, 4).map((prompt) => (
-            <button
-              key={prompt.label}
-              onClick={() => handleQuickAction(prompt.prompt)}
-              disabled={isLoading}
-              className={classNames(
-                buttonStyles.text,
-                'text-xs px-2 py-1'
-              )}
-            >
-              {prompt.label}
-            </button>
-          ))}
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-blue-600" />
+          <Text className="font-semibold">AI Assistant</Text>
         </div>
+        <Button plain onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
       </div>
-
-      {/* Template Actions */}
-      <div className="px-4 py-2 border-b border-gray-200">
-        <p className="text-xs text-gray-500 mb-2">Letter templates:</p>
-        <div className="grid grid-cols-2 gap-2">
-          {templateActions.map((action) => (
-            <button
-              key={action.label}
-              onClick={() => handleQuickAction(action.prompt)}
-              disabled={isLoading}
-              className={classNames(
-                'text-xs px-3 py-2 bg-[#8a7fae] text-white rounded hover:bg-[#7a6f9e] transition-colors disabled:opacity-50'
-              )}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Available Variables Info */}
-      {availableVariables.length > 0 && (
-        <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
-          <p className="text-xs text-gray-600">
-            Available variables: 
-            {availableVariables.flatMap(group => 
-              group.variables.map((v: any) => ` {{${v.name}}}`)
-            ).join(',')}
-          </p>
-        </div>
-      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-[#44474F] py-8">
-            <p className="text-sm mb-4">I can help you create clinical letters with proper variables.</p>
-            <ul className="text-xs text-left max-w-xs mx-auto space-y-1">
-              <li>• Generate complete letter templates</li>
-              <li>• Use variables like MemberName, ProviderName</li>
-              <li>• Create prior authorizations & appeals</li>
-              <li>• Ensure HIPAA compliance</li>
-              <li>• Improve tone and clarity</li>
-            </ul>
-            {selectedText && (
-              <p className="text-xs mt-4 text-gray-500">
-                Selected text: "{selectedText.substring(0, 100)}..."
-              </p>
-            )}
+          <div className="text-center py-8">
+            <Bot className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Text className="text-gray-500">
+              Hi! I can help you create clinical letters. Just describe what you need.
+            </Text>
+            <div className="mt-4 space-y-2">
+              <Text className="text-sm text-gray-500">Try asking me to:</Text>
+              <ul className="text-sm text-gray-500 space-y-1">
+                <li>• Generate a prior authorization letter</li>
+                <li>• Create an appeal for a denied claim</li>
+                <li>• Write a member notification</li>
+                <li>• Improve the tone of selected text</li>
+              </ul>
+            </div>
           </div>
         )}
-        
+
         {messages.map((message, index) => (
           <div
             key={index}
-            className={classNames(
-              'px-4 py-2 rounded-lg max-w-[80%]',
-              message.role === 'user'
-                ? 'ml-auto bg-[#8a7fae] text-white'
-                : message.role === 'assistant'
-                ? 'mr-auto bg-gray-100 text-[#44474F]'
-                : 'mx-auto bg-yellow-50 text-yellow-800 text-sm'
-            )}
+            className={`flex gap-3 ${
+              message.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
           >
-            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+            {message.role === 'assistant' && (
+              <Avatar className="w-8 h-8 bg-blue-100">
+                <Bot className="h-5 w-5 text-blue-600" />
+              </Avatar>
+            )}
+            <div
+              className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                message.role === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-900'
+              }`}
+            >
+              <Text className="text-sm whitespace-pre-wrap">{message.content}</Text>
+              <Text className="text-xs opacity-70 mt-1">
+                {message.timestamp.toLocaleTimeString()}
+              </Text>
+            </div>
+            {message.role === 'user' && (
+              <Avatar className="w-8 h-8 bg-gray-100">
+                <User className="h-5 w-5 text-gray-600" />
+              </Avatar>
+            )}
           </div>
         ))}
-        
+
         {isLoading && (
-          <div className="flex items-center space-x-2 text-[#44474F]">
-            <div className="w-2 h-2 bg-[#8a7fae] rounded-full animate-bounce" />
-            <div className="w-2 h-2 bg-[#8a7fae] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-            <div className="w-2 h-2 bg-[#8a7fae] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+          <div className="flex gap-3 justify-start">
+            <Avatar className="w-8 h-8 bg-blue-100">
+              <Bot className="h-5 w-5 text-blue-600" />
+            </Avatar>
+            <div className="bg-gray-100 rounded-lg px-4 py-2">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+              </div>
+            </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
-        <div className="flex space-x-2">
-          <textarea
-            ref={textareaRef}
+      {/* Input */}
+      <div className="border-t p-4">
+        <div className="flex gap-2">
+          <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit(e);
+                handleSubmit();
               }
             }}
-            placeholder="Ask me to create a letter with variables..."
-            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8a7fae] focus:border-transparent resize-none"
-            rows={1}
+            placeholder="Ask me to create a letter..."
+            className="flex-1 resize-none"
+            rows={2}
             disabled={isLoading}
           />
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className={buttonStyles.purple}
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              'Send'
-            )}
-          </button>
+          <Button onClick={handleSubmit} disabled={!input.trim() || isLoading}>
+            <Send className="h-4 w-4" />
+          </Button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

@@ -1,320 +1,203 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
-import { healthcarePrompts } from '@/lib/tiptap/ai-config';
-import { classNames } from '@/lib/utils/cn';
+import { useEffect, useRef, useState } from 'react';
 import { 
-  FileTextIcon, 
-  UsersIcon, 
-  HeartIcon, 
-  ShieldCheckIcon, 
-  ClipboardCheckIcon,
-  XCircleIcon,
-  MessageSquareIcon,
-  CheckCircleIcon,
-  FileIcon,
-  PlusIcon,
-  EditIcon,
-  ActivityIcon,
-  HashIcon,
-  SyringeIcon,
-  SparklesIcon
+  List, 
+  Table, 
+  Hash,
+  Calendar,
+  Type,
+  Heading1,
+  Heading2,
+  Code,
+  Quote,
+  X
 } from 'lucide-react';
 
 interface AiAgentMenuProps {
   editor: Editor;
-  onClose?: () => void;
+  onClose: () => void;
+  aiAgentProvider?: any;
 }
 
-export default function AiAgentMenu({ editor, onClose }: AiAgentMenuProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [customPrompt, setCustomPrompt] = useState('');
-  const [showCustomPrompt, setShowCustomPrompt] = useState(false);
+interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  description: string;
+  action: () => void;
+}
+
+export default function AiAgentMenu({ editor, onClose, aiAgentProvider }: AiAgentMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const customPromptRef = useRef<HTMLInputElement>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Basic editor commands only - no AI generation
+  const menuItems: MenuItem[] = [
+    {
+      icon: Heading1,
+      label: 'Heading 1',
+      description: 'Large section heading',
+      action: () => {
+        editor.chain().toggleHeading({ level: 1 }).focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: Heading2,
+      label: 'Heading 2',
+      description: 'Medium section heading',
+      action: () => {
+        editor.chain().toggleHeading({ level: 2 }).focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: Type,
+      label: 'Paragraph',
+      description: 'Normal text paragraph',
+      action: () => {
+        editor.chain().setParagraph().focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: List,
+      label: 'Bullet List',
+      description: 'Insert a bullet list',
+      action: () => {
+        editor.chain().toggleBulletList().focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: Hash,
+      label: 'Numbered List',
+      description: 'Insert a numbered list',
+      action: () => {
+        editor.chain().toggleOrderedList().focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: Quote,
+      label: 'Blockquote',
+      description: 'Insert a quote block',
+      action: () => {
+        editor.chain().toggleBlockquote().focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: Code,
+      label: 'Code Block',
+      description: 'Insert a code block',
+      action: () => {
+        editor.chain().toggleCodeBlock().focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: Table,
+      label: 'Table',
+      description: 'Insert a table',
+      action: () => {
+        editor.chain().insertTable({ rows: 3, cols: 3 }).focus().run();
+        onClose();
+      }
+    },
+    {
+      icon: Calendar,
+      label: 'Current Date',
+      description: 'Insert today\'s date',
+      action: () => {
+        const date = new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+        editor.chain().insertContent(date).focus().run();
+        onClose();
+      }
+    },
+  ];
 
   useEffect(() => {
-    if (showCustomPrompt && customPromptRef.current) {
-      customPromptRef.current.focus();
-    } else if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [showCustomPrompt]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        onClose?.();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev + 1) % menuItems.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev - 1 + menuItems.length) % menuItems.length);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        menuItems[selectedIndex].action();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
       }
     };
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (showCustomPrompt) {
-          setShowCustomPrompt(false);
-          setCustomPrompt('');
-        } else {
-          onClose?.();
-        }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIndex, menuItems, onClose]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onClose, showCustomPrompt]);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
 
-  const getIcon = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
-      FileTextIcon,
-      UsersIcon,
-      HeartIcon,
-      ShieldCheckIcon,
-      ClipboardCheckIcon,
-      XCircleIcon,
-      MessageSquareIcon,
-      CheckCircleIcon,
-      FileIcon,
-      PlusIcon,
-      EditIcon,
-      ActivityIcon,
-      HashIcon,
-      SyringeIcon,
-      SparklesIcon
-    };
-    
-    const Icon = iconMap[iconName];
-    return Icon ? <Icon className="h-4 w-4" /> : null;
-  };
-
-  const filteredPrompts = healthcarePrompts.filter(
-    prompt =>
-      prompt.label.toLowerCase().includes(search.toLowerCase()) ||
-      prompt.description.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const categories = Array.from(new Set(filteredPrompts.map(p => p.category)));
-
-  const promptsByCategory = selectedCategory
-    ? filteredPrompts.filter(p => p.category === selectedCategory)
-    : filteredPrompts;
-
-  const handlePromptSelect = (prompt: typeof healthcarePrompts[0]) => {
-    const { from, to } = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(from, to);
-    
-    // Get the full prompt with selected text
-    const fullPrompt = prompt.prompt.replace('{selectedText}', selectedText || 'the following text');
-    
-    // Try to trigger AI through the AI extension
-    try {
-      // Check if there's an AI command available
-      if ((editor.commands as any).insertAI) {
-        (editor.commands as any).insertAI(fullPrompt);
-      } else if ((editor.commands as any).ai) {
-        // Try generic ai command
-        (editor.commands as any).ai(fullPrompt);
-      } else {
-        // Fallback: Insert the prompt as content for now
-        // This will help you see what prompt would be sent
-        editor.chain()
-          .focus()
-          .insertContent(`\n[AI Prompt: ${fullPrompt}]\n`)
-          .run();
-          
-        console.log('AI command not found. Available commands:', Object.keys(editor.commands));
-      }
-    } catch (error) {
-      console.error('Error executing AI command:', error);
-      // Fallback
-      editor.chain()
-        .focus()
-        .insertContent(`\n[AI Error: ${fullPrompt}]\n`)
-        .run();
+  // If aiAgentProvider is available, you could add a message or different behavior
+  useEffect(() => {
+    if (aiAgentProvider) {
+      console.log('AI Agent Provider is available for future enhancements');
     }
-    
-    onClose?.();
-  };
-
-  const handleCustomPrompt = () => {
-    if (customPrompt.trim()) {
-      const { from, to } = editor.state.selection;
-      const selectedText = editor.state.doc.textBetween(from, to);
-      
-      const fullPrompt = selectedText 
-        ? `${customPrompt} the following text: ${selectedText}`
-        : customPrompt;
-      
-      try {
-        if ((editor.commands as any).insertAI) {
-          (editor.commands as any).insertAI(fullPrompt);
-        } else if ((editor.commands as any).ai) {
-          (editor.commands as any).ai(fullPrompt);
-        } else {
-          editor.chain()
-            .focus()
-            .insertContent(`\n[Custom AI: ${fullPrompt}]\n`)
-            .run();
-        }
-      } catch (error) {
-        console.error('Error with custom prompt:', error);
-      }
-      
-      onClose?.();
-    }
-  };
+  }, [aiAgentProvider]);
 
   return (
-    <div
-      ref={menuRef}
-      className="absolute z-50 mt-2 w-96 rounded-lg bg-white shadow-lg ring-1 ring-gray-200 overflow-hidden"
-    >
-      {showCustomPrompt ? (
-        // Custom prompt input
-        <div className="p-4">
-          <div className="mb-3">
-            <button
-              onClick={() => {
-                setShowCustomPrompt(false);
-                setCustomPrompt('');
-              }}
-              className="text-sm text-[#8a7fae] hover:underline"
-            >
-              ← Back to commands
-            </button>
-          </div>
-          <div className="space-y-3">
-            <input
-              ref={customPromptRef}
-              type="text"
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && customPrompt.trim()) {
-                  handleCustomPrompt();
-                }
-              }}
-              placeholder="Enter your custom instruction..."
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8a7fae] focus:border-transparent"
-            />
-            <button
-              onClick={handleCustomPrompt}
-              disabled={!customPrompt.trim()}
-              className={classNames(
-                'w-full px-4 py-2 text-sm font-medium rounded-md transition-colors',
-                customPrompt.trim()
-                  ? 'bg-[#8a7fae] text-white hover:bg-[#7a6f9e]'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              )}
-            >
-              Apply Custom Instruction
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Search */}
-          <div className="p-3 border-b border-gray-100">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search AI actions..."
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8a7fae] focus:border-transparent"
-            />
-          </div>
-
-          {/* Categories */}
-          {!selectedCategory && categories.length > 1 && (
-            <div className="p-2 border-b border-gray-100">
-              <div className="flex flex-wrap gap-1">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className="px-3 py-1 text-xs font-medium text-[#44474F] bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
+    <div ref={menuRef} className="ai-agent-menu bg-white rounded-lg shadow-xl border border-gray-200 p-2 min-w-[300px] max-h-[400px] overflow-y-auto">
+      <div className="flex items-center justify-between px-2 py-1 mb-1">
+        <span className="text-xs font-medium text-gray-500 uppercase">Insert</span>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+      {menuItems.map((item, index) => {
+        const Icon = item.icon;
+        return (
+          <button
+            key={index}
+            onClick={item.action}
+            onMouseEnter={() => setSelectedIndex(index)}
+            className={`w-full text-left px-3 py-2 rounded-md flex items-start gap-3 transition-colors ${
+              selectedIndex === index 
+                ? 'bg-blue-50 text-blue-900' 
+                : 'hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="font-medium text-sm">{item.label}</div>
+              <div className="text-xs text-gray-500">{item.description}</div>
             </div>
-          )}
-
-          {/* Custom Prompt Option */}
-          <div className="p-2 border-b border-gray-100">
-            <button
-              onClick={() => setShowCustomPrompt(true)}
-              className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-[#8a7fae]">
-                  <SparklesIcon className="h-4 w-4" />
-                </span>
-                <div>
-                  <p className="text-sm font-medium text-[#2E4A3F]">
-                    Custom instruction
-                  </p>
-                  <p className="text-xs text-[#44474F]">
-                    Enter your own AI instruction
-                  </p>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Prompts List */}
-          <div className="max-h-64 overflow-y-auto">
-            {selectedCategory && (
-              <div className="px-3 py-2 border-b border-gray-100">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className="text-sm text-[#8a7fae] hover:underline"
-                >
-                  ← Back to all
-                </button>
-              </div>
-            )}
-            
-            {promptsByCategory.length === 0 ? (
-              <div className="p-4 text-center text-sm text-gray-500">
-                No AI actions found
-              </div>
-            ) : (
-              <div className="p-2">
-                {promptsByCategory.map((prompt) => (
-                  <button
-                    key={prompt.label}
-                    onClick={() => handlePromptSelect(prompt)}
-                    className={classNames(
-                      'w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 transition-colors',
-                      'group'
-                    )}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <span className="mt-0.5 text-[#8a7fae]">{getIcon(prompt.icon)}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#2E4A3F]">
-                          {prompt.label}
-                        </p>
-                        <p className="text-xs text-[#44474F] mt-0.5">
-                          {prompt.description}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
+          </button>
+        );
+      })}
+      
+      {/* Show a hint about AI features being in the chat */}
+      {aiAgentProvider && (
+        <div className="mt-2 pt-2 border-t border-gray-200 px-3 py-2">
+          <p className="text-xs text-gray-500">
+            💡 Use the AI Assistant chat for letter generation
+          </p>
+        </div>
       )}
     </div>
   );

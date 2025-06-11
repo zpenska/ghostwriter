@@ -1,42 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/16/solid';
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
-import TemplateEditor from '@/components/template-builder/TemplateEditor';
+import TemplateEditorCloud from '@/components/template-builder/TemplateEditorCloud';
 import VariablePanel from '@/components/template-builder/VariablePanel';
 import AiAgentChat from '@/components/template-builder/AiAgentChat';
 import { Editor } from '@tiptap/react';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { classNames } from '@/lib/utils/cn';
-import { createAiAgentProvider } from '@/lib/tiptap/ai-config';
 
-// Define the variable structure for context
-const variableGroups = [
+// Sample variable sets for the healthcare context
+const variableSets = [
   {
-    name: 'Member',
+    category: 'Member Information',
     variables: [
-      { id: 'member-name', name: 'MemberName', type: 'Text', description: 'Full name of the member' },
-      { id: 'member-id', name: 'MemberID', type: 'ID', description: 'Unique member identifier' },
-      { id: 'member-dob', name: 'DateOfBirth', type: 'Date', description: 'Member date of birth' },
-    ],
+      { name: 'member_name', label: 'Member Name', value: 'John Doe' },
+      { name: 'member_id', label: 'Member ID', value: 'M123456' },
+      { name: 'member_dob', label: 'Date of Birth', value: '01/15/1980' },
+      { name: 'member_address', label: 'Address', value: '123 Main St, City, ST 12345' }
+    ]
   },
   {
-    name: 'Provider',
+    category: 'Provider Details',
     variables: [
-      { id: 'provider-name', name: 'ProviderName', type: 'Text', description: 'Healthcare provider name' },
-      { id: 'provider-npi', name: 'ProviderNPI', type: 'ID', description: 'National Provider Identifier' },
-      { id: 'provider-specialty', name: 'Specialty', type: 'Text', description: 'Provider specialty' },
-    ],
+      { name: 'provider_name', label: 'Provider Name', value: 'Dr. Sarah Smith' },
+      { name: 'provider_npi', label: 'NPI', value: '1234567890' },
+      { name: 'facility_name', label: 'Facility', value: 'City Medical Center' }
+    ]
   },
   {
-    name: 'Service',
+    category: 'Clinical Information',
     variables: [
-      { id: 'service-date', name: 'ServiceDate', type: 'Date', description: 'Date of service' },
-      { id: 'service-code', name: 'ServiceCode', type: 'Code', description: 'Service procedure code' },
-      { id: 'diagnosis-code', name: 'DiagnosisCode', type: 'Code', description: 'Diagnosis code' },
-    ],
-  },
+      { name: 'diagnosis_code', label: 'Diagnosis Code', value: 'E11.9' },
+      { name: 'diagnosis_desc', label: 'Diagnosis Description', value: 'Type 2 diabetes mellitus' },
+      { name: 'procedure_code', label: 'Procedure Code', value: '99213' },
+      { name: 'service_date', label: 'Service Date', value: '03/15/2024' }
+    ]
+  }
 ];
 
 export default function TemplateBuilderPage() {
@@ -44,35 +45,14 @@ export default function TemplateBuilderPage() {
   const [showAiChat, setShowAiChat] = useState(false);
   const [variablePanelCollapsed, setVariablePanelCollapsed] = useState(false);
   const [editorRef, setEditorRef] = useState<Editor | null>(null);
-  const [aiAgentProvider, setAiAgentProvider] = useState<any>(null);
 
   const tabs = ['Builder', 'Logic', 'Properties', 'Preview'];
 
-  // Initialize AI Agent Provider at the page level with context about variables
-  useEffect(() => {
-    let mounted = true;
-    
-    const initializeProvider = async () => {
-      try {
-        const provider = await createAiAgentProvider();
-        if (provider && mounted) {
-          setAiAgentProvider(provider);
-          console.log('AI Agent Provider initialized');
-        }
-      } catch (error) {
-        console.error('Failed to initialize AI Agent Provider:', error);
-      }
-    };
-    
-    initializeProvider();
-    
-    return () => {
-      mounted = false;
-      if (aiAgentProvider && typeof (aiAgentProvider as any).destroy === 'function') {
-        (aiAgentProvider as any).destroy();
-      }
-    };
-  }, []);
+  // Generate a unique document name for this session (or use a saved one)
+  const [documentName] = useState(() => {
+    // In production, you'd load this from your database
+    return `template-${Date.now()}`;
+  });
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -184,9 +164,11 @@ export default function TemplateBuilderPage() {
               )}>
                 {activeTab === 'Builder' && (
                   <div className="h-full">
-                    <TemplateEditor 
+                    <TemplateEditorCloud 
                       onEditorReady={setEditorRef}
-                      aiAgentProvider={aiAgentProvider}
+                      documentName={documentName}
+                      userName="Clinical User"
+                      userId="user-123"
                     />
                   </div>
                 )}
@@ -223,21 +205,13 @@ export default function TemplateBuilderPage() {
               </div>
 
               {/* AI Chat Panel */}
-              {showAiChat && (
+              {showAiChat && editorRef && (
                 <div className="w-96 h-full">
                   <AiAgentChat 
+                    editor={editorRef}
+                    isOpen={showAiChat}
                     onClose={() => setShowAiChat(false)}
-                    onInsertText={(text) => {
-                      if (editorRef) {
-                        editorRef.chain().focus().insertContent(text).run();
-                      }
-                    }}
-                    selectedText={editorRef?.state.doc.textBetween(
-                      editorRef.state.selection.from,
-                      editorRef.state.selection.to
-                    )}
-                    aiAgentProvider={aiAgentProvider}
-                    availableVariables={variableGroups}
+                    variables={variableSets}
                   />
                 </div>
               )}
