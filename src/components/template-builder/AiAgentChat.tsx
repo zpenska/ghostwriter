@@ -46,7 +46,7 @@ export default function AiAgentChat({
 
   // Subscribe to AI Agent state changes
   useEffect(() => {
-    if (!aiAgentProvider) return;
+    if (!aiAgentProvider || typeof aiAgentProvider.on !== 'function') return;
 
     const handleStateChange = (newState: any) => {
       console.log('AI Agent state:', newState);
@@ -83,8 +83,10 @@ export default function AiAgentChat({
     }
 
     return () => {
-      aiAgentProvider.off('stateChange', handleStateChange);
-      aiAgentProvider.off('loadingError', handleError);
+      if (typeof aiAgentProvider.off === 'function') {
+        aiAgentProvider.off('stateChange', handleStateChange);
+        aiAgentProvider.off('loadingError', handleError);
+      }
     };
   }, [aiAgentProvider]);
 

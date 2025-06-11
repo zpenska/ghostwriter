@@ -52,32 +52,32 @@ export default function TemplateEditor({ onEditorReady, aiAgentProvider: externa
 
   // Initialize AI Agent Provider if not provided externally
   useEffect(() => {
-    if (!externalProvider) {
-      const provider = createAiAgentProvider();
-      if (provider) {
-        setInternalAiAgentProvider(provider);
-
+    if (!externalProvider && aiAgentProvider) {
+      // Only set up listeners if provider has the methods
+      if (typeof aiAgentProvider.on === 'function') {
         // Subscribe to state changes
-        provider.on('stateChange', (newState: any) => {
+        const handleStateChange = (newState: any) => {
           console.log('AI Agent state changed:', newState);
           setIsAiLoading(newState.status === 'loading');
-        });
+        };
 
-        // Subscribe to loading errors
-        provider.on('loadingError', (error: any) => {
+        const handleError = (error: any) => {
           console.error('AI Agent error:', error);
           setIsAiLoading(false);
-        });
+        };
+
+        aiAgentProvider.on('stateChange', handleStateChange);
+        aiAgentProvider.on('loadingError', handleError);
+
+        return () => {
+          if (typeof aiAgentProvider.off === 'function') {
+            aiAgentProvider.off('stateChange', handleStateChange);
+            aiAgentProvider.off('loadingError', handleError);
+          }
+        };
       }
     }
-
-    return () => {
-      // The provider might not have a destroy method, so check first
-      if (internalAiAgentProvider && typeof (internalAiAgentProvider as any).destroy === 'function') {
-        (internalAiAgentProvider as any).destroy();
-      }
-    };
-  }, [externalProvider]);
+  }, [externalProvider, aiAgentProvider]);
 
   // Initialize IndexedDB persistence for local versioning
   useEffect(() => {

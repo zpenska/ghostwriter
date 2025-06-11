@@ -1,63 +1,27 @@
-// src/app/api/tiptap-auth/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+// src/app/api/tiptap-jwt/route.ts
+import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { TIPTAP_CLOUD_CONFIG } from '@/lib/tiptap/cloud-config';
 
-export async function POST(request: NextRequest) {
+export async function GET() {
   try {
-    const { userId, userName, documentId } = await request.json();
-
-    if (!userId || !userName) {
-      return NextResponse.json(
-        { error: 'Missing userId or userName' },
-        { status: 400 }
-      );
-    }
-
-    // Generate JWT for document access using your app secret
-    const documentToken = jwt.sign(
+    // Your Tiptap app secret (keep this secure - use environment variables in production)
+    const appSecret = process.env.TIPTAP_APP_SECRET || 'd796d28c7388b661bd27c84a73a8b2aa2f5bb55d5d26b21f096348391304807a';
+    
+    // Generate JWT token
+    const token = jwt.sign(
       {
-        aud: TIPTAP_CLOUD_CONFIG.appId,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
-        sub: userId,
-        context: {
-          user: {
-            id: userId,
-            name: userName,
-          },
-          document: {
-            id: documentId || 'default',
-            access: 'write',
-          },
-        },
+        // Add any custom claims here if needed
       },
-      TIPTAP_CLOUD_CONFIG.appSecret,
-      { algorithm: 'HS256' }
+      appSecret,
+      {
+        algorithm: 'HS256',
+        expiresIn: '24h', // Token expires in 24 hours
+      }
     );
 
-    // Generate JWT for AI features
-    const aiToken = jwt.sign(
-      {
-        aud: TIPTAP_CLOUD_CONFIG.aiAppId,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-        sub: userId,
-      },
-      TIPTAP_CLOUD_CONFIG.aiSecret,
-      { algorithm: 'HS256' }
-    );
-
-    return NextResponse.json({
-      documentToken,
-      aiToken,
-      expiresIn: 86400, // 24 hours
-    });
+    return NextResponse.json({ token });
   } catch (error) {
-    console.error('JWT generation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate tokens' },
-      { status: 500 }
-    );
+    console.error('Error generating JWT:', error);
+    return NextResponse.json({ error: 'Failed to generate token' }, { status: 500 });
   }
 }

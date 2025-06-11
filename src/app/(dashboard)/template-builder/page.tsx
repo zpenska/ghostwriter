@@ -50,17 +50,26 @@ export default function TemplateBuilderPage() {
 
   // Initialize AI Agent Provider at the page level with context about variables
   useEffect(() => {
-    const provider = createAiAgentProvider();
-    if (provider) {
-      setAiAgentProvider(provider);
-      
-      // The variable context will be passed when the chat is opened
-      console.log('AI Agent Provider initialized');
-    }
+    let mounted = true;
+    
+    const initializeProvider = async () => {
+      try {
+        const provider = await createAiAgentProvider();
+        if (provider && mounted) {
+          setAiAgentProvider(provider);
+          console.log('AI Agent Provider initialized');
+        }
+      } catch (error) {
+        console.error('Failed to initialize AI Agent Provider:', error);
+      }
+    };
+    
+    initializeProvider();
     
     return () => {
-      if (provider && typeof (provider as any).destroy === 'function') {
-        (provider as any).destroy();
+      mounted = false;
+      if (aiAgentProvider && typeof (aiAgentProvider as any).destroy === 'function') {
+        (aiAgentProvider as any).destroy();
       }
     };
   }, []);

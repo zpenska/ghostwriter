@@ -105,6 +105,18 @@ export const healthcarePrompts = [
   },
 ];
 
+// Get JWT token for authentication
+async function getJwtToken() {
+  try {
+    const response = await fetch('/api/tiptap-jwt');
+    const data = await response.json();
+    return data.token;
+  } catch (error) {
+    console.error('Failed to get JWT token:', error);
+    return null;
+  }
+}
+
 // Tiptap AI configuration for AI extension
 export const configureTiptapAI = () => {
   return AI.configure({
@@ -128,13 +140,21 @@ export const configureAiSuggestion = () => {
 };
 
 // Create AI Agent Provider
-export const createAiAgentProvider = () => {
+export const createAiAgentProvider = async () => {
   try {
+    // Get JWT token
+    const token = await getJwtToken();
+    if (!token) {
+      console.error('Failed to get JWT token');
+      return null;
+    }
+
     return new AiAgentProvider({
       appId: 'jkver1dm',
-      token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
+      token: token, // Use the JWT token
+      baseUrl: 'https://api.tiptap.dev/v1', // Correct base URL
       modelName: 'gpt-4o',
-      autoAccept: 'never', // Changed from false to 'never'
+      autoAccept: 'never',
       autoSaveCheckpoints: true,
       onStateChange: (newState: any, previousState: any, context: any) => {
         console.log('AI Agent state changed:', newState);
