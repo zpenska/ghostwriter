@@ -40,3 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .npmrc
+
+node_modules/
+.next/
+.env
+firebase-debug.log
+.DS_Store
+dist/
