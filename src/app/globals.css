@@ -1,0 +1,286 @@
+@import url('https://fonts.googleapis.com/css2?family=Radio+Canada:wght@300;400;500;600;700&display=swap');
+/* @tailwind base; */
+@tailwind base;
+/* @tailwind components; */
+@tailwind components;
+/* @tailwind utilities; */
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 214, 219, 220;
+    --background-end-rgb: 255, 255, 255;
+  /* Drag handle styles */
+  .drag-handle {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+  }
+
+  .drag-handle:hover {
+    background-color: #f3f4f6;
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .ProseMirror:hover .drag-handle,
+  .drag-handle:hover {
+    opacity: 1;
+  }
+
+  /* AI loading states */
+  .ProseMirror .ai-loading {
+    background-color: #f3f4f6;
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.25rem;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
+  }
+
+  /* Emoji picker styles */
+  .tippy-box[data-theme~='emoji'] {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Mathematics styles */
+  .ProseMirror .math-inline {
+    background-color: #f9fafb;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-family: 'JetBrainsMono', monospace;
+  }
+
+  .ProseMirror .math-block {
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+
+  /* Collaboration history styles */
+  .collaboration-history-item {
+    padding: 0.5rem;
+    border-left: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .collaboration-history-item:hover {
+    background-color: #f9fafb;
+    border-left-color: #8a7fae;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --foreground-rgb: 255, 255, 255;
+      --background-start-rgb: 0, 0, 0;
+      --background-end-rgb: 0, 0, 0;
+    }
+  }
+
+  body {
+    font-family: 'Radio Canada', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Drag and drop styles */
+  [data-draggable="true"] {
+    cursor: grab;
+  }
+  
+  [data-draggable="true"]:active {
+    cursor: grabbing;
+  }
+  
+  .dragging {
+    opacity: 0.5;
+  }
+
+  /* Tiptap Editor Styles */
+  .template-editor .ProseMirror {
+    min-height: 600px;
+  }
+
+  .template-editor .ProseMirror:focus {
+    outline: none;
+  }
+
+  /* Table styles */
+  .template-editor table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    width: 100%;
+  }
+
+  .template-editor th,
+  .template-editor td {
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  .template-editor th {
+    background-color: #f9fafb;
+    font-weight: 600;
+  }
+
+  .template-editor tr:hover {
+    background-color: #f9fafb;
+  }
+
+  /* Task list styles */
+  .template-editor ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+  }
+
+  .template-editor ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .template-editor ul[data-type="taskList"] li > label {
+    flex: 0 0 auto;
+    margin-right: 0.5rem;
+    user-select: none;
+  }
+
+  .template-editor ul[data-type="taskList"] li > div {
+    flex: 1 1 auto;
+  }
+
+  /* Collaboration cursor */
+  .collaboration-cursor__caret {
+    border-left: 2px solid;
+    margin-left: -1px;
+    margin-right: -1px;
+    pointer-events: none;
+    position: relative;
+    word-break: normal;
+  }
+
+  .collaboration-cursor__label {
+    border-radius: 3px 3px 3px 0;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    left: -1px;
+    line-height: normal;
+    padding: 0.1rem 0.3rem;
+    position: absolute;
+    top: -1.4em;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  /* Placeholder styles */
+  .template-editor .is-empty::before {
+    color: #9ca3af;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Link styles */
+  .template-editor a {
+    color: #8a7fae;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .template-editor a:hover {
+    color: #7c6fa0;
+  }
+
+  /* Code block styles */
+  .template-editor pre {
+    background: #1e1e1e;
+    border-radius: 0.5rem;
+    color: #d4d4d4;
+    font-family: 'JetBrainsMono', monospace;
+    padding: 0.75rem 1rem;
+  }
+
+  .template-editor code {
+    background: #f3f4f6;
+    border-radius: 0.25rem;
+    color: #374151;
+    font-size: 0.875rem;
+    padding: 0.125rem 0.25rem;
+  }
+
+  /* Drag handle styles */
+  .drag-handle {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+  }
+
+  .drag-handle:hover {
+    background-color: #f3f4f6;
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+
+  .ProseMirror:hover .drag-handle,
+  .drag-handle:hover {
+    opacity: 1;
+  }
+}
+/* Add this to your existing globals.css file */
+
+/* AI Chat Panel Animation */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}

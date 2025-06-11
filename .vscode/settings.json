@@ -1,0 +1,19 @@
+{
+    "css.validate": false,
+    "css.lint.unknownAtRules": "ignore",
+    "scss.validate": false,
+    "scss.lint.unknownAtRules": "ignore",
+    "tailwindCSS.includeLanguages": {
+      "html": "html",
+      "javascript": "javascript",
+      "typescript": "typescript",
+      "javascriptreact": "javascript",
+      "typescriptreact": "javascript"
+    },
+    "editor.quickSuggestions": {
+      "strings": true
+    },
+    "files.associations": {
+      "*.css": "tailwindcss"
+    }
+  }
