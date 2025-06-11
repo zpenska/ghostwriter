@@ -28,23 +28,56 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 import EditorToolbar from './EditorToolbar';
 import AiMenu from './AiMenu';
-import AiAgentMenu from './AiAgentMenu';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { LanguageTool } from '@/lib/tiptap/extensions/languagetool';
+import { configureTiptapAI, configureAiChanges, configureAiSuggestion, createAiAgentProvider, configureAiAgent } from '@/lib/tiptap/ai-config';
 import 'katex/dist/katex.min.css';
 
 interface TemplateEditorProps {
   onEditorReady?: (editor: any) => void;
+  aiAgentProvider?: any; // Pass the provider from parent
 }
 
-export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
+export default function TemplateEditor({ onEditorReady, aiAgentProvider: externalProvider }: TemplateEditorProps) {
   const [showAiChat, setShowAiChat] = useState(false);
-  const [showAiAgentMenu, setShowAiAgentMenu] = useState(false);
-  const [aiMenuPosition, setAiMenuPosition] = useState({ top: 0, left: 0 });
   const [selectedText, setSelectedText] = useState('');
   const [ydoc] = useState(() => new Y.Doc());
   const [snapshotProvider, setSnapshotProvider] = useState<any>(null);
+  const [internalAiAgentProvider, setInternalAiAgentProvider] = useState<any>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // Use external provider if provided, otherwise create internal one
+  const aiAgentProvider = externalProvider || internalAiAgentProvider;
+
+  // Initialize AI Agent Provider if not provided externally
+  useEffect(() => {
+    if (!externalProvider) {
+      const provider = createAiAgentProvider();
+      if (provider) {
+        setInternalAiAgentProvider(provider);
+
+        // Subscribe to state changes
+        provider.on('stateChange', (newState: any) => {
+          console.log('AI Agent state changed:', newState);
+          setIsAiLoading(newState.status === 'loading');
+        });
+
+        // Subscribe to loading errors
+        provider.on('loadingError', (error: any) => {
+          console.error('AI Agent error:', error);
+          setIsAiLoading(false);
+        });
+      }
+    }
+
+    return () => {
+      // The provider might not have a destroy method, so check first
+      if (internalAiAgentProvider && typeof (internalAiAgentProvider as any).destroy === 'function') {
+        (internalAiAgentProvider as any).destroy();
+      }
+    };
+  }, [externalProvider]);
 
   // Initialize IndexedDB persistence for local versioning
   useEffect(() => {
@@ -59,94 +92,109 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
     };
   }, [ydoc]);
 
+  // Build extensions array
+  const extensions = [
+    StarterKit.configure({
+      heading: {
+        levels: [1, 2, 3],
+      },
+      history: false, // We'll use CollaborationHistory
+    }),
+    Placeholder.configure({
+      placeholder: 'Start typing your letter here...',
+      showOnlyWhenEditable: true,
+      emptyEditorClass: 'is-editor-empty',
+    }),
+    Typography,
+    Highlight.configure({
+      multicolor: true,
+      HTMLAttributes: {
+        class: 'highlight',
+      },
+    }),
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+      alignments: ['left', 'center', 'right', 'justify'],
+    }),
+    Underline,
+    CharacterCount.configure({
+      limit: null,
+    }),
+    Mathematics,
+    Table.configure({
+      resizable: true,
+      HTMLAttributes: {
+        class: 'template-table',
+      },
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
+    FileHandler.configure({
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
+      onDrop: (currentEditor: any, files: File[], pos: number) => {
+        files.forEach((file: File) => {
+          const fileReader = new FileReader();
+          fileReader.readAsDataURL(file);
+          fileReader.onload = () => {
+            currentEditor.chain().insertContentAt(pos, {
+              type: 'image',
+              attrs: {
+                src: fileReader.result,
+              },
+            }).focus().run();
+          };
+        });
+      },
+    } as any),
+    Emoji.configure({
+      enableEmoticons: true,
+      emojis: gitHubEmojis,
+    }),
+    UniqueID.configure({
+      attributeName: 'data-unique-id',
+      types: ['paragraph', 'heading', 'listItem'],
+    }),
+    CollaborationHistory.configure({
+      provider: null as any,
+      maxVersions: 100,
+    } as any),
+    DragHandle.configure({
+      render: () => {
+        const element = document.createElement('div');
+        element.classList.add('drag-handle');
+        element.innerHTML = '⋮⋮';
+        return element;
+      },
+    }),
+    Snapshot,
+    Details.configure({
+      persist: true,
+      HTMLAttributes: {
+        class: 'details',
+      },
+    }),
+    DetailsSummary,
+    DetailsContent,
+    InvisibleCharacters.configure({
+      visible: false, // Can be toggled via toolbar
+    }),
+    // Add Tiptap AI extensions
+    configureTiptapAI(),
+  ]; // <- This closing bracket was missing
+
+  // Only add these if they return valid extensions
+  const aiChanges = configureAiChanges();
+  if (aiChanges) extensions.push(aiChanges as any);
+
+  const aiSuggestion = configureAiSuggestion();
+  if (aiSuggestion) extensions.push(aiSuggestion as any);
+
+  const aiAgent = aiAgentProvider ? configureAiAgent(aiAgentProvider) : null;
+  if (aiAgent) extensions.push(aiAgent as any);
+
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3],
-        },
-        history: false, // We'll use CollaborationHistory
-      }),
-      Placeholder.configure({
-        placeholder: 'Start typing your letter here...',
-        showOnlyWhenEditable: true,
-        emptyEditorClass: 'is-editor-empty',
-      }),
-      Typography,
-      Highlight.configure({
-        multicolor: true,
-        HTMLAttributes: {
-          class: 'highlight',
-        },
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right', 'justify'],
-      }),
-      Underline,
-      CharacterCount.configure({
-        limit: null,
-      }),
-      Mathematics,
-      Table.configure({
-        resizable: true,
-        HTMLAttributes: {
-          class: 'template-table',
-        },
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      FileHandler.configure({
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
-        onDrop: (currentEditor: any, files: File[], pos: number) => {
-          files.forEach((file: File) => {
-            const fileReader = new FileReader();
-            fileReader.readAsDataURL(file);
-            fileReader.onload = () => {
-              currentEditor.chain().insertContentAt(pos, {
-                type: 'image',
-                attrs: {
-                  src: fileReader.result,
-                },
-              }).focus().run();
-            };
-          });
-        },
-      } as any),
-      Emoji.configure({
-        enableEmoticons: true,
-        emojis: gitHubEmojis,
-      }),
-      UniqueID.configure({
-        attributeName: 'data-unique-id',
-        types: ['paragraph', 'heading', 'listItem'],
-      }),
-      CollaborationHistory.configure({
-        provider: null, // We'll use local storage for now, can switch to cloud provider later
-        maxVersions: 100,
-      }),
-      DragHandle.configure({
-        render: () => {
-          const element = document.createElement('div');
-          element.classList.add('drag-handle');
-          element.innerHTML = '⋮⋮';
-          return element;
-        },
-      }),
-      Snapshot,
-      Details.configure({
-        persist: true,
-        HTMLAttributes: {
-          class: 'details',
-        },
-      }),
-      DetailsSummary,
-      DetailsContent,
-      InvisibleCharacters.configure({
-        visible: false, // Can be toggled via toolbar
-      }),
-    ],
+    extensions: extensions.filter(Boolean) as any[], // Use 'as any[]' to bypass strict type checking
     content: '',
     autofocus: true,
     editable: true,
@@ -159,22 +207,9 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       // Set up snapshot provider
       const provider = editor.storage.snapshot;
       setSnapshotProvider(provider);
-    },
-    onUpdate: ({ editor }) => {
-      // Check for "/" to show AI agent menu
-      const { from, to } = editor.state.selection;
-      const text = editor.state.doc.textBetween(from - 1, from);
       
-      if (text === '/') {
-        const coords = editor.view.coordsAtPos(from);
-        const editorRect = editorRef.current?.getBoundingClientRect();
-        if (editorRect && coords) {
-          setAiMenuPosition({
-            top: coords.top - editorRect.top + 20,
-            left: coords.left - editorRect.left,
-          });
-          setShowAiAgentMenu(true);
-        }
+      if (onEditorReady) {
+        onEditorReady(editor);
       }
     },
     onSelectionUpdate: ({ editor }) => {
@@ -182,14 +217,7 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       const text = editor.state.doc.textBetween(from, to);
       setSelectedText(text);
     },
-  });
-
-  // Callback for editor ready
-  useEffect(() => {
-    if (editor && onEditorReady) {
-      onEditorReady(editor);
-    }
-  }, [editor, onEditorReady]);
+  }, [aiAgentProvider]);
 
   const takeSnapshot = useCallback(() => {
     if (!editor) return;
@@ -256,23 +284,11 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       <div ref={editorRef} className="flex-1 overflow-y-auto relative bg-white">
         <EditorContent editor={editor} className="template-editor h-full" />
         
-        {/* AI Agent Menu */}
-        {showAiAgentMenu && (
-          <div 
-            style={{
-              position: 'absolute',
-              top: aiMenuPosition.top,
-              left: aiMenuPosition.left,
-            }}
-          >
-            <AiAgentMenu 
-              editor={editor}
-              onClose={() => {
-                setShowAiAgentMenu(false);
-                // Remove the "/" from the editor
-                editor.chain().deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.from }).focus().run();
-              }}
-            />
+        {/* AI Loading Indicator */}
+        {isAiLoading && (
+          <div className="absolute bottom-4 right-4 bg-blue-100 text-blue-700 px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+            <span>AI is thinking...</span>
           </div>
         )}
       </div>

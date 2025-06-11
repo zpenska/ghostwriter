@@ -1,3 +1,8 @@
+// src/lib/tiptap/ai-config.ts
+import AI from '@tiptap-pro/extension-ai';
+import AiAgent from '@tiptap-pro/extension-ai-agent';
+import { AiAgentProvider } from '@tiptap-pro/extension-ai-agent';
+
 // Healthcare-specific AI prompts for Ghostwriter
 export const healthcarePrompts = [
   {
@@ -101,8 +106,6 @@ export const healthcarePrompts = [
 ];
 
 // Tiptap AI configuration for AI extension
-import AI from '@tiptap-pro/extension-ai';
-
 export const configureTiptapAI = () => {
   return AI.configure({
     appId: 'jkver1dm',
@@ -110,4 +113,47 @@ export const configureTiptapAI = () => {
     baseUrl: 'https://api.tiptap.dev/v1',
     autocompletion: true,
   } as any);
+};
+
+// For now, let's just export placeholder functions for the AI extensions
+// that aren't working with the current version
+export const configureAiChanges = () => {
+  // Placeholder - the extension might not support these options
+  return null;
+};
+
+export const configureAiSuggestion = () => {
+  // Placeholder - the extension might not support these options
+  return null;
+};
+
+// Create AI Agent Provider
+export const createAiAgentProvider = () => {
+  try {
+    return new AiAgentProvider({
+      appId: 'jkver1dm',
+      token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
+      modelName: 'gpt-4o',
+      autoAccept: 'never', // Changed from false to 'never'
+      autoSaveCheckpoints: true,
+      onStateChange: (newState: any, previousState: any, context: any) => {
+        console.log('AI Agent state changed:', newState);
+      },
+      onLoadingError: (error: any, context: any) => {
+        console.error('AI Agent error:', error);
+      },
+    });
+  } catch (error) {
+    console.error('Failed to create AI Agent Provider:', error);
+    return null;
+  }
+};
+
+// Configure AI Agent Extension
+export const configureAiAgent = (provider: any) => {
+  if (!provider) return null;
+  
+  return AiAgent.configure({
+    provider,
+  });
 };
