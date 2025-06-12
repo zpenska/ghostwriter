@@ -8,13 +8,13 @@ import Highlight from '@tiptap/extension-highlight';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import CharacterCount from '@tiptap/extension-character-count';
+import Link from '@tiptap/extension-link';
 import { Mathematics } from '@tiptap-pro/extension-mathematics';
 import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { Emoji, gitHubEmojis } from '@tiptap-pro/extension-emoji';
-import CollaborationHistory from '@tiptap-pro/extension-collaboration-history';
 import FileHandler from '@tiptap-pro/extension-file-handler';
 import UniqueID from '@tiptap-pro/extension-unique-id';
 import DragHandle from '@tiptap-pro/extension-drag-handle';
@@ -23,13 +23,14 @@ import Details from '@tiptap-pro/extension-details';
 import DetailsSummary from '@tiptap-pro/extension-details-summary';
 import DetailsContent from '@tiptap-pro/extension-details-content';
 import InvisibleCharacters from '@tiptap-pro/extension-invisible-characters';
+import Image from '@tiptap/extension-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 import EditorToolbar from './EditorToolbar';
-import AiMenu from './AiMenu';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { LanguageTool } from '@/lib/tiptap/extensions/languagetool';
+import { configureTiptapAI } from '@/lib/tiptap/ai-config';
 import 'katex/dist/katex.min.css';
 
 interface TemplateEditorProps {
@@ -37,11 +38,7 @@ interface TemplateEditorProps {
 }
 
 export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
-  const [showAiChat, setShowAiChat] = useState(false);
-  const [aiMenuPosition, setAiMenuPosition] = useState({ top: 0, left: 0 });
-  const [selectedText, setSelectedText] = useState('');
   const [ydoc] = useState(() => new Y.Doc());
-  const [snapshotProvider, setSnapshotProvider] = useState<any>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
   // Initialize IndexedDB persistence for local versioning
@@ -63,8 +60,9 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
         heading: {
           levels: [1, 2, 3],
         },
-        history: false, // We'll use CollaborationHistory
+        // history is included by default in StarterKit
       }),
+      configureTiptapAI(), // Standard Tiptap AI extension
       Placeholder.configure({
         placeholder: 'Start typing your letter here...',
         showOnlyWhenEditable: true,
@@ -85,6 +83,12 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       CharacterCount.configure({
         limit: null,
       }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'template-link',
+        },
+      }),
       Mathematics,
       Table.configure({
         resizable: true,
@@ -95,6 +99,13 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       TableRow,
       TableHeader,
       TableCell,
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'template-image',
+        },
+      }),
       FileHandler.configure({
         allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'],
         onDrop: (currentEditor: any, files: File[], pos: number) => {
@@ -120,10 +131,6 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
         attributeName: 'data-unique-id',
         types: ['paragraph', 'heading', 'listItem'],
       }),
-      CollaborationHistory.configure({
-        provider: null, // We'll use local storage for now, can switch to cloud provider later
-        maxVersions: 100,
-      }),
       DragHandle.configure({
         render: () => {
           const element = document.createElement('div');
@@ -142,7 +149,11 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       DetailsSummary,
       DetailsContent,
       InvisibleCharacters.configure({
-        visible: false, // Can be toggled via toolbar
+        visible: false,
+      }),
+      LanguageTool.configure({
+        apiKey: process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY,
+        language: 'en-US',
       }),
     ],
     content: '',
@@ -152,23 +163,6 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
       attributes: {
         class: 'prose prose-sm max-w-none focus:outline-none min-h-[600px] px-8 py-6',
       },
-    },
-    onCreate: ({ editor }) => {
-      // Set up snapshot provider
-      const provider = editor.storage.snapshot;
-      setSnapshotProvider(provider);
-    },
-    onUpdate: ({ editor }) => {
-      // Check for "/" to show AI agent menu
-      const { from, to } = editor.state.selection;
-      const text = editor.state.doc.textBetween(from - 1, from);
-      
-
-    },
-    onSelectionUpdate: ({ editor }) => {
-      const { from, to } = editor.state.selection;
-      const text = editor.state.doc.textBetween(from, to);
-      setSelectedText(text);
     },
   });
 
@@ -182,7 +176,6 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   const takeSnapshot = useCallback(() => {
     if (!editor) return;
     
-    // Use the Snapshot extension
     const content = editor.getHTML();
     const snapshots = JSON.parse(localStorage.getItem('template-snapshots') || '[]');
     snapshots.push({
@@ -200,9 +193,44 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
     if (!editor) return;
     
     try {
-      // Import the spell check service
-      const { spellCheckService } = await import('@/lib/services/spell-check');
-      await spellCheckService.checkEditor(editor);
+      const { from, to } = editor.state.selection;
+      const text = editor.state.doc.textBetween(from, to || editor.state.doc.content.size);
+      
+      if (!text) {
+        alert('Please select some text to check.');
+        return;
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY 
+        ? 'https://api.languagetoolplus.com/v2/check'
+        : 'https://api.languagetool.org/v2/check';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: new URLSearchParams({
+          text: text,
+          language: 'en-US',
+          apiKey: process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY || '',
+          enabledRules: '',
+          disabledRules: 'WHITESPACE_RULE,PUNCTUATION_PARAGRAPH_END',
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.matches && data.matches.length > 0) {
+        const errors = data.matches.map((match: any) => 
+          `• ${match.message} (at position ${match.offset})`
+        ).join('\n');
+        
+        alert(`Grammar/Spelling Issues Found:\n\n${errors}`);
+      } else {
+        alert('No spelling or grammar issues found!');
+      }
     } catch (error) {
       console.error('Spell check error:', error);
       alert('Spell check failed. Please try again.');
@@ -210,14 +238,11 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   }, [editor]);
 
   const checkGrammar = useCallback(() => {
-    // Grammar check uses the same service as spell check
     checkSpelling();
   }, [checkSpelling]);
 
   const showInvisibleCharacters = useCallback(() => {
     if (!editor) return;
-    
-    // Toggle invisible characters
     editor.chain().focus().toggleInvisibleCharacters().run();
   }, [editor]);
 
@@ -235,16 +260,11 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   return (
     <div className="template-editor-container flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-200">
       {/* Toolbar */}
-      <EditorToolbar 
-        editor={editor} 
-        onOpenAiChat={() => setShowAiChat(true)}
-      />
+      <EditorToolbar editor={editor} />
 
       {/* Editor */}
       <div ref={editorRef} className="flex-1 overflow-y-auto relative bg-white">
         <EditorContent editor={editor} className="template-editor h-full" />
-        
- 
       </div>
 
       {/* Footer */}
@@ -288,14 +308,6 @@ export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
           </button>
         </div>
       </div>
-
-      {/* AI Chat Modal */}
-      {showAiChat && (
-        <AiMenu 
-          editor={editor}
-          onClose={() => setShowAiChat(false)}
-        />
-      )}
     </div>
   );
 }

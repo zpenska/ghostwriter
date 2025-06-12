@@ -31,7 +31,6 @@ import InvisibleCharacters from '@tiptap-pro/extension-invisible-characters';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import * as Y from 'yjs';
 import EditorToolbar from './EditorToolbar';
-import AiMenu from './AiMenu';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { TIPTAP_CLOUD_CONFIG } from '@/lib/tiptap/cloud-config';
 import 'katex/dist/katex.min.css';
@@ -55,9 +54,6 @@ export default function TemplateEditorCloud({
   const [tokens, setTokens] = useState<any>(null);
   const [status, setStatus] = useState<string>('Connecting...');
   const [ydoc] = useState(() => new Y.Doc());
-  const [showAiChat, setShowAiChat] = useState(false);
-  const [aiMenuPosition, setAiMenuPosition] = useState({ top: 0, left: 0 });
-  const [selectedText, setSelectedText] = useState('');
   const editorRef = useRef<HTMLDivElement>(null);
 
   // Get authentication tokens
@@ -242,18 +238,6 @@ export default function TemplateEditorCloud({
         onEditorReady(editor);
       }
     },
-    onUpdate: ({ editor }) => {
-      // Check for "/" to show AI agent menu
-      const { from, to } = editor.state.selection;
-      const text = editor.state.doc.textBetween(from - 1, from);
-      
-      
-    },
-    onSelectionUpdate: ({ editor }) => {
-      const { from, to } = editor.state.selection;
-      const text = editor.state.doc.textBetween(from, to);
-      setSelectedText(text);
-    },
   }, [provider, tokens, onEditorReady]);
 
   const takeSnapshot = useCallback(() => {
@@ -277,8 +261,44 @@ export default function TemplateEditorCloud({
     if (!editor) return;
     
     try {
-      const { spellCheckService } = await import('@/lib/services/spell-check');
-      await spellCheckService.checkEditor(editor);
+      const { from, to } = editor.state.selection;
+      const text = editor.state.doc.textBetween(from, to || editor.state.doc.content.size);
+      
+      if (!text) {
+        alert('Please select some text to check.');
+        return;
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY 
+        ? 'https://api.languagetoolplus.com/v2/check'
+        : 'https://api.languagetool.org/v2/check';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: new URLSearchParams({
+          text: text,
+          language: 'en-US',
+          apiKey: process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY || '',
+          enabledRules: '',
+          disabledRules: 'WHITESPACE_RULE,PUNCTUATION_PARAGRAPH_END',
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.matches && data.matches.length > 0) {
+        const errors = data.matches.map((match: any) => 
+          `• ${match.message} (at position ${match.offset})`
+        ).join('\n');
+        
+        alert(`Grammar/Spelling Issues Found:\n\n${errors}`);
+      } else {
+        alert('No spelling or grammar issues found!');
+      }
     } catch (error) {
       console.error('Spell check error:', error);
       alert('Spell check failed. Please try again.');
@@ -307,14 +327,10 @@ export default function TemplateEditorCloud({
 
   return (
     <div className="template-editor-container flex flex-col h-full bg-white rounded-lg shadow-sm">
-      <EditorToolbar 
-        editor={editor} 
-        onOpenAiChat={() => setShowAiChat(true)}
-      />
+      <EditorToolbar editor={editor} />
       
       <div ref={editorRef} className="flex-1 overflow-y-auto relative">
         <EditorContent editor={editor} className="template-editor" />
-        
       </div>
       
       <div className="border-t border-gray-200 px-4 py-2 flex items-center justify-between text-sm text-gray-600">
@@ -344,14 +360,6 @@ export default function TemplateEditorCloud({
           </button>
         </div>
       </div>
-
-      {/* AI Chat Modal */}
-      {showAiChat && (
-        <AiMenu 
-          editor={editor}
-          onClose={() => setShowAiChat(false)}
-        />
-      )}
     </div>
   );
 }

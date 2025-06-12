@@ -1,245 +1,352 @@
 'use client';
 
 import { Editor } from '@tiptap/react';
-import { healthcarePrompts } from '@/lib/tiptap/ai-config';
+import { useState, useRef, useEffect } from 'react';
 import { 
-  FileText, 
-  Users, 
-  Heart, 
-  ShieldCheck, 
-  ClipboardCheck,
-  XCircle,
-  MessageSquare,
-  CheckCircle,
-  File,
-  Plus,
-  Edit,
-  Activity,
-  Hash,
-  Stethoscope
-} from 'lucide-react';
-import { useState } from 'react';
-import { tiptapAI } from '@/lib/services/tiptap-ai-service';
+  SparklesIcon,
+  XMarkIcon,
+  PaperAirplaneIcon,
+  DocumentTextIcon,
+  UsersIcon,
+  HeartIcon,
+  ShieldCheckIcon,
+  XCircleIcon,
+  CheckCircleIcon,
+  PlusIcon,
+  PencilIcon,
+  BeakerIcon,
+  HashtagIcon,
+} from '@heroicons/react/24/outline';
+import { buttonStyles } from '@/lib/utils/button-styles';
+import { classNames } from '@/lib/utils/cn';
+import { healthcarePrompts } from '@/lib/tiptap/ai-config';
 
 interface AiMenuProps {
   editor: Editor;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-// Map icon names to Lucide components
 const iconMap: { [key: string]: any } = {
-  'FileTextIcon': FileText,
-  'UsersIcon': Users,
-  'HeartIcon': Heart,
-  'ShieldCheckIcon': ShieldCheck,
-  'ClipboardCheckIcon': ClipboardCheck,
-  'XCircleIcon': XCircle,
-  'MessageSquareIcon': MessageSquare,
-  'CheckCircleIcon': CheckCircle,
-  'FileIcon': File,
-  'PlusIcon': Plus,
-  'EditIcon': Edit,
-  'ActivityIcon': Activity,
-  'HashIcon': Hash,
-  'SyringeIcon': Stethoscope
+  FileTextIcon: DocumentTextIcon,
+  UsersIcon,
+  HeartIcon,
+  ShieldCheckIcon,
+  XCircleIcon,
+  CheckCircleIcon,
+  FileIcon: DocumentTextIcon,
+  MessageSquareIcon: DocumentTextIcon,
+  PlusIcon,
+  EditIcon: PencilIcon,
+  ActivityIcon: BeakerIcon,
+  HashIcon: HashtagIcon,
+  SyringeIcon: BeakerIcon,
 };
 
 export default function AiMenu({ editor, onClose }: AiMenuProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showChat, setShowChat] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatHistory, setChatHistory] = useState<Array<{ role: string; content: string }>>([]);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Group prompts by category
-  const categories = healthcarePrompts.reduce((acc, prompt) => {
-    if (!acc[prompt.category]) {
-      acc[prompt.category] = [];
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose?.();
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose?.();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [onClose]);
+
+  const handleInsertText = (text: string) => {
+    editor.chain().focus().insertContent(text).run();
+  };
+
+  const { from, to } = editor.state.selection;
+  const selectedText = editor.state.doc.textBetween(from, to);
+
+  const categories = ['All', ...new Set(healthcarePrompts.map(p => p.category))];
+
+  const filteredPrompts = selectedCategory === 'All' 
+    ? healthcarePrompts 
+    : healthcarePrompts.filter(p => p.category === selectedCategory);
+
+  const callTiptapAI = async (prompt: string) => {
+    const response = await fetch('https://api.tiptap.dev/v1/ai/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TIPTAP_AI_SECRET}`,
+      },
+      body: JSON.stringify({
+        appId: process.env.NEXT_PUBLIC_TIPTAP_AI_APP_ID,
+        text: selectedText,
+        instruction: prompt.replace('{selectedText}', selectedText),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('AI request failed');
     }
-    acc[prompt.category].push(prompt);
-    return acc;
-  }, {} as Record<string, typeof healthcarePrompts>);
 
-  const handlePromptClick = async (prompt: typeof healthcarePrompts[0]) => {
-    const { from, to } = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(from, to, ' ');
+    const result = await response.json();
+    return result.text || selectedText;
+  };
 
+  const handlePromptAction = async (prompt: any) => {
+    if (!selectedText && !showChat) {
+      alert('Please select some text first');
+      return;
+    }
+
+    setIsProcessing(true);
     try {
-      // Check if AI extension is properly configured
-      const hasAI = editor.extensionManager.extensions.find(ext => ext.name === 'ai');
-      
-      if (!hasAI) {
-        alert('AI extension is not properly configured. Please check your settings.');
-        onClose();
-        return;
-      }
-
-      // For text operations, we need selected text
-      if (selectedText && selectedText.trim()) {
-        // Use the AI rewrite functionality
-        const promptText = prompt.prompt.replace('{selectedText}', selectedText);
-        
-        // Show loading state
-        editor.chain().focus().setTextSelection({ from, to }).run();
-        editor.chain().focus().deleteSelection().insertContent('✨ AI is processing...').run();
-        
-        // Call TipTap AI service
-        const response = await tiptapAI.rewriteText(selectedText, promptText);
-        
-        if (response.error) {
-          // Revert on error
-          editor.chain().focus().undo().run();
-          alert(`AI Error: ${response.error}`);
-        } else if (response.text) {
-          // Replace with AI response
-          editor.chain().focus().undo().insertContent(response.text).run();
-        }
-      } else {
-        // No text selected - for generation prompts
-        if (prompt.category === 'Templates') {
-          editor.chain().focus().insertContent('✨ Generating template...').run();
-          
-          const templateKey = prompt.label.toLowerCase().replace(/\s+/g, '-');
-          const response = await tiptapAI.generateTemplate(templateKey);
-          
-          if (response.error) {
-            editor.chain().focus().undo().run();
-            alert(`AI Error: ${response.error}`);
-          } else if (response.text) {
-            editor.chain().focus().undo().insertContent(response.text).run();
-          }
-        } else {
-          alert('Please select some text for this operation');
-        }
-      }
-      
-      onClose();
+      const result = await callTiptapAI(prompt.prompt);
+      editor.chain().focus().deleteRange({ from, to }).insertContent(result).run();
+      onClose?.();
     } catch (error) {
-      console.error('AI prompt error:', error);
-      alert('AI feature encountered an error. Please try again.');
-      // Try to clean up any loading state
-      try {
-        editor.chain().focus().undo().run();
-      } catch (e) {
-        // Ignore cleanup errors
-      }
+      console.error('AI action failed:', error);
+      alert('Failed to process request. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  // Helper function to get template content
-  const getTemplateContent = (templateType: string) => {
-    const templates: Record<string, string> = {
-      'Prior Auth': `
-Subject: Prior Authorization Approval - [Member Name] - [Service/Medication]
+  const handleChatSubmit = async () => {
+    if (!chatInput.trim()) return;
 
-Dear [Provider Name],
+    const userMessage = { role: 'user', content: chatInput };
+    setChatHistory([...chatHistory, userMessage]);
+    setChatInput('');
+    setIsProcessing(true);
 
-We are pleased to inform you that the prior authorization request for [Member Name] (Member ID: [Member ID]) has been approved.
-
-Authorization Details:
-- Service/Medication: [Service/Medication Name]
-- Authorization Number: [Auth Number]
-- Effective Date: [Start Date]
-- Expiration Date: [End Date]
-- Approved Units/Visits: [Number]
-
-This authorization is subject to the member's continued eligibility and benefit coverage at the time of service.
-
-If you have any questions, please contact our Provider Services at [Phone Number].
-
-Sincerely,
-[Your Organization]
-`,
-      'Appeal Response': `
-Subject: Appeal Decision - [Member Name] - [Case Number]
-
-Dear [Member/Provider Name],
-
-We have completed our review of your appeal dated [Appeal Date] regarding [Service/Claim].
-
-After careful consideration of all submitted documentation and applicable coverage guidelines, we have determined:
-
-[DECISION: Approved/Partially Approved/Denied]
-
-[Detailed explanation of decision and rationale]
-
-You have the right to request an external review of this decision. Please see the attached appeal rights for more information.
-
-Sincerely,
-[Your Organization]
-`,
-      'Denial Explanation': `
-Subject: Benefit Determination - [Member Name] - [Service]
-
-Dear [Member/Provider Name],
-
-We have reviewed the request for [Service/Treatment] for [Member Name] (Member ID: [Member ID]).
-
-After careful review, we are unable to approve coverage for the requested service at this time.
-
-Reason for Determination:
-[Detailed explanation of denial reason based on medical policy, benefit limitations, or eligibility]
-
-You have the right to appeal this decision. Please see the enclosed appeal rights and procedures.
-
-Sincerely,
-[Your Organization]
-`
-    };
-
-    return templates[templateType] || `\n[Template for ${templateType}]\n`;
+    try {
+      const result = await callTiptapAI(chatInput);
+      const aiMessage = { role: 'assistant', content: result };
+      setChatHistory(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Chat failed:', error);
+      const errorMessage = { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' };
+      setChatHistory(prev => [...prev, errorMessage]);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 w-80 max-h-96 overflow-hidden flex">
-      {/* Categories */}
-      <div className="w-1/3 border-r border-gray-200 bg-gray-50">
-        <div className="p-2">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 py-1">
-            Categories
-          </div>
-          {Object.keys(categories).map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 ${
-                selectedCategory === category ? 'bg-purple-100 text-purple-700' : 'text-gray-700'
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Prompts */}
-      <div className="flex-1 overflow-y-auto">
-        {selectedCategory ? (
-          <div className="p-2">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 py-1">
-              {selectedCategory}
-            </div>
-            {categories[selectedCategory].map((prompt) => {
-              const Icon = iconMap[prompt.icon] || FileText;
-              return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div ref={menuRef} className="w-[800px] max-h-[600px] bg-white rounded-lg shadow-xl">
+        {showChat ? (
+          <div className="flex flex-col h-[600px]">
+            {/* Chat Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <SparklesIcon className="h-6 w-6 text-[#8a7fae]" />
+                <h2 className="text-lg font-semibold text-gray-900">AI Chat</h2>
+              </div>
+              <div className="flex items-center space-x-2">
                 <button
-                  key={prompt.label}
-                  onClick={() => handlePromptClick(prompt)}
-                  className="w-full text-left px-2 py-2 text-sm rounded hover:bg-gray-100 flex items-start gap-2 group"
+                  onClick={() => setShowChat(false)}
+                  className={buttonStyles.text}
                 >
-                  <Icon className="w-4 h-4 text-gray-400 group-hover:text-purple-600 mt-0.5" />
-                  <div>
-                    <div className="font-medium text-gray-700 group-hover:text-purple-700">
-                      {prompt.label}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {prompt.description}
-                    </div>
-                  </div>
+                  Back
                 </button>
-              );
-            })}
+                <button
+                  onClick={onClose}
+                  className={buttonStyles.icon}
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {chatHistory.length === 0 && (
+                <div className="text-center text-gray-500">
+                  Start a conversation with the AI assistant
+                </div>
+              )}
+              {chatHistory.map((message, index) => (
+                <div
+                  key={index}
+                  className={classNames(
+                    'mb-4 p-3 rounded-lg',
+                    message.role === 'user' 
+                      ? 'bg-purple-50 ml-auto max-w-[80%]' 
+                      : 'bg-gray-50 mr-auto max-w-[80%]'
+                  )}
+                >
+                  <p className="text-sm">{message.content}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleChatSubmit()}
+                  placeholder="Type your message..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8a7fae]"
+                  disabled={isProcessing}
+                />
+                <button
+                  onClick={handleChatSubmit}
+                  disabled={isProcessing || !chatInput.trim()}
+                  className={classNames(
+                    buttonStyles.purple,
+                    'px-4',
+                    (isProcessing || !chatInput.trim()) && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  <PaperAirplaneIcon className="h-4 w-4" />
+                </button>
+              </div>
+              {selectedText && (
+                <button
+                  onClick={() => handleInsertText(chatHistory[chatHistory.length - 1]?.content || '')}
+                  disabled={!chatHistory.length || chatHistory[chatHistory.length - 1]?.role !== 'assistant'}
+                  className={classNames(
+                    buttonStyles.text,
+                    'mt-2 text-sm',
+                    (!chatHistory.length || chatHistory[chatHistory.length - 1]?.role !== 'assistant') && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  Insert last response into editor
+                </button>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="p-4 text-center text-sm text-gray-500">
-            Select a category to view AI prompts
-          </div>
+          <>
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <SparklesIcon className="h-6 w-6 text-[#8a7fae]" />
+                <h2 className="text-lg font-semibold text-gray-900">AI Assistant</h2>
+              </div>
+              <button
+                onClick={onClose}
+                className={buttonStyles.icon}
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Category Tabs */}
+            <div className="px-6 py-3 border-b border-gray-200">
+              <div className="flex space-x-2">
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={classNames(
+                      'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                      selectedCategory === category
+                        ? 'bg-[#8a7fae] text-white'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    )}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 max-h-[400px] overflow-y-auto">
+              {selectedText ? (
+                <>
+                  <div className="mb-4 p-3 bg-gray-50 rounded-md">
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Selected text:</span> "{selectedText.substring(0, 100)}
+                      {selectedText.length > 100 ? '...' : ''}"
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {filteredPrompts.map((prompt) => {
+                      const Icon = iconMap[prompt.icon] || DocumentTextIcon;
+                      return (
+                        <button
+                          key={prompt.label}
+                          onClick={() => handlePromptAction(prompt)}
+                          disabled={isProcessing}
+                          className={classNames(
+                            'flex items-start p-3 rounded-lg border border-gray-200',
+                            'hover:border-[#8a7fae] hover:bg-purple-50 transition-colors',
+                            'text-left group',
+                            isProcessing && 'opacity-50 cursor-not-allowed'
+                          )}
+                        >
+                          <Icon className="h-5 w-5 text-[#8a7fae] mt-0.5 mr-3 flex-shrink-0" />
+                          <div>
+                            <h4 className="font-medium text-gray-900 group-hover:text-[#8a7fae]">
+                              {prompt.label}
+                            </h4>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                              {prompt.description}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <button
+                      onClick={() => setShowChat(true)}
+                      className={classNames(
+                        buttonStyles.purple,
+                        'w-full flex items-center justify-center'
+                      )}
+                    >
+                      <PaperAirplaneIcon className="h-4 w-4 mr-2" />
+                      Open AI Chat for Custom Requests
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Text Selected
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Select some text in the editor to use AI actions, or open the chat for custom requests.
+                  </p>
+                  <button
+                    onClick={() => setShowChat(true)}
+                    className={classNames(
+                      buttonStyles.purple,
+                      'inline-flex items-center'
+                    )}
+                  >
+                    <PaperAirplaneIcon className="h-4 w-4 mr-2" />
+                    Open AI Chat
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

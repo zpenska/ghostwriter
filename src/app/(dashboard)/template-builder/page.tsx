@@ -75,13 +75,6 @@ export default function TemplateBuilderPage() {
               </h1>
               <div className="flex space-x-3">
                 <button
-                  onClick={() => setShowAiChat(!showAiChat)}
-                  type="button"
-                  className={showAiChat ? buttonStyles.purple : buttonStyles.secondary}
-                >
-                  AI Assistant
-                </button>
-                <button
                   type="button"
                   className={buttonStyles.secondary}
                 >
@@ -92,6 +85,18 @@ export default function TemplateBuilderPage() {
                   className={buttonStyles.primary}
                 >
                   Save & Close
+                </button>
+                <button
+                  type="button"
+                  className={classNames(
+                    'bg-[#8a7fae] hover:bg-[#7a6f9e] text-white',
+                    'px-4 py-2 rounded-md font-medium text-sm',
+                    'transition-colors duration-200',
+                    'focus:outline-none focus:ring-2 focus:ring-[#8a7fae] focus:ring-offset-2',
+                    'shadow-sm hover:shadow-md'
+                  )}
+                >
+                  Publish Template
                 </button>
               </div>
             </div>
@@ -121,10 +126,7 @@ export default function TemplateBuilderPage() {
           <div className="flex-1 p-6 overflow-hidden bg-gray-50">
             <div className="h-full flex gap-6">
               {/* Editor Area */}
-              <div className={classNames(
-                "flex-1 bg-white rounded-lg shadow-sm",
-                showAiChat ? "mr-0" : ""
-              )}>
+              <div className="flex-1 bg-white rounded-lg shadow-sm">
                 {activeTab === 'Builder' && (
                   <div className="h-full">
                     <TemplateEditor onEditorReady={setEditorRef} />
@@ -161,8 +163,6 @@ export default function TemplateBuilderPage() {
                   </div>
                 )}
               </div>
-
-              
             </div>
           </div>
         </div>

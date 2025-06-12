@@ -105,9 +105,12 @@ import AI from '@tiptap-pro/extension-ai';
 
 export const configureTiptapAI = () => {
   return AI.configure({
-    appId: 'jkver1dm',
-    token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
+    appId: process.env.NEXT_PUBLIC_TIPTAP_AI_APP_ID || 'jkver1dm',
+    token: process.env.NEXT_PUBLIC_TIPTAP_AI_SECRET || 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
     baseUrl: 'https://api.tiptap.dev/v1',
     autocompletion: true,
+    onError: (error: any) => {
+      console.error('Tiptap AI Error:', error);
+    },
   } as any);
 };

@@ -29,13 +29,13 @@ import {
 import { useState, useRef, useEffect } from 'react';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { classNames } from '@/lib/utils/cn';
+import AiToolbarButton from './AiToolbarButton';
 
 interface EditorToolbarProps {
   editor: Editor | null;
-  onOpenAiChat?: () => void;
 }
 
-export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarProps) {
+export default function EditorToolbar({ editor }: EditorToolbarProps) {
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
   const highlightMenuRef = useRef<HTMLDivElement>(null);
@@ -66,6 +66,29 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
     { name: 'Yellow', color: '#d4c57f' },
     { name: 'Clear', color: 'transparent' },
   ];
+
+  const addImage = () => {
+    const url = window.prompt('Enter image URL:');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  };
+
+  const setLink = () => {
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('Enter URL:', previousUrl);
+
+    if (url === null) {
+      return;
+    }
+
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  };
 
   return (
     <div className="border-b border-gray-200 bg-white p-2">
@@ -249,7 +272,28 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
           </button>
         </div>
 
+        <div className="w-px h-6 bg-gray-300" />
 
+        {/* Media */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={addImage}
+            className={buttonStyles.toolbar}
+            title="Insert Image"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={setLink}
+            className={classNames(
+              buttonStyles.toolbar,
+              editor.isActive('link') ? 'bg-gray-200' : ''
+            )}
+            title="Insert Link"
+          >
+            <LinkIcon className="h-4 w-4" />
+          </button>
+        </div>
 
         <div className="w-px h-6 bg-gray-300" />
 
@@ -377,8 +421,8 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
             onClick={() => {
               try {
                 // Try to use undo if available
-                if (editor.commands.undo) {
-                  editor.commands.undo();
+                if (editor.can().undo()) {
+                  editor.chain().focus().undo().run();
                 } else {
                   console.log('Undo not available - using CollaborationHistory');
                 }
@@ -386,8 +430,11 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
                 console.log('Undo error:', e);
               }
             }}
-            disabled={false}
-            className={buttonStyles.toolbar}
+            disabled={!editor.can().undo()}
+            className={classNames(
+              buttonStyles.toolbar,
+              !editor.can().undo() && 'opacity-50 cursor-not-allowed'
+            )}
             title="Undo (Ctrl/Cmd+Z)"
           >
             <UndoIcon className="h-4 w-4" />
@@ -396,8 +443,8 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
             onClick={() => {
               try {
                 // Try to use redo if available
-                if (editor.commands.redo) {
-                  editor.commands.redo();
+                if (editor.can().redo()) {
+                  editor.chain().focus().redo().run();
                 } else {
                   console.log('Redo not available - using CollaborationHistory');
                 }
@@ -405,8 +452,11 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
                 console.log('Redo error:', e);
               }
             }}
-            disabled={false}
-            className={buttonStyles.toolbar}
+            disabled={!editor.can().redo()}
+            className={classNames(
+              buttonStyles.toolbar,
+              !editor.can().redo() && 'opacity-50 cursor-not-allowed'
+            )}
             title="Redo (Ctrl/Cmd+Shift+Z)"
           >
             <RedoIcon className="h-4 w-4" />
@@ -416,18 +466,10 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         <div className="w-px h-6 bg-gray-300" />
 
         {/* AI Button */}
-        {onOpenAiChat && (
-          <button
-            onClick={onOpenAiChat}
-            className={classNames(
-              buttonStyles.purple,
-              'text-xs px-3 py-1'
-            )}
-            title="AI Assistant"
-          >
-            AI
-          </button>
-        )}
+        <div className="flex items-center space-x-1">
+          {/* Quick AI Actions */}
+          <AiToolbarButton editor={editor} />
+        </div>
       </div>
     </div>
   );

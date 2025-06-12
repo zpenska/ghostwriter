@@ -12,6 +12,29 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Function to call Tiptap AI API
+  const callTiptapAI = async (text: string, instruction: string) => {
+    const response = await fetch('https://api.tiptap.dev/v1/ai/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TIPTAP_AI_SECRET}`,
+      },
+      body: JSON.stringify({
+        appId: process.env.NEXT_PUBLIC_TIPTAP_AI_APP_ID,
+        text: text,
+        instruction: instruction,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('AI request failed');
+    }
+
+    const result = await response.json();
+    return result.text || text;
+  };
+  
   // AI actions that work with the AI extension
   const aiActions = [
     {
@@ -21,17 +44,15 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         const selectedText = editor.state.doc.textBetween(from, to);
         if (selectedText) {
           setIsProcessing(true);
-          // Use the AI extension's actual API
           try {
-            // The AI extension provides these through the editor instance
-            const aiExtension = editor.extensionManager.extensions.find(ext => ext.name === 'ai');
-            if (aiExtension && aiExtension.options.appId) {
-              // For now, we'll use a placeholder - in production, this would call the AI API
-              const improvedText = `[AI Improved]: ${selectedText}`;
-              editor.chain().focus().deleteRange({ from, to }).insertContent(improvedText).run();
-            }
+            const improvedText = await callTiptapAI(
+              selectedText,
+              'Improve the writing quality, clarity, and professionalism of this text while maintaining its original meaning.'
+            );
+            editor.chain().focus().deleteRange({ from, to }).insertContent(improvedText).run();
           } catch (error) {
             console.error('AI improvement failed:', error);
+            alert('Failed to improve text. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -45,11 +66,14 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         if (selectedText) {
           setIsProcessing(true);
           try {
-            // Placeholder for AI grammar fix
-            const fixedText = `[Grammar Fixed]: ${selectedText}`;
+            const fixedText = await callTiptapAI(
+              selectedText,
+              'Fix all spelling and grammar errors in this text.'
+            );
             editor.chain().focus().deleteRange({ from, to }).insertContent(fixedText).run();
           } catch (error) {
             console.error('Grammar fix failed:', error);
+            alert('Failed to fix grammar. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -63,10 +87,14 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         if (selectedText) {
           setIsProcessing(true);
           try {
-            const shorterText = `[Shortened]: ${selectedText.substring(0, Math.floor(selectedText.length / 2))}...`;
+            const shorterText = await callTiptapAI(
+              selectedText,
+              'Make this text more concise while preserving all key information.'
+            );
             editor.chain().focus().deleteRange({ from, to }).insertContent(shorterText).run();
           } catch (error) {
             console.error('Shortening failed:', error);
+            alert('Failed to shorten text. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -80,10 +108,14 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         if (selectedText) {
           setIsProcessing(true);
           try {
-            const longerText = `[Expanded]: ${selectedText} with additional context and details.`;
+            const longerText = await callTiptapAI(
+              selectedText,
+              'Expand this text with more detail and context while maintaining clarity.'
+            );
             editor.chain().focus().deleteRange({ from, to }).insertContent(longerText).run();
           } catch (error) {
             console.error('Expansion failed:', error);
+            alert('Failed to expand text. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -97,10 +129,14 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         if (selectedText) {
           setIsProcessing(true);
           try {
-            const simplifiedText = `[Simplified]: ${selectedText}`;
+            const simplifiedText = await callTiptapAI(
+              selectedText,
+              'Simplify this text to make it easier to understand, using simpler words and shorter sentences.'
+            );
             editor.chain().focus().deleteRange({ from, to }).insertContent(simplifiedText).run();
           } catch (error) {
             console.error('Simplification failed:', error);
+            alert('Failed to simplify text. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -114,10 +150,14 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         if (selectedText) {
           setIsProcessing(true);
           try {
-            const professionalText = `[Professional]: ${selectedText}`;
+            const professionalText = await callTiptapAI(
+              selectedText,
+              'Rewrite this text in a professional, formal tone suitable for business communication.'
+            );
             editor.chain().focus().deleteRange({ from, to }).insertContent(professionalText).run();
           } catch (error) {
             console.error('Tone change failed:', error);
+            alert('Failed to change tone. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -131,10 +171,56 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         if (selectedText) {
           setIsProcessing(true);
           try {
-            const casualText = `[Casual]: ${selectedText}`;
+            const casualText = await callTiptapAI(
+              selectedText,
+              'Rewrite this text in a casual, friendly tone.'
+            );
             editor.chain().focus().deleteRange({ from, to }).insertContent(casualText).run();
           } catch (error) {
             console.error('Tone change failed:', error);
+            alert('Failed to change tone. Please try again.');
+          }
+          setIsProcessing(false);
+        }
+      },
+    },
+    {
+      label: 'Patient-friendly',
+      command: async () => {
+        const { from, to } = editor.state.selection;
+        const selectedText = editor.state.doc.textBetween(from, to);
+        if (selectedText) {
+          setIsProcessing(true);
+          try {
+            const patientText = await callTiptapAI(
+              selectedText,
+              'Rewrite this text to be easily understood by patients, avoiding medical jargon and using simple, clear language.'
+            );
+            editor.chain().focus().deleteRange({ from, to }).insertContent(patientText).run();
+          } catch (error) {
+            console.error('Patient-friendly conversion failed:', error);
+            alert('Failed to convert text. Please try again.');
+          }
+          setIsProcessing(false);
+        }
+      },
+    },
+    {
+      label: 'Add empathy',
+      command: async () => {
+        const { from, to } = editor.state.selection;
+        const selectedText = editor.state.doc.textBetween(from, to);
+        if (selectedText) {
+          setIsProcessing(true);
+          try {
+            const empatheticText = await callTiptapAI(
+              selectedText,
+              'Add empathetic and compassionate language to this text while maintaining professionalism, suitable for healthcare communication.'
+            );
+            editor.chain().focus().deleteRange({ from, to }).insertContent(empatheticText).run();
+          } catch (error) {
+            console.error('Empathy addition failed:', error);
+            alert('Failed to add empathy. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -148,10 +234,14 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
         if (selectedText) {
           setIsProcessing(true);
           try {
-            const translatedText = `[Spanish]: ${selectedText}`;
+            const translatedText = await callTiptapAI(
+              selectedText,
+              'Translate this text to Spanish, maintaining the same tone and formality level.'
+            );
             editor.chain().focus().deleteRange({ from, to }).insertContent(translatedText).run();
           } catch (error) {
             console.error('Translation failed:', error);
+            alert('Failed to translate text. Please try again.');
           }
           setIsProcessing(false);
         }
@@ -181,7 +271,7 @@ export default function AiToolbarButton({ editor }: AiToolbarButtonProps) {
       
       {showMenu && !isProcessing && (
         <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-          <div className="py-1">
+          <div className="py-1 max-h-96 overflow-y-auto">
             {aiActions.map((action) => (
               <button
                 key={action.label}
