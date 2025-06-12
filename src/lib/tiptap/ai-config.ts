@@ -1,7 +1,3 @@
-// src/lib/tiptap/ai-config.ts
-import AI from '@tiptap-pro/extension-ai';
-import AiAgent from '@tiptap-pro/extension-ai-agent';
-
 // Healthcare-specific AI prompts for Ghostwriter
 export const healthcarePrompts = [
   {
@@ -104,16 +100,14 @@ export const healthcarePrompts = [
   },
 ];
 
-// Configure AI extension for use with Cloud
+// Tiptap AI configuration for AI extension
+import AI from '@tiptap-pro/extension-ai';
+
 export const configureTiptapAI = () => {
   return AI.configure({
-    // Configuration for cloud setup - the provider handles authentication
-  });
-};
-
-// Configure AI Agent extension for use with Cloud
-export const configureAiAgent = () => {
-  return AiAgent.configure({
-    // The agent will use the cloud provider's authentication
-  });
+    appId: 'jkver1dm',
+    token: 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
+    baseUrl: 'https://api.tiptap.dev/v1',
+    autocompletion: true,
+  } as any);
 };

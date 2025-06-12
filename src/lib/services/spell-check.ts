@@ -23,12 +23,10 @@ interface SpellCheckResponse {
 
 export class SpellCheckService {
   private apiKey?: string;
-  private username?: string;
   private baseUrl: string;
 
-  constructor(apiKey?: string, username?: string) {
+  constructor(apiKey?: string) {
     this.apiKey = apiKey;
-    this.username = username;
     this.baseUrl = apiKey 
       ? 'https://api.languagetoolplus.com/v2/check'
       : 'https://api.languagetool.org/v2/check';
@@ -151,6 +149,5 @@ export class SpellCheckService {
 }
 
 export const spellCheckService = new SpellCheckService(
-  process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY,
-  process.env.NEXT_PUBLIC_LANGUAGETOOL_USERNAME
+  process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY
 );

@@ -28,20 +28,16 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 import EditorToolbar from './EditorToolbar';
 import AiMenu from './AiMenu';
-import AiAgentMenu from './AiAgentMenu';
 import { buttonStyles } from '@/lib/utils/button-styles';
 import { LanguageTool } from '@/lib/tiptap/extensions/languagetool';
-import { configureTiptapAI, configureAiAgent } from '@/lib/tiptap/ai-config';
 import 'katex/dist/katex.min.css';
 
 interface TemplateEditorProps {
   onEditorReady?: (editor: any) => void;
-  aiAgentProvider?: any;
 }
 
-export default function TemplateEditor({ onEditorReady, aiAgentProvider }: TemplateEditorProps) {
+export default function TemplateEditor({ onEditorReady }: TemplateEditorProps) {
   const [showAiChat, setShowAiChat] = useState(false);
-  const [showAiAgentMenu, setShowAiAgentMenu] = useState(false);
   const [aiMenuPosition, setAiMenuPosition] = useState({ top: 0, left: 0 });
   const [selectedText, setSelectedText] = useState('');
   const [ydoc] = useState(() => new Y.Doc());
@@ -124,7 +120,10 @@ export default function TemplateEditor({ onEditorReady, aiAgentProvider }: Templ
         attributeName: 'data-unique-id',
         types: ['paragraph', 'heading', 'listItem'],
       }),
-      CollaborationHistory,
+      CollaborationHistory.configure({
+        provider: null, // We'll use local storage for now, can switch to cloud provider later
+        maxVersions: 100,
+      }),
       DragHandle.configure({
         render: () => {
           const element = document.createElement('div');
@@ -145,9 +144,6 @@ export default function TemplateEditor({ onEditorReady, aiAgentProvider }: Templ
       InvisibleCharacters.configure({
         visible: false, // Can be toggled via toolbar
       }),
-      // Add AI extensions
-      configureTiptapAI(),
-      configureAiAgent(),
     ],
     content: '',
     autofocus: true,
@@ -158,27 +154,16 @@ export default function TemplateEditor({ onEditorReady, aiAgentProvider }: Templ
       },
     },
     onCreate: ({ editor }) => {
-      // Set up snapshot provider if available
-      if (editor.storage.snapshot) {
-        setSnapshotProvider(editor.storage.snapshot);
-      }
+      // Set up snapshot provider
+      const provider = editor.storage.snapshot;
+      setSnapshotProvider(provider);
     },
     onUpdate: ({ editor }) => {
       // Check for "/" to show AI agent menu
       const { from, to } = editor.state.selection;
       const text = editor.state.doc.textBetween(from - 1, from);
       
-      if (text === '/') {
-        const coords = editor.view.coordsAtPos(from);
-        const editorRect = editorRef.current?.getBoundingClientRect();
-        if (editorRect && coords) {
-          setAiMenuPosition({
-            top: coords.top - editorRect.top + 20,
-            left: coords.left - editorRect.left,
-          });
-          setShowAiAgentMenu(true);
-        }
-      }
+
     },
     onSelectionUpdate: ({ editor }) => {
       const { from, to } = editor.state.selection;
@@ -186,16 +171,6 @@ export default function TemplateEditor({ onEditorReady, aiAgentProvider }: Templ
       setSelectedText(text);
     },
   });
-
-  // Set up AI Agent provider when available
-  useEffect(() => {
-    if (editor && aiAgentProvider) {
-      // The AI Agent provider is now available for use
-      console.log('AI Agent connected to editor');
-      // Store the provider reference if needed by AI extensions
-      editor.storage.aiAgentProvider = aiAgentProvider;
-    }
-  }, [editor, aiAgentProvider]);
 
   // Callback for editor ready
   useEffect(() => {
@@ -269,26 +244,7 @@ export default function TemplateEditor({ onEditorReady, aiAgentProvider }: Templ
       <div ref={editorRef} className="flex-1 overflow-y-auto relative bg-white">
         <EditorContent editor={editor} className="template-editor h-full" />
         
-        {/* AI Agent Menu */}
-        {showAiAgentMenu && (
-          <div 
-            style={{
-              position: 'absolute',
-              top: aiMenuPosition.top,
-              left: aiMenuPosition.left,
-            }}
-          >
-            <AiAgentMenu 
-              editor={editor}
-              onClose={() => {
-                setShowAiAgentMenu(false);
-                // Remove the "/" from the editor
-                editor.chain().deleteRange({ from: editor.state.selection.from - 1, to: editor.state.selection.from }).focus().run();
-              }}
-              aiAgentProvider={aiAgentProvider}
-            />
-          </div>
-        )}
+ 
       </div>
 
       {/* Footer */}
