@@ -397,10 +397,10 @@ export default function TemplateEditor({
           <button onClick={takeSnapshot} className={buttonStyles.text}>
             Snapshot
           </button>
-          <button onClick={checkSpelling} className={buttonStyles.text}>
+          <button onClick={checkSpelling} className={buttonStyles.tertiary}>
             Spelling
           </button>
-          <button onClick={showInvisibleCharacters} className={buttonStyles.text}>
+          <button onClick={showInvisibleCharacters} className={buttonStyles.tertiary}>
             ¶
           </button>
         </div>
