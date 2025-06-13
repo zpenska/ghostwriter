@@ -33,14 +33,38 @@ function createJWT(payload: any, secret: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, userName } = await request.json();
+    const { userId, userName, documentId } = await request.json();
 
-    // Your Document Server Secret (not AI Secret)
-    const secret = 'd796d28c7388b661bd27c84a73a8b2aa2f5bb55d5d26b21f096348391304807a';
+    // Document Server credentials (UPDATED)
+    const documentSecret = '05cff228724828845c69f7a6f6397397574acc89590f438aac87c6fe39a9d48d';
+    const documentAppId = 'w9ne2v89';
+    
+    // Document Management ID
+    const docManagementId = '24964a9d372c048b1784a53a5f5b59de890a5069d41c3439359aa3062437963b';
+    
+    // AI credentials (UPDATED)
+    const aiSecret = 'GNVLBYqJiRsk3NZHPsjpAl9m0Fgeqgzcwj5L2uiSp1obHR64TjV6CrRJVRY6w5to';
+    const aiAppId = 'e976rxjm';
+    
+    // Conversion credentials (UPDATED)
+    const conversionSecret = 'VgwMIjOaJItlLLEzoJMY5ePZbE0cllm1X34DXlJnGaKqIEqqzNVYP5ybZudfa7eF';
+    const conversionAppId = 'e976rxjm';
     
     // Create JWT payload for Document Server
-    const payload = {
-      aud: 'j9yd36p9', // Document Server App ID
+    const documentPayload = {
+      aud: documentAppId,
+      iat: Math.floor(Date.now() / 1000),
+      nbf: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 86400, // 24 hours
+      iss: 'https://cloud.tiptap.dev',
+      sub: userId,
+      name: userName,
+      ...(documentId && { document: documentId })
+    };
+
+    // Create JWT payload for AI
+    const aiPayload = {
+      aud: aiAppId,
       iat: Math.floor(Date.now() / 1000),
       nbf: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 86400, // 24 hours
@@ -49,11 +73,41 @@ export async function POST(request: NextRequest) {
       name: userName
     };
 
-    const token = createJWT(payload, secret);
-    
-    console.log('Generated JWT token for user:', userId);
+    // Create JWT payload for Conversion
+    const conversionPayload = {
+      aud: conversionAppId,
+      iat: Math.floor(Date.now() / 1000),
+      nbf: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 86400, // 24 hours
+      iss: 'https://cloud.tiptap.dev',
+      sub: userId,
+      name: userName
+    };
 
-    return NextResponse.json({ token });
+    const documentToken = createJWT(documentPayload, documentSecret);
+    const aiToken = createJWT(aiPayload, aiSecret);
+    const conversionToken = createJWT(conversionPayload, conversionSecret);
+    
+    console.log('Generated JWT tokens for user:', userId);
+
+    return NextResponse.json({ 
+      // Document Server
+      appId: documentAppId,
+      token: documentToken, // Keep for backward compatibility
+      documentToken,
+      docManagementId, // For document management
+      
+      // AI
+      aiAppId,
+      aiToken,
+      
+      // Conversion
+      conversionAppId,
+      conversionToken,
+      
+      // Legacy support
+      documentId: documentId || 'default'
+    });
   } catch (error) {
     console.error('JWT generation error:', error);
     return NextResponse.json(
@@ -66,10 +120,17 @@ export async function POST(request: NextRequest) {
 // Also handle GET for testing
 export async function GET() {
   return NextResponse.json({ 
-    message: 'Tiptap Auth API is working. Use POST to generate a token.',
+    message: 'Tiptap Auth API is working. Use POST to generate tokens.',
     expectedPayload: {
       userId: 'string',
-      userName: 'string'
+      userName: 'string',
+      documentId: 'string (optional)'
+    },
+    features: {
+      documentServer: 'w9ne2v89',
+      contentAI: 'e976rxjm',
+      conversion: 'e976rxjm',
+      docManagement: '24964a9d372c048b1784a53a5f5b59de890a5069d41c3439359aa3062437963b'
     }
   });
 }

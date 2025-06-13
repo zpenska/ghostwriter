@@ -1,33 +1,20 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import {
-  MagnifyingGlassIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-} from '@heroicons/react/20/solid'
-import { useDraggable } from '@dnd-kit/core'
-import clsx from 'clsx'
-import { Text } from '@/components/ui/text'
+import { useState, useEffect } from 'react';
+import { MagnifyingGlassIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { useDraggable } from '@dnd-kit/core';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
+import { ReusableComponent } from '@/types/component';
 
-type Item = {
-  id: string
-  name: string
-  type: string
-  description: string
-}
+type Variable = {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+};
 
-type Group =
-  | {
-      name: string
-      variables: Item[]
-    }
-  | {
-      name: string
-      components: Item[]
-    }
-
-const variableGroups = [
+const variableGroups: { name: string; variables: Variable[] }[] = [
   {
     name: 'Member',
     variables: [
@@ -44,36 +31,20 @@ const variableGroups = [
       { id: 'provider-specialty', name: 'Specialty', type: 'Text', description: 'Provider specialty' },
     ],
   },
-]
+];
 
-const componentGroups = [
-  {
-    name: 'Logos',
-    components: [
-      { id: 'logo-hospital', name: 'HospitalLogo', type: 'Image', description: 'Main hospital logo' },
-    ],
-  },
-  {
-    name: 'Blocks',
-    components: [
-      { id: 'address-block', name: 'AddressBlock', type: 'Block', description: 'Reusable address block' },
-      { id: 'barcode-block', name: 'Barcode', type: 'Barcode', description: 'Auto-generated barcode' },
-    ],
-  },
-]
-
-function DraggableItem({ item }: { item: Item }) {
+function DraggableItem({ item }: { item: any }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
     data: item,
-  })
+  });
 
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
         opacity: isDragging ? 0.5 : 1,
       }
-    : undefined
+    : undefined;
 
   return (
     <div
@@ -81,119 +52,142 @@ function DraggableItem({ item }: { item: Item }) {
       style={style}
       {...listeners}
       {...attributes}
-      className="group flex cursor-grab items-center justify-between rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm transition hover:bg-[#F5F5F1] hover:shadow"
+      className="flex items-center justify-between py-2 px-3 bg-white rounded-md shadow-sm hover:bg-gray-50 cursor-grab active:cursor-grabbing border"
     >
-      <Text variant="code" className="truncate">
-        {`{{${item.name}}}`}
-      </Text>
-      <span className="ml-2 text-xs text-zinc-500">{item.type}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm text-gray-700 font-mono truncate">
+          {item.type === 'Text' || item.type === 'ID' || item.type === 'Date'
+            ? `{{${item.name}}}`
+            : item.name}
+        </span>
+      </div>
+      <span className="text-xs text-gray-500 ml-2">{item.type}</span>
     </div>
-  )
+  );
 }
 
 export default function VariablePanel() {
-  const [tab, setTab] = useState<'variables' | 'components'>('variables')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'variables' | 'components'>('variables');
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(variableGroups.map(g => g.name)));
+  const [components, setComponents] = useState<ReusableComponent[]>([]);
 
-  const groups: Group[] = tab === 'variables' ? variableGroups : componentGroups
-  const label = tab === 'variables' ? 'Variables' : 'Components'
+  useEffect(() => {
+    const loadComponents = async () => {
+      const snapshot = await getDocs(collection(db, 'reusableComponents'));
+      const items: ReusableComponent[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as Omit<ReusableComponent, 'id'>),
+      }));
+      setComponents(items);
+    };
+
+    loadComponents();
+  }, []);
 
   const toggleGroup = (groupName: string) => {
-    const newExpanded = new Set(expandedGroups)
-    newExpanded.has(groupName) ? newExpanded.delete(groupName) : newExpanded.add(groupName)
-    setExpandedGroups(newExpanded)
-  }
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupName)) newExpanded.delete(groupName);
+    else newExpanded.add(groupName);
+    setExpandedGroups(newExpanded);
+  };
 
-  const filteredGroups = groups
-    .map(group => {
-      const items = 'variables' in group ? group.variables : group.components
-      const filteredItems = items.filter(
-        item =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      return {
-        name: group.name,
-        items: filteredItems,
-      }
-    })
-    .filter(group => group.items.length > 0)
+  const filteredVariables = variableGroups
+    .map(group => ({
+      ...group,
+      variables: group.variables.filter(
+        variable =>
+          variable.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          variable.description.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    }))
+    .filter(group => group.variables.length > 0);
+
+  const filteredComponents = components.filter(comp =>
+    comp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="flex h-full flex-col bg-[#F5F5F1] font-radio">
+    <div className="h-full flex flex-col">
       {/* Tabs */}
-      <div className="flex gap-4 border-b border-zinc-200 px-4 py-3 bg-white">
+      <div className="flex gap-4 border-b px-4 py-3">
         <button
-          onClick={() => setTab('variables')}
-          className={clsx(
-            'text-sm font-medium transition',
-            tab === 'variables'
-              ? 'text-[#8a7fae] border-b-2 border-[#8a7fae]'
-              : 'text-zinc-500 hover:text-zinc-700'
-          )}
+          onClick={() => setActiveTab('variables')}
+          className={`text-sm font-medium ${
+            activeTab === 'variables' ? 'text-[#8a7fae] border-b-2 border-[#8a7fae]' : 'text-zinc-500'
+          }`}
         >
           Variables
         </button>
         <button
-          onClick={() => setTab('components')}
-          className={clsx(
-            'text-sm font-medium transition',
-            tab === 'components'
-              ? 'text-[#8a7fae] border-b-2 border-[#8a7fae]'
-              : 'text-zinc-500 hover:text-zinc-700'
-          )}
+          onClick={() => setActiveTab('components')}
+          className={`text-sm font-medium ${
+            activeTab === 'components' ? 'text-[#8a7fae] border-b-2 border-[#8a7fae]' : 'text-zinc-500'
+          }`}
         >
           Components
         </button>
       </div>
 
       {/* Search */}
-      <div className="border-b border-zinc-200 px-4 py-3 bg-white">
+      <div className="p-4 border-b">
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <MagnifyingGlassIcon className="h-5 w-5 text-zinc-400" />
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
           </div>
           <input
             type="search"
-            className="block w-full rounded-md border border-zinc-300 bg-white py-1.5 pl-10 pr-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:ring-2 focus:ring-[#8a7fae]"
-            placeholder={`Search ${label.toLowerCase()}...`}
+            className="block w-full rounded-md border border-zinc-300 py-1.5 pl-10 pr-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-[#8a7fae] text-sm"
+            placeholder={`Search ${activeTab === 'variables' ? 'variables' : 'components'}...`}
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-[#F5F5F1]">
-        {filteredGroups.map(group => (
-          <div key={group.name} className="border-b border-zinc-200 px-4 py-3 bg-white">
-            <button
-              onClick={() => toggleGroup(group.name)}
-              className="flex w-full items-center justify-between text-sm font-semibold text-zinc-800 hover:text-zinc-900"
-            >
-              <span>{group.name}</span>
-              {expandedGroups.has(group.name) ? (
-                <ChevronDownIcon className="h-5 w-5 text-zinc-400" />
-              ) : (
-                <ChevronRightIcon className="h-5 w-5 text-zinc-400" />
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {activeTab === 'variables' &&
+          filteredVariables.map(group => (
+            <div key={group.name} className="border-b pb-2">
+              <button
+                onClick={() => toggleGroup(group.name)}
+                className="w-full flex justify-between items-center text-sm font-medium text-gray-900"
+              >
+                {group.name}
+                {expandedGroups.has(group.name) ? (
+                  <ChevronDownIcon className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+              {expandedGroups.has(group.name) && (
+                <div className="mt-2 space-y-2">
+                  {group.variables.map(variable => (
+                    <DraggableItem key={variable.id} item={variable} />
+                  ))}
+                </div>
               )}
-            </button>
-            {expandedGroups.has(group.name) && (
-              <div className="mt-2 space-y-2">
-                {group.items.map(item => (
-                  <DraggableItem key={item.id} item={item} />
-                ))}
-              </div>
+            </div>
+          ))}
+
+        {activeTab === 'components' && (
+          <div className="space-y-2">
+            {filteredComponents.length === 0 ? (
+              <p className="text-sm text-gray-500">No components found.</p>
+            ) : (
+              filteredComponents.map((comp) => (
+                <DraggableItem key={comp.id} item={{ ...comp, type: comp.type }} />
+              ))
             )}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Footer */}
-      <div className="border-t border-zinc-200 bg-white px-4 py-3 text-center text-xs text-zinc-500">
-        Drag {label.toLowerCase()} into your template
+      <div className="p-4 bg-gray-50 border-t text-xs text-gray-500 text-center">
+        Drag {activeTab === 'variables' ? 'variables' : 'components'} into your template
       </div>
     </div>
-  )
+  );
 }
