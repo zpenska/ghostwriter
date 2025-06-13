@@ -1,225 +1,378 @@
+// src/app/(dashboard)/templates/components/page.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeftIcon, PencilIcon, TrashIcon, ArrowUpTrayIcon } from '@heroicons/react/20/solid';
-import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebase/config';
 import {
   collection,
   addDoc,
-  onSnapshot,
+  getDocs,
   doc,
-  deleteDoc,
   updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  serverTimestamp,
 } from 'firebase/firestore';
-import { ReusableComponent } from '@/lib/types/component';
+import { 
+  PlusIcon, 
+  MagnifyingGlassIcon, 
+  PuzzlePieceIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  DocumentDuplicateIcon
+} from '@heroicons/react/24/outline';
+import { buttonStyles } from '@/lib/utils/button-styles';
+import { cn } from '@/lib/utils/cn';
 
-export default function ComponentBuilderPage() {
+interface Component {
+  id?: string;
+  name: string;
+  description?: string;
+  content: string;
+  category: string;
+  tags?: string[];
+  isActive: boolean;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export default function ComponentsPage() {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [name, setName] = useState('');
-  const [type, setType] = useState('');
-  const [components, setComponents] = useState<ReusableComponent[]>([]);
-  const [editId, setEditId] = useState<string | null>(null);
+  const [components, setComponents] = useState<Component[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Build a reusable component here (e.g. address block, table, logo)...',
-      }),
-    ],
-    content: '',
-  });
-
-  const handleSave = async () => {
-    if (!name || !type || !editor) return;
-    const html = editor.getHTML();
-
-    if (editId) {
-      await updateDoc(doc(db, 'reusableComponents', editId), {
-        name,
-        type,
-        html,
-        updatedAt: new Date().toISOString(),
-      });
-    } else {
-      await addDoc(collection(db, 'reusableComponents'), {
-        name,
-        type,
-        html,
-        createdAt: new Date().toISOString(),
-      });
-    }
-
-    setName('');
-    setType('');
-    setEditId(null);
-    editor.commands.clearContent();
-  };
-
-  const handleEdit = (comp: ReusableComponent) => {
-    setName(comp.name);
-    setType(comp.type);
-    editor?.commands.setContent(comp.html);
-    setEditId(comp.id);
-  };
-
-  const handleDelete = async (id: string) => {
-    const confirm = window.confirm('Are you sure you want to delete this component?');
-    if (confirm) {
-      await deleteDoc(doc(db, 'reusableComponents', id));
-    }
-  };
-
-  const handleFileUpload = async (file: File) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const html = reader.result?.toString() || '';
-      const name = file.name.replace(/\.[^/.]+$/, '');
-      await addDoc(collection(db, 'reusableComponents'), {
-        name,
-        type: 'Uploaded',
-        html,
-        createdAt: new Date().toISOString(),
-      });
-    };
-    reader.readAsText(file);
-  };
-
-  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) await handleFileUpload(file);
-  };
+  const categories = [
+    { value: 'all', label: 'All Components' },
+    { value: 'header', label: 'Headers' },
+    { value: 'footer', label: 'Footers' },
+    { value: 'signature', label: 'Signatures' },
+    { value: 'disclaimer', label: 'Disclaimers' },
+    { value: 'address', label: 'Addresses' },
+    { value: 'contact', label: 'Contact Info' },
+    { value: 'custom', label: 'Custom' }
+  ];
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'reusableComponents'), (snapshot) => {
-      const items: ReusableComponent[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as Omit<ReusableComponent, 'id'>),
-      }));
-      setComponents(items);
-    });
-
-    return () => unsubscribe();
+    loadComponents();
   }, []);
 
+  const loadComponents = async () => {
+    try {
+      setLoading(true);
+      const q = query(collection(db, 'components'), orderBy('updatedAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const componentsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Component));
+      setComponents(componentsData);
+    } catch (error) {
+      console.error('Error loading components:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateComponent = async (componentData: Omit<Component, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      await addDoc(collection(db, 'components'), {
+        ...componentData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      await loadComponents();
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error('Error creating component:', error);
+      alert('Failed to create component');
+    }
+  };
+
+  const handleUpdateComponent = async (componentId: string, updates: Partial<Component>) => {
+    try {
+      await updateDoc(doc(db, 'components', componentId), {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+      await loadComponents();
+    } catch (error) {
+      console.error('Error updating component:', error);
+      alert('Failed to update component');
+    }
+  };
+
+  const handleDeleteComponent = async (componentId: string) => {
+    if (confirm('Are you sure you want to delete this component?')) {
+      try {
+        await deleteDoc(doc(db, 'components', componentId));
+        await loadComponents();
+      } catch (error) {
+        console.error('Error deleting component:', error);
+        alert('Failed to delete component');
+      }
+    }
+  };
+
+  const handleDuplicateComponent = async (component: Component) => {
+    try {
+      const duplicatedComponent = {
+        ...component,
+        name: `${component.name} (Copy)`,
+        id: undefined,
+        createdAt: undefined,
+        updatedAt: undefined
+      };
+      await handleCreateComponent(duplicatedComponent);
+    } catch (error) {
+      console.error('Error duplicating component:', error);
+      alert('Failed to duplicate component');
+    }
+  };
+
+  // Filter components based on search and category
+  const filteredComponents = components.filter(component => {
+    const matchesSearch = component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         component.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         component.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategory = selectedCategory === 'all' || component.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      'header': 'bg-blue-100 text-blue-800',
+      'footer': 'bg-green-100 text-green-800',
+      'signature': 'bg-purple-100 text-purple-800',
+      'disclaimer': 'bg-yellow-100 text-yellow-800',
+      'address': 'bg-indigo-100 text-indigo-800',
+      'contact': 'bg-pink-100 text-pink-800',
+      'custom': 'bg-gray-100 text-gray-800'
+    };
+    return colors[category as keyof typeof colors] || colors.custom;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white text-zinc-900">
-      {/* Breadcrumb */}
-      <div className="border-b px-6 py-4 bg-[#F5F5F1] flex items-center gap-3">
-        <button onClick={() => router.push('/templates')} className="text-sm font-medium text-[#8a7fae] flex items-center">
-          <ChevronLeftIcon className="h-4 w-4 mr-1" /> Templates
-        </button>
-        <span className="text-sm text-zinc-400">/</span>
-        <span className="text-sm font-semibold">Component Builder</span>
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Components</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Reusable content blocks for your templates
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/templates')}
+              className={cn(buttonStyles.secondary, "flex items-center gap-2")}
+            >
+              Back to Templates
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className={cn(buttonStyles.primary, "flex items-center gap-2")}
+            >
+              <PlusIcon className="h-4 w-4" />
+              New Component
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Form Section */}
-      <div className="p-6 max-w-4xl mx-auto space-y-6">
-        <div>
-          <h2 className="text-xl font-semibold mb-2">
-            {editId ? 'Edit Component' : 'Create a New Component'}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      {/* Filters */}
+      <div className="px-6 py-4 bg-white border-b border-gray-200">
+        <div className="flex items-center gap-4">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Component Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="px-3 py-2 border border-zinc-300 rounded-md"
-            />
-            <input
-              type="text"
-              placeholder="Component Type (e.g. Logo, Block)"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="px-3 py-2 border border-zinc-300 rounded-md"
+              placeholder="Search components..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
-          <div className="border rounded-md">
-            <EditorContent editor={editor} className="prose max-w-none p-4" />
-          </div>
-          <div className="flex items-center gap-3 mt-4">
-            <button
-              onClick={handleSave}
-              className="bg-[#8a7fae] text-white px-4 py-2 rounded-md hover:bg-[#7a6f9e] text-sm font-medium"
-            >
-              {editId ? 'Update Component' : 'Save Component'}
-            </button>
-            {editId && (
+
+          {/* Category Filter */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          >
+            {categories.map(category => (
+              <option key={category.value} value={category.value}>
+                {category.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Components Grid */}
+      <div className="flex-1 overflow-auto p-6">
+        {filteredComponents.length === 0 ? (
+          <div className="text-center py-12">
+            <PuzzlePieceIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No components found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm || selectedCategory !== 'all' 
+                ? 'Try adjusting your search or filter criteria'
+                : 'Create your first reusable component'
+              }
+            </p>
+            {(!searchTerm && selectedCategory === 'all') && (
               <button
-                onClick={() => {
-                  setName('');
-                  setType('');
-                  setEditId(null);
-                  editor?.commands.clearContent();
-                }}
-                className="text-sm text-zinc-500 underline"
+                onClick={() => setShowCreateModal(true)}
+                className={buttonStyles.primary}
               >
-                Cancel Edit
+                Create Component
               </button>
             )}
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredComponents.map((component) => (
+              <div key={component.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-gray-900 truncate mb-1">
+                      {component.name}
+                    </h3>
+                    <span className={cn(
+                      "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                      getCategoryColor(component.category)
+                    )}>
+                      {component.category}
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <button className="p-1 hover:bg-gray-100 rounded">
+                      <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
 
-        {/* Upload Area */}
-        <div className="border rounded-md p-4 bg-[#F5F5F1]">
-          <h3 className="text-sm font-medium text-zinc-700 mb-2">Or upload a component file</h3>
-          <label
-            htmlFor="fileUpload"
-            className="flex items-center gap-2 text-sm text-[#8a7fae] hover:underline cursor-pointer"
-          >
-            <ArrowUpTrayIcon className="h-5 w-5" />
-            Upload .html or .txt file
-          </label>
-          <input
-            ref={fileInputRef}
-            id="fileUpload"
-            type="file"
-            accept=".html,.htm,.txt"
-            className="hidden"
-            onChange={handleFileInputChange}
-          />
-        </div>
+                {component.description && (
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {component.description}
+                  </p>
+                )}
 
-        {/* Saved List */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Saved Components</h2>
-          <div className="grid gap-4">
-            {components.length === 0 ? (
-              <p className="text-sm text-zinc-500">No components created yet.</p>
-            ) : (
-              components.map((comp) => (
-                <div key={comp.id} className="border border-zinc-200 rounded p-4 bg-white shadow-sm relative">
-                  <div className="absolute top-3 right-3 flex gap-2">
+                <div className="text-xs text-gray-500 mb-4">
+                  <div className="bg-gray-50 rounded p-2 font-mono text-xs overflow-hidden">
+                    <div className="line-clamp-3" dangerouslySetInnerHTML={{ __html: component.content }} />
+                  </div>
+                </div>
+
+                {component.tags && component.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {component.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                    {component.tags.length > 3 && (
+                      <span className="text-xs text-gray-500">
+                        +{component.tags.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => handleEdit(comp)}
-                      className="text-sm text-indigo-600 hover:underline"
-                      title="Edit"
+                      onClick={() => {
+                        // TODO: Open edit modal
+                        console.log('Edit component:', component.id);
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
+                      title="Edit Component"
                     >
                       <PencilIcon className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(comp.id)}
-                      className="text-sm text-red-500 hover:underline"
-                      title="Delete"
+                      onClick={() => handleDuplicateComponent(component)}
+                      className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
+                      title="Duplicate Component"
+                    >
+                      <DocumentDuplicateIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteComponent(component.id!)}
+                      className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600"
+                      title="Delete Component"
                     >
                       <TrashIcon className="h-4 w-4" />
                     </button>
                   </div>
-                  <p className="font-semibold text-zinc-800 mb-1">{comp.name}</p>
-                  <p className="text-sm text-zinc-500 mb-2">{comp.type}</p>
-                  <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: comp.html }} />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                      {component.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <div className={cn(
+                      "w-2 h-2 rounded-full",
+                      component.isActive ? 'bg-green-400' : 'bg-gray-300'
+                    )} />
+                  </div>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Create Component Modal - TODO: Implement */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div className="fixed inset-0 bg-black opacity-50" onClick={() => setShowCreateModal(false)} />
+            <div className="relative bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-medium mb-4">Create New Component</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                This feature will be implemented in the next version.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className={buttonStyles.secondary}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className={buttonStyles.primary}
+                >
+                  Coming Soon
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -10,7 +10,7 @@ import {
     query, 
     where, 
     orderBy, 
-    serverTimestamp,
+    serverTimestamp, 
     Timestamp 
   } from 'firebase/firestore';
   import { db } from '@/lib/firebase/config';
@@ -19,68 +19,169 @@ import {
     id?: string;
     name: string;
     description?: string;
-    content: string; // HTML content from editor
-    collectionId: string;
-    collectionName: string;
-    category: 'denial' | 'approval' | 'appeal' | 'prior-auth' | 'general';
-    status: 'draft' | 'published' | 'archived';
-    variables: string[]; // Array of variable keys used in template
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
-    createdBy: string;
-    lastModifiedBy: string;
-    version: number;
-    tags: string[];
+    content: string;
+    collectionId?: string;
+    category?: string;
+    status?: 'draft' | 'published' | 'archived';
+    tags?: string[];
+    variables?: string[];
     isActive: boolean;
+    version?: number;
+    createdAt?: Date | Timestamp;
+    updatedAt?: Date | Timestamp;
+    createdBy?: string;
   }
   
   export interface TemplateCollection {
     id?: string;
     name: string;
     description?: string;
-    color: string; // Hex color for UI
-    icon: string; // Icon name for UI
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
-    createdBy: string;
-    templateCount: number;
+    color: string;
+    icon: string;
     isActive: boolean;
+    templateCount?: number;
+    createdAt?: Date | Timestamp;
+    updatedAt?: Date | Timestamp;
+    createdBy?: string;
   }
   
-  export class TemplateService {
+  class TemplateService {
     private templatesCollection = 'templates';
     private collectionsCollection = 'template-collections';
   
-    // Collection Management
-    async createCollection(collectionData: Omit<TemplateCollection, 'id' | 'createdAt' | 'updatedAt' | 'templateCount'>): Promise<string> {
+    // Template CRUD operations
+    async createTemplate(templateData: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
       try {
-        const docRef = await addDoc(collection(db, this.collectionsCollection), {
-          ...collectionData,
+        const docRef = await addDoc(collection(db, this.templatesCollection), {
+          ...templateData,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          templateCount: 0,
-          isActive: collectionData.isActive ?? true // Default to true if not provided
+          version: 1,
+          isActive: templateData.isActive ?? true
         });
-        
-        console.log('✅ Collection created:', docRef.id);
         return docRef.id;
       } catch (error) {
-        console.error('❌ Error creating collection:', error);
+        console.error('Error creating template:', error);
         throw error;
       }
     }
   
-    async updateCollection(id: string, updates: Partial<TemplateCollection>): Promise<void> {
+    async saveTemplate(templateData: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+      // Alias for createTemplate to maintain backward compatibility
+      return this.createTemplate(templateData);
+    }
+  
+    async updateTemplate(templateId: string, updates: Partial<Template>, incrementVersion: boolean = true): Promise<void> {
       try {
-        const docRef = doc(db, this.collectionsCollection, id);
-        await updateDoc(docRef, {
+        const updateData: any = {
+          ...updates,
+          updatedAt: serverTimestamp()
+        };
+  
+        if (incrementVersion) {
+          // Get current version and increment
+          const templateDoc = await this.getTemplate(templateId);
+          if (templateDoc) {
+            updateData.version = (templateDoc.version || 1) + 1;
+          }
+        }
+  
+        await updateDoc(doc(db, this.templatesCollection, templateId), updateData);
+      } catch (error) {
+        console.error('Error updating template:', error);
+        throw error;
+      }
+    }
+  
+    async getTemplate(templateId: string): Promise<Template | null> {
+      try {
+        const docSnap = await getDoc(doc(db, this.templatesCollection, templateId));
+        if (docSnap.exists()) {
+          return { id: docSnap.id, ...docSnap.data() } as Template;
+        }
+        return null;
+      } catch (error) {
+        console.error('Error getting template:', error);
+        throw error;
+      }
+    }
+  
+    async getTemplates(collectionId?: string): Promise<Template[]> {
+      try {
+        let q = query(collection(db, this.templatesCollection), orderBy('updatedAt', 'desc'));
+        
+        if (collectionId) {
+          q = query(collection(db, this.templatesCollection), where('collectionId', '==', collectionId), orderBy('updatedAt', 'desc'));
+        }
+  
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Template));
+      } catch (error) {
+        console.error('Error getting templates:', error);
+        throw error;
+      }
+    }
+  
+    async deleteTemplate(templateId: string): Promise<void> {
+      try {
+        // Soft delete - mark as archived instead of hard delete
+        await this.updateTemplate(templateId, { 
+          status: 'archived', 
+          isActive: false 
+        }, false);
+      } catch (error) {
+        console.error('Error deleting template:', error);
+        throw error;
+      }
+    }
+  
+    async hardDeleteTemplate(templateId: string): Promise<void> {
+      try {
+        await deleteDoc(doc(db, this.templatesCollection, templateId));
+      } catch (error) {
+        console.error('Error hard deleting template:', error);
+        throw error;
+      }
+    }
+  
+    // Collection CRUD operations
+    async createCollection(collectionData: Omit<TemplateCollection, 'id' | 'createdAt' | 'updatedAt' | 'templateCount'>): Promise<string> {
+      try {
+        const docRef = await addDoc(collection(db, this.collectionsCollection), {
+          ...collectionData,
+          isActive: collectionData.isActive ?? true,
+          templateCount: 0,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        return docRef.id;
+      } catch (error) {
+        console.error('Error creating collection:', error);
+        throw error;
+      }
+    }
+  
+    async updateCollection(collectionId: string, updates: Partial<TemplateCollection>): Promise<void> {
+      try {
+        await updateDoc(doc(db, this.collectionsCollection, collectionId), {
           ...updates,
           updatedAt: serverTimestamp()
         });
-        
-        console.log('✅ Collection updated:', id);
       } catch (error) {
-        console.error('❌ Error updating collection:', error);
+        console.error('Error updating collection:', error);
+        throw error;
+      }
+    }
+  
+    async getCollection(collectionId: string): Promise<TemplateCollection | null> {
+      try {
+        const docSnap = await getDoc(doc(db, this.collectionsCollection, collectionId));
+        if (docSnap.exists()) {
+          return { id: docSnap.id, ...docSnap.data() } as TemplateCollection;
+        }
+        return null;
+      } catch (error) {
+        console.error('Error getting collection:', error);
         throw error;
       }
     }
@@ -88,235 +189,88 @@ import {
     async getCollections(): Promise<TemplateCollection[]> {
       try {
         const q = query(
-          collection(db, this.collectionsCollection),
+          collection(db, this.collectionsCollection), 
           where('isActive', '==', true),
-          orderBy('name')
+          orderBy('name', 'asc')
         );
-        
         const querySnapshot = await getDocs(q);
-        const collections: TemplateCollection[] = [];
         
-        querySnapshot.forEach((doc) => {
-          collections.push({
-            id: doc.id,
-            ...doc.data()
-          } as TemplateCollection);
-        });
-        
-        console.log('✅ Collections loaded:', collections.length);
+        // Get template counts for each collection
+        const collections = await Promise.all(
+          querySnapshot.docs.map(async (doc) => {
+            const collectionData = { id: doc.id, ...doc.data() } as TemplateCollection;
+            const templateCount = await this.getTemplateCount(doc.id);
+            return { ...collectionData, templateCount };
+          })
+        );
+  
         return collections;
       } catch (error) {
-        console.error('❌ Error loading collections:', error);
+        console.error('Error getting collections:', error);
         throw error;
       }
     }
   
-    async deleteCollection(id: string): Promise<void> {
+    async deleteCollection(collectionId: string): Promise<void> {
       try {
-        // Soft delete - mark as inactive
-        const docRef = doc(db, this.collectionsCollection, id);
-        await updateDoc(docRef, {
-          isActive: false,
-          updatedAt: serverTimestamp()
-        });
-        
-        console.log('✅ Collection deleted:', id);
+        // First, move all templates in this collection to uncategorized
+        const templates = await this.getTemplates(collectionId);
+        await Promise.all(
+          templates.map(template => 
+            this.updateTemplate(template.id!, { collectionId: undefined }, false)
+          )
+        );
+  
+        // Then delete the collection
+        await deleteDoc(doc(db, this.collectionsCollection, collectionId));
       } catch (error) {
-        console.error('❌ Error deleting collection:', error);
+        console.error('Error deleting collection:', error);
         throw error;
       }
     }
   
-    // Template Management
-    async saveTemplate(templateData: Omit<Template, 'id' | 'createdAt' | 'updatedAt' | 'version'>): Promise<string> {
-      try {
-        const docRef = await addDoc(collection(db, this.templatesCollection), {
-          ...templateData,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          version: 1,
-          isActive: true
-        });
-        
-        // Update collection template count
-        await this.updateCollectionCount(templateData.collectionId);
-        
-        console.log('✅ Template saved:', docRef.id);
-        return docRef.id;
-      } catch (error) {
-        console.error('❌ Error saving template:', error);
-        throw error;
-      }
-    }
-  
-    async updateTemplate(id: string, updates: Partial<Template>, incrementVersion = true): Promise<void> {
-      try {
-        const docRef = doc(db, this.templatesCollection, id);
-        
-        // Get current version if incrementing
-        let versionUpdate = {};
-        if (incrementVersion) {
-          const currentDoc = await getDoc(docRef);
-          const currentVersion = currentDoc.data()?.version || 1;
-          versionUpdate = { version: currentVersion + 1 };
-        }
-        
-        await updateDoc(docRef, {
-          ...updates,
-          ...versionUpdate,
-          updatedAt: serverTimestamp()
-        });
-        
-        console.log('✅ Template updated:', id);
-      } catch (error) {
-        console.error('❌ Error updating template:', error);
-        throw error;
-      }
-    }
-  
-    async getTemplate(id: string): Promise<Template | null> {
-      try {
-        const docRef = doc(db, this.templatesCollection, id);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          return {
-            id: docSnap.id,
-            ...docSnap.data()
-          } as Template;
-        }
-        
-        return null;
-      } catch (error) {
-        console.error('❌ Error loading template:', error);
-        throw error;
-      }
-    }
-  
-    async getTemplatesByCollection(collectionId: string): Promise<Template[]> {
+    // Helper methods
+    async getTemplateCount(collectionId: string): Promise<number> {
       try {
         const q = query(
-          collection(db, this.templatesCollection),
+          collection(db, this.templatesCollection), 
           where('collectionId', '==', collectionId),
-          where('isActive', '==', true),
-          orderBy('updatedAt', 'desc')
+          where('status', '!=', 'archived')
         );
-        
         const querySnapshot = await getDocs(q);
-        const templates: Template[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          templates.push({
-            id: doc.id,
-            ...doc.data()
-          } as Template);
-        });
-        
-        console.log('✅ Templates loaded for collection:', templates.length);
-        return templates;
+        return querySnapshot.size;
       } catch (error) {
-        console.error('❌ Error loading templates:', error);
-        throw error;
+        console.error('Error getting template count:', error);
+        return 0;
       }
     }
   
-    async getAllTemplates(): Promise<Template[]> {
+    async searchTemplates(searchTerm: string, collectionId?: string): Promise<Template[]> {
       try {
-        const q = query(
-          collection(db, this.templatesCollection),
-          where('isActive', '==', true),
-          orderBy('updatedAt', 'desc')
+        // Note: Firestore doesn't support full-text search natively
+        // This is a basic implementation - for production, consider using Algolia or similar
+        const templates = await this.getTemplates(collectionId);
+        
+        const searchTermLower = searchTerm.toLowerCase();
+        return templates.filter(template => 
+          template.name.toLowerCase().includes(searchTermLower) ||
+          template.description?.toLowerCase().includes(searchTermLower) ||
+          template.category?.toLowerCase().includes(searchTermLower) ||
+          template.tags?.some(tag => tag.toLowerCase().includes(searchTermLower))
         );
-        
-        const querySnapshot = await getDocs(q);
-        const templates: Template[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          templates.push({
-            id: doc.id,
-            ...doc.data()
-          } as Template);
-        });
-        
-        console.log('✅ All templates loaded:', templates.length);
-        return templates;
       } catch (error) {
-        console.error('❌ Error loading all templates:', error);
+        console.error('Error searching templates:', error);
         throw error;
-      }
-    }
-  
-    async deleteTemplate(id: string): Promise<void> {
-      try {
-        // Get template data first to update collection count
-        const template = await this.getTemplate(id);
-        
-        // Soft delete - mark as inactive
-        const docRef = doc(db, this.templatesCollection, id);
-        await updateDoc(docRef, {
-          isActive: false,
-          updatedAt: serverTimestamp()
-        });
-        
-        // Update collection template count
-        if (template) {
-          await this.updateCollectionCount(template.collectionId);
-        }
-        
-        console.log('✅ Template deleted:', id);
-      } catch (error) {
-        console.error('❌ Error deleting template:', error);
-        throw error;
-      }
-    }
-  
-    async duplicateTemplate(id: string, newName: string): Promise<string> {
-      try {
-        const originalTemplate = await this.getTemplate(id);
-        if (!originalTemplate) {
-          throw new Error('Template not found');
-        }
-        
-        const duplicateData = {
-          ...originalTemplate,
-          name: newName,
-          status: 'draft' as const
-        };
-        
-        // Remove id and timestamp fields
-        delete duplicateData.id;
-        delete (duplicateData as any).createdAt;
-        delete (duplicateData as any).updatedAt;
-        delete (duplicateData as any).version;
-        
-        return await this.saveTemplate(duplicateData);
-      } catch (error) {
-        console.error('❌ Error duplicating template:', error);
-        throw error;
-      }
-    }
-  
-    // Helper method to update collection template count
-    private async updateCollectionCount(collectionId: string): Promise<void> {
-      try {
-        const templates = await this.getTemplatesByCollection(collectionId);
-        const docRef = doc(db, this.collectionsCollection, collectionId);
-        await updateDoc(docRef, {
-          templateCount: templates.length,
-          updatedAt: serverTimestamp()
-        });
-      } catch (error) {
-        console.error('❌ Error updating collection count:', error);
       }
     }
   
     // Extract variables from template content
     extractVariables(content: string): string[] {
-      const variableRegex = /\{\{([^}]+)\}\}/g;
+      const regex = /\{\{([^}]+)\}\}/g;
       const variables: string[] = [];
       let match;
       
-      while ((match = variableRegex.exec(content)) !== null) {
+      while ((match = regex.exec(content)) !== null) {
         const variable = match[1].trim();
         if (!variables.includes(variable)) {
           variables.push(variable);
@@ -326,47 +280,17 @@ import {
       return variables;
     }
   
-    // Search templates
-    async searchTemplates(searchTerm: string, collectionId?: string): Promise<Template[]> {
+    // Update template variables automatically
+    async updateTemplateVariables(templateId: string, content: string): Promise<void> {
       try {
-        let q = query(
-          collection(db, this.templatesCollection),
-          where('isActive', '==', true)
-        );
-        
-        if (collectionId) {
-          q = query(q, where('collectionId', '==', collectionId));
-        }
-        
-        const querySnapshot = await getDocs(q);
-        const templates: Template[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          const template = {
-            id: doc.id,
-            ...doc.data()
-          } as Template;
-          
-          // Simple text search in name, description, and content
-          const searchLower = searchTerm.toLowerCase();
-          if (
-            template.name.toLowerCase().includes(searchLower) ||
-            template.description?.toLowerCase().includes(searchLower) ||
-            template.content.toLowerCase().includes(searchLower) ||
-            template.tags.some(tag => tag.toLowerCase().includes(searchLower))
-          ) {
-            templates.push(template);
-          }
-        });
-        
-        console.log('✅ Search completed:', templates.length, 'results');
-        return templates;
+        const variables = this.extractVariables(content);
+        await this.updateTemplate(templateId, { variables }, false);
       } catch (error) {
-        console.error('❌ Error searching templates:', error);
+        console.error('Error updating template variables:', error);
         throw error;
       }
     }
   }
   
-  // Export singleton instance
   export const templateService = new TemplateService();
+  export default templateService;

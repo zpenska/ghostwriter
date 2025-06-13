@@ -65,7 +65,7 @@ export default function TemplateBuilderPage() {
     if (over && over.id === 'editor-droppable' && editorRef) {
       const variable = active.data.current;
       if (variable) {
-        const variableHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200 font-mono text-sm" contenteditable="false">{{${variable.name}}}</span>&nbsp;`;
+        const variableHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded bg-[#D3C5E8] text-[#3d3d3c] border border-[#8a7fae] font-mono text-sm" contenteditable="false">{{${variable.name}}}</span>&nbsp;`;
         editorRef.chain().focus().insertContent(variableHtml).run();
         setHasUnsavedChanges(true);
       }
@@ -212,8 +212,7 @@ export default function TemplateBuilderPage() {
           currentTemplate.id,
           {
             content: templateContent,
-            variables,
-            lastModifiedBy: 'current-user'
+            variables
           },
           false // Don't increment version for auto-saves to preserve collaboration
         );
@@ -243,8 +242,8 @@ export default function TemplateBuilderPage() {
   return (
     <EditorContext.Provider value={{ editor: editorRef }}>
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="flex h-screen bg-gray-50">
-          {/* Sidebar */}
+        <div className="flex h-screen bg-[#F5F5F1]">
+          {/* Variable Panel Sidebar - WHITE background */}
           <div className={classNames(
             'bg-white border-r border-gray-200 transition-all duration-300',
             variablePanelCollapsed ? 'w-12' : 'w-80'
@@ -252,7 +251,7 @@ export default function TemplateBuilderPage() {
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className={classNames(
-                  'text-lg font-semibold text-gray-900',
+                  'text-lg font-semibold text-[#3d3d3c]',
                   variablePanelCollapsed ? 'hidden' : ''
                 )}>
                   Template Builder
@@ -278,22 +277,22 @@ export default function TemplateBuilderPage() {
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
-            {/* Header */}
+            {/* Header - WHITE background */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <h1 className="text-2xl font-semibold text-gray-900">
+                  <h1 className="text-2xl font-semibold text-[#3d3d3c]">
                     {currentTemplate?.name || 'New Template'}
                   </h1>
                   {hasUnsavedChanges && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#d4c57f]/20 text-[#3d3d3c]">
                       Unsaved changes
                     </span>
                   )}
                   {currentTemplate?.status && (
                     <span className={classNames(
                       "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-                      currentTemplate.status === 'published' ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                      currentTemplate.status === 'published' ? "bg-[#DFFC95] text-[#3a4943]" : "bg-[#F5F5F1] text-[#3d3d3c]"
                     )}>
                       {currentTemplate.status}
                     </span>
@@ -319,7 +318,7 @@ export default function TemplateBuilderPage() {
               </div>
             </div>
 
-            {/* Tabs */}
+            {/* Tabs - WHITE background */}
             <div className="bg-white border-b border-gray-200">
               <nav className="flex space-x-8 px-6" aria-label="Tabs">
                 {tabs.map((tab) => (
@@ -339,10 +338,10 @@ export default function TemplateBuilderPage() {
               </nav>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 p-6 overflow-hidden bg-gray-50">
+            {/* Content Area - NIMBUS background */}
+            <div className="flex-1 p-6 overflow-hidden bg-[#F5F5F1]">
               <div className="h-full flex gap-6">
-                {/* Editor Area */}
+                {/* Editor Area - WHITE background */}
                 <div className="flex-1 bg-white rounded-lg shadow-sm">
                   {activeTab === 'Builder' && (
                     <div className="h-full">
@@ -358,7 +357,7 @@ export default function TemplateBuilderPage() {
                   )}
                   {activeTab === 'Logic' && (
                     <div className="h-full bg-white rounded-lg shadow-sm p-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Template Logic</h3>
+                      <h3 className="text-lg font-medium text-[#3d3d3c] mb-4">Template Logic</h3>
                       <div className="space-y-4">
                         <p className="text-gray-500">Configure conditional logic and rules for your template.</p>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
@@ -370,35 +369,35 @@ export default function TemplateBuilderPage() {
                   )}
                   {activeTab === 'Properties' && (
                     <div className="h-full bg-white rounded-lg shadow-sm p-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Template Properties</h3>
+                      <h3 className="text-lg font-medium text-[#3d3d3c] mb-4">Template Properties</h3>
                       <div className="space-y-4">
                         {currentTemplate && (
-                          <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                          <div className="bg-[#F5F5F1] p-4 rounded-lg space-y-3">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <label className="font-medium text-gray-700">Name:</label>
-                                <p className="text-gray-900">{currentTemplate.name}</p>
+                                <label className="font-medium text-[#3d3d3c]">Name:</label>
+                                <p className="text-[#3d3d3c]">{currentTemplate.name}</p>
                               </div>
                               <div>
-                                <label className="font-medium text-gray-700">Category:</label>
-                                <p className="text-gray-900 capitalize">{currentTemplate.category}</p>
+                                <label className="font-medium text-[#3d3d3c]">Category:</label>
+                                <p className="text-[#3d3d3c] capitalize">{currentTemplate.category}</p>
                               </div>
                               <div>
-                                <label className="font-medium text-gray-700">Status:</label>
-                                <p className="text-gray-900 capitalize">{currentTemplate.status}</p>
+                                <label className="font-medium text-[#3d3d3c]">Status:</label>
+                                <p className="text-[#3d3d3c] capitalize">{currentTemplate.status}</p>
                               </div>
                               <div>
-                                <label className="font-medium text-gray-700">Version:</label>
-                                <p className="text-gray-900">{currentTemplate.version}</p>
+                                <label className="font-medium text-[#3d3d3c]">Version:</label>
+                                <p className="text-[#3d3d3c]">{currentTemplate.version}</p>
                               </div>
                             </div>
                             <div>
-                              <label className="font-medium text-gray-700">Variables Used:</label>
+                              <label className="font-medium text-[#3d3d3c]">Variables Used:</label>
                               <div className="flex flex-wrap gap-2 mt-1">
                                 {currentTemplate.variables?.map((variable: string, index: number) => (
                                   <span
                                     key={index}
-                                    className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
+                                    className="inline-flex items-center px-2 py-1 bg-[#D3C5E8] text-[#3d3d3c] text-xs rounded-full"
                                   >
                                     {variable}
                                   </span>
@@ -418,10 +417,10 @@ export default function TemplateBuilderPage() {
                   )}
                   {activeTab === 'Preview' && (
                     <div className="h-full bg-white rounded-lg shadow-sm p-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">Template Preview</h3>
+                      <h3 className="text-lg font-medium text-[#3d3d3c] mb-4">Template Preview</h3>
                       <div className="space-y-4">
                         <p className="text-gray-500">Preview your template with sample data.</p>
-                        <div className="border rounded-lg p-6 bg-gray-50">
+                        <div className="border rounded-lg p-6 bg-[#F5F5F1]">
                           <div 
                             className="prose max-w-none"
                             dangerouslySetInnerHTML={{ __html: templateContent || '<p>No content yet...</p>' }}

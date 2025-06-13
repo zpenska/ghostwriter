@@ -1,31 +1,37 @@
-// Button styles based on your Ghostwriter design system and Tailwind Catalyst UI
-// Using your specified colors without ghost/emoji terminology
+// src/lib/utils/button-styles.ts
+// Button styles based on your Ghostwriter design system and brand colors
 
 export const buttonStyles = {
   // Primary button - Muted lavender (#8a7fae)
-  primary: 'inline-flex items-center justify-center rounded-md bg-[#8a7fae] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#7a6f9e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] disabled:opacity-50 disabled:cursor-not-allowed',
+  primary: 'inline-flex items-center justify-center rounded-md bg-[#8a7fae] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#3a4943] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
   
-  // Secondary button - using slate gray
-  secondary: 'inline-flex items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-[#44474F] shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] disabled:opacity-50 disabled:cursor-not-allowed',
+  // Secondary button - White with border
+  secondary: 'inline-flex items-center justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-[#3d3d3c] shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-[#F5F5F1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
   
-  // Text button - minimal style
-  text: 'inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-semibold text-[#44474F] hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] disabled:opacity-50 disabled:cursor-not-allowed',
+  // Tertiary button - Text only
+  tertiary: 'inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-semibold text-[#8a7fae] hover:bg-[#8a7fae]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
   
-  // Icon button - for toolbar icons
-  icon: 'inline-flex items-center justify-center rounded p-1 text-[#44474F] hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] disabled:opacity-50 disabled:cursor-not-allowed',
+  // Danger button - For destructive actions
+  danger: 'inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 transition-colors duration-200',
   
-  // Toolbar button - for editor toolbar
-  toolbar: 'inline-flex items-center justify-center rounded px-2 py-1 text-sm text-[#44474F] hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] disabled:opacity-50 disabled:cursor-not-allowed',
+  // Success button - For positive actions
+  success: 'inline-flex items-center justify-center rounded-md bg-[#3a4943] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#8a7fae] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3a4943] transition-colors duration-200',
   
-  // Danger button - for destructive actions
-  danger: 'inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-50 disabled:cursor-not-allowed',
+  // Icon button - For icon-only buttons
+  icon: 'inline-flex items-center justify-center rounded-md p-2 text-[#3d3d3c] hover:bg-[#F5F5F1] hover:text-[#8a7fae] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
   
-  // Success button - using deep forest green
-  success: 'inline-flex items-center justify-center rounded-md bg-[#2E4A3F] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#253e34] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2E4A3F] disabled:opacity-50 disabled:cursor-not-allowed',
+  // Small variants
+  primarySmall: 'inline-flex items-center justify-center rounded-md bg-[#8a7fae] px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-[#3a4943] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
   
-  // Yellow button - using muted yellow
-  yellow: 'inline-flex items-center justify-center rounded-md bg-[#d4c57f] px-3 py-2 text-sm font-semibold text-[#2E4A3F] shadow-sm hover:bg-[#c4b56f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4c57f] disabled:opacity-50 disabled:cursor-not-allowed',
+  secondarySmall: 'inline-flex items-center justify-center rounded-md bg-white px-2 py-1 text-xs font-semibold text-[#3d3d3c] shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-[#F5F5F1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
   
-  // Purple button - using muted lavender (same as primary)
-  purple: 'inline-flex items-center justify-center rounded-md bg-[#8a7fae] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#7a6f9e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] disabled:opacity-50 disabled:cursor-not-allowed',
-}
+  // Large variants
+  primaryLarge: 'inline-flex items-center justify-center rounded-md bg-[#8a7fae] px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-[#3a4943] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
+  
+  secondaryLarge: 'inline-flex items-center justify-center rounded-md bg-white px-4 py-3 text-base font-semibold text-[#3d3d3c] shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-[#F5F5F1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a7fae] transition-colors duration-200',
+  
+  // Disabled states
+  primaryDisabled: 'inline-flex items-center justify-center rounded-md bg-gray-300 px-3 py-2 text-sm font-semibold text-gray-500 shadow-sm cursor-not-allowed',
+  
+  secondaryDisabled: 'inline-flex items-center justify-center rounded-md bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-400 shadow-sm ring-1 ring-inset ring-gray-200 cursor-not-allowed',
+};
