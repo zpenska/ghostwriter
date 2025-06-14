@@ -1,99 +1,188 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import html2pdf from 'html2pdf.js';
-import { PaperAirplaneIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+import { Badge } from '@/components/ui/badge';
+
+interface Template {
+  id: string;
+  name: string;
+  content: string;
+}
+
+interface Member {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  memberId?: string;
+  dob?: string;
+}
 
 export default function ClientSimulatorPage() {
-  const [templates, setTemplates] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [statusMap, setStatusMap] = useState({});
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [status, setStatus] = useState<'idle' | 'success'>('idle');
+
+  const [memberOpen, setMemberOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'templates'), (snapshot) => {
-      const loaded = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setTemplates(loaded);
+    const unsubTemplates = onSnapshot(collection(db, 'templates'), (snap) => {
+      const rows = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Template));
+      setTemplates(rows);
     });
-    return () => unsubscribe();
+
+    const unsubMembers = onSnapshot(collection(db, 'variable-test-data'), (snap) => {
+      const rows = snap.docs.map((doc) => {
+        const raw = doc.data();
+        const data = raw.data || {};
+
+        const member: Member = {
+          id: doc.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          memberId: data.memberId,
+          dob: data.birthDate,
+        };
+
+        console.log('[📥 Firestore Member]', member);
+        return member;
+      });
+
+      setMembers(rows);
+    });
+
+    return () => {
+      unsubTemplates();
+      unsubMembers();
+    };
   }, []);
 
-  const sendLetter = async (template) => {
+  const fillTemplate = (template: string, member: Member) => {
+    return template
+      .replace(/{{member_name}}/g, `${member.firstName ?? ''} ${member.lastName ?? ''}`)
+      .replace(/{{dob}}/g, member.dob ?? '')
+      .replace(/{{member_id}}/g, member.memberId ?? '')
+      .replace(/{{diagnosis_code}}/g, 'D123.4')
+      .replace(/{{provider_name}}/g, 'Dr. Smith')
+      .replace(/{{facility_name}}/g, 'HealthCare Clinic')
+      .replace(/{{service_date}}/g, '06/14/2025')
+      .replace(/{{procedure_code}}/g, 'PROC-001');
+  };
+
+  const sendLetter = async () => {
+    if (!selectedTemplate || !selectedMember) return;
+
+    console.log('✅ Sending letter to:', selectedMember.memberId);
+
+    const filled = fillTemplate(selectedTemplate.content, selectedMember);
+
     const docRef = await addDoc(collection(db, 'deliveries'), {
-      templateId: template.id,
+      templateId: selectedTemplate.id,
+      memberId: selectedMember.id,
       method: 'mail',
       status: 'pending',
       timestamp: new Date(),
     });
-    setStatusMap((prev) => ({ ...prev, [docRef.id]: 'pending' }));
-    // Call Lob API here
-  };
 
-  const sendFax = async (template) => {
-    const docRef = await addDoc(collection(db, 'deliveries'), {
-      templateId: template.id,
-      method: 'fax',
-      status: 'pending',
-      timestamp: new Date(),
+    await fetch('/api/lob-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        html: filled,
+        deliveryId: docRef.id,
+      }),
     });
-    setStatusMap((prev) => ({ ...prev, [docRef.id]: 'pending' }));
-    // Call InterFAX API here
-  };
 
-  const downloadPDF = (html) => {
-    html2pdf().from(html).save();
+    setStatus('success');
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="max-w-5xl mx-auto p-6 space-y-6 font-sans">
       <h1 className="text-3xl font-bold text-zinc-800">Client Simulator</h1>
-      <p className="text-zinc-500">Preview and send templates as letters or faxes</p>
+      <p className="text-zinc-500">Select a member and a letter template to send.</p>
 
-      <div className="rounded-2xl border bg-white shadow p-4 space-y-4">
-        <label className="text-sm text-zinc-700 font-medium">Select Template</label>
-        <select
-          className="w-full p-2 border border-zinc-300 rounded-xl"
-          onChange={(e) => {
-            const selected = templates.find(t => t.id === e.target.value);
-            setSelectedTemplate(selected || null);
-          }}
-        >
-          <option value="">Choose a template</option>
-          {templates.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
-          ))}
-        </select>
-
-        {selectedTemplate && (
-          <div className="border rounded-xl p-4 bg-zinc-50 space-y-4">
-            <div id="template-preview" className="prose max-w-none bg-white p-4 rounded-xl shadow">
-              <div dangerouslySetInnerHTML={{ __html: selectedTemplate.content }} />
-            </div>
-
-            <div className="flex gap-4">
-              <button
-                onClick={() => sendLetter(selectedTemplate)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8a7fae] text-white hover:opacity-90"
-              >
-                <PaperAirplaneIcon className="h-4 w-4" /> Send Letter
-              </button>
-              <button
-                onClick={() => sendFax(selectedTemplate)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3a4943] text-white hover:opacity-90"
-              >
-                <PrinterIcon className="h-4 w-4" /> Send Fax
-              </button>
-              <button
-                onClick={() => downloadPDF(document.getElementById('template-preview'))}
-                className="ml-auto text-sm underline text-zinc-600 hover:text-zinc-800"
-              >
-                Download PDF
-              </button>
-            </div>
+      <div className="space-y-4 bg-white border rounded-2xl p-6 shadow-sm">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-zinc-700 mb-1 block">Select Member</label>
+            <Select
+              open={memberOpen}
+              onOpenChange={setMemberOpen}
+              onValueChange={(id: string) => {
+                setSelectedMember(members.find((m) => m.id === id) || null);
+                setMemberOpen(false);
+              }}
+            >
+              <SelectTrigger className="w-full border border-zinc-300 bg-white shadow-sm rounded-md px-3 py-2 text-sm text-zinc-800">
+                <SelectValue placeholder="Choose a member" />
+              </SelectTrigger>
+              <SelectContent>
+                {members
+                  .filter((m) => m.firstName && m.lastName && m.memberId)
+                  .map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.firstName} {m.lastName} ({m.memberId})
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
+
+          <div>
+            <label className="text-sm font-medium text-zinc-700 mb-1 block">Select Template</label>
+            <Select
+              open={templateOpen}
+              onOpenChange={setTemplateOpen}
+              onValueChange={(id: string) => {
+                setSelectedTemplate(templates.find((t) => t.id === id) || null);
+                setTemplateOpen(false);
+              }}
+            >
+              <SelectTrigger className="w-full border border-zinc-300 bg-white shadow-sm rounded-md px-3 py-2 text-sm text-zinc-800">
+                <SelectValue placeholder="Choose a template" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <button
+            onClick={sendLetter}
+            disabled={!selectedTemplate || !selectedMember}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#8a7fae] text-white hover:opacity-90 disabled:opacity-50"
+          >
+            <PaperAirplaneIcon className="h-4 w-4" /> Send Letter
+          </button>
+
+          {status === 'success' && (
+            <Badge color="green" className="ml-4">
+              Letter sent successfully!
+            </Badge>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
