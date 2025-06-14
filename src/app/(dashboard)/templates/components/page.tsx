@@ -1,4 +1,3 @@
-// src/app/(dashboard)/templates/components/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,7 +25,7 @@ import {
   TrashIcon,
   DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
-import { buttonStyles } from '@/lib/utils/button-styles';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/cn';
 
 interface Component {
@@ -152,9 +151,9 @@ export default function ComponentsPage() {
     const colors = {
       'header': 'bg-blue-100 text-blue-800',
       'footer': 'bg-green-100 text-green-800',
-      'signature': 'bg-purple-100 text-purple-800',
+      'signature': 'bg-indigo-100 text-indigo-800',
       'disclaimer': 'bg-yellow-100 text-yellow-800',
-      'address': 'bg-indigo-100 text-indigo-800',
+      'address': 'bg-violet-100 text-violet-800',
       'contact': 'bg-pink-100 text-pink-800',
       'custom': 'bg-gray-100 text-gray-800'
     };
@@ -164,7 +163,7 @@ export default function ComponentsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -181,19 +180,21 @@ export default function ComponentsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              outline
               onClick={() => router.push('/templates')}
-              className={cn(buttonStyles.secondary, "flex items-center gap-2")}
+              className="flex items-center gap-2"
             >
               Back to Templates
-            </button>
-            <button
+            </Button>
+            <Button
+              color="indigo"
               onClick={() => setShowCreateModal(true)}
-              className={cn(buttonStyles.primary, "flex items-center gap-2")}
+              className="flex items-center gap-2"
             >
               <PlusIcon className="h-4 w-4" />
               New Component
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -209,7 +210,7 @@ export default function ComponentsPage() {
               placeholder="Search components..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
 
@@ -217,7 +218,7 @@ export default function ComponentsPage() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {categories.map(category => (
               <option key={category.value} value={category.value}>
@@ -241,12 +242,12 @@ export default function ComponentsPage() {
               }
             </p>
             {(!searchTerm && selectedCategory === 'all') && (
-              <button
+              <Button
+                color="indigo"
                 onClick={() => setShowCreateModal(true)}
-                className={buttonStyles.primary}
               >
                 Create Component
-              </button>
+              </Button>
             )}
           </div>
         ) : (
@@ -266,9 +267,9 @@ export default function ComponentsPage() {
                     </span>
                   </div>
                   <div className="relative">
-                    <button className="p-1 hover:bg-gray-100 rounded">
+                    <Button plain className="p-1">
                       <EllipsisVerticalIcon className="h-4 w-4 text-gray-500" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -304,30 +305,33 @@ export default function ComponentsPage() {
 
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                   <div className="flex items-center gap-1">
-                    <button
+                    <Button
+                      plain
                       onClick={() => {
                         // TODO: Open edit modal
                         console.log('Edit component:', component.id);
                       }}
-                      className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
+                      className="p-1 text-gray-500 hover:text-gray-700"
                       title="Edit Component"
                     >
                       <PencilIcon className="h-4 w-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      plain
                       onClick={() => handleDuplicateComponent(component)}
-                      className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
+                      className="p-1 text-gray-500 hover:text-gray-700"
                       title="Duplicate Component"
                     >
                       <DocumentDuplicateIcon className="h-4 w-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      plain
                       onClick={() => handleDeleteComponent(component.id!)}
-                      className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600"
+                      className="p-1 text-gray-500 hover:text-red-600"
                       title="Delete Component"
                     >
                       <TrashIcon className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-500">
@@ -356,18 +360,18 @@ export default function ComponentsPage() {
                 This feature will be implemented in the next version.
               </p>
               <div className="flex justify-end gap-2">
-                <button
+                <Button
+                  outline
                   onClick={() => setShowCreateModal(false)}
-                  className={buttonStyles.secondary}
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                  color="indigo"
                   onClick={() => setShowCreateModal(false)}
-                  className={buttonStyles.primary}
                 >
                   Coming Soon
-                </button>
+                </Button>
               </div>
             </div>
           </div>

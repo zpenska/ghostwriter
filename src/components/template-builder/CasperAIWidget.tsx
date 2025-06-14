@@ -1,9 +1,9 @@
-// src/components/template-builder/CasperAIWidget.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { Send, AlertCircle, Loader2, Sparkles, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Message {
   role: 'user' | 'ai';
@@ -246,9 +246,13 @@ export default function CasperAIWidget({
         open ? "translate-x-0" : "translate-x-full"
       )}
     >
-      {/* Toggle Button - Lower and wider, just "Casper" */}
-      <button
-        className="absolute left-[-100px] bottom-16 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-5 py-3 rounded-l-lg hover:from-purple-700 hover:to-blue-700 text-sm shadow-lg transition-all duration-200 flex items-center gap-2 min-w-[100px]"
+      {/* Toggle Button */}
+      <Button
+        color="indigo"
+        className={cn(
+          "absolute left-[-100px] bottom-16 min-w-[100px] shadow-lg",
+          "flex items-center gap-2"
+        )}
         onClick={() => setOpen((prev) => !prev)}
       >
         {open ? (
@@ -259,21 +263,22 @@ export default function CasperAIWidget({
             <span className="whitespace-nowrap">Casper</span>
           </>
         )}
-      </button>
+      </Button>
 
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="p-4 border-b bg-gradient-to-r from-purple-50 to-blue-50 flex items-center justify-between">
+        <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-600" />
-            <h2 className="text-lg font-semibold text-gray-800">Casper AI</h2>
+            <Sparkles className="w-5 h-5 text-indigo-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Casper AI</h2>
           </div>
-          <button
+          <Button
+            plain
             onClick={clearChat}
-            className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1 rounded-full bg-white hover:bg-gray-50 transition-colors shadow-sm"
+            className="text-xs px-3 py-1"
           >
             Clear Chat
-          </button>
+          </Button>
         </div>
 
         {/* Quick Actions */}
@@ -282,13 +287,14 @@ export default function CasperAIWidget({
             <p className="text-xs text-gray-600 mb-2">Quick actions:</p>
             <div className="grid grid-cols-2 gap-2">
               {quickActions.map((action, index) => (
-                <button
+                <Button
                   key={index}
+                  plain
                   onClick={() => handleQuickAction(action.prompt)}
-                  className="text-left text-xs p-2 bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg transition-colors"
+                  className="text-left text-xs p-2 h-auto whitespace-normal"
                 >
                   {action.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -300,12 +306,12 @@ export default function CasperAIWidget({
             <div
               key={i}
               className={cn(
-                'rounded-lg p-3 text-sm max-w-[90%] shadow-sm',
+                'rounded-lg p-3 text-sm max-w-[90%] shadow-sm border',
                 msg.role === 'user' 
-                  ? 'bg-gradient-to-r from-purple-100 to-blue-100 text-gray-800 ml-auto border border-purple-200' 
+                  ? 'bg-indigo-50 text-gray-800 ml-auto border-indigo-200' 
                   : msg.error
-                    ? 'bg-red-50 text-red-800 border border-red-200'
-                    : 'bg-green-50 text-gray-800 border border-green-200'
+                    ? 'bg-red-50 text-red-800 border-red-200'
+                    : 'bg-green-50 text-gray-800 border-green-200'
               )}
             >
               {msg.error && (
@@ -335,23 +341,23 @@ export default function CasperAIWidget({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none min-h-[80px] max-h-[120px]"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none min-h-[80px] max-h-[120px]"
               placeholder="Ask Casper to draft a letter, add variables, or rewrite content..."
               rows={3}
               disabled={loading}
             />
-            <button
-              type="button"
+            <Button
+              color="indigo"
               onClick={handleSubmit}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white p-3 rounded-lg disabled:opacity-50 transition-all duration-200 flex-shrink-0 shadow-sm"
               disabled={loading || !input.trim()}
+              className="flex-shrink-0 p-3"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />
               )}
-            </button>
+            </Button>
           </div>
           
           <div className="flex items-center justify-between text-xs text-gray-500">

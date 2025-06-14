@@ -1,28 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Radio+Canada:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@layer base {
-  :root {
-    --foreground-rgb: 0, 0, 0;
-    --background-start-rgb: 214, 219, 220;
-    --background-end-rgb: 255, 255, 255;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --foreground-rgb: 255, 255, 255;
-      --background-start-rgb: 0, 0, 0;
-      --background-end-rgb: 0, 0, 0;
-    }
-  }
-
-  body {
-    font-family: 'Radio Canada', system-ui, sans-serif;
-  }
-}
 
 @layer utilities {
   .text-balance {
@@ -53,7 +31,7 @@
 
   /* Placeholder styles */
   .template-editor .is-editor-empty:first-child::before {
-    color: #adb5bd;
+    color: #9ca3af;
     content: attr(data-placeholder);
     float: left;
     height: 0;
@@ -183,7 +161,7 @@
   /* Invisible characters */
   .invisible-characters .ProseMirror-widget {
     color: #d1d5db;
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
   }
 
   /* Highlight styles */
@@ -198,11 +176,11 @@
     display: inline-flex;
     align-items: center;
     padding: 0.125rem 0.5rem;
-    background-color: #e9d5ff;
-    color: #6b21a8;
-    border: 1px solid #c084fc;
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border: 1px solid #a5b4fc;
     border-radius: 0.25rem;
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
     font-size: 0.875rem;
     user-select: none;
   }
@@ -224,7 +202,7 @@
     border-radius: 8px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
     max-width: 400px;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   }
 
   .language-tool-popup-content {
@@ -335,132 +313,125 @@
     color: #111827;
   }
 
-  /* Spell check popup styles - remove old implementation */
-  .spell-check-popup {
-    display: none;
+  /* Line clamp utilities for template descriptions */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
   }
-}
-/* Add these styles to your existing globals.css file */
-/* They work with your existing Radio Canada font and color scheme */
 
-/* Line clamp utilities for template descriptions */
-.line-clamp-1 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
 
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
 
-.line-clamp-3 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
+  /* Template management specific styles */
+  .template-card {
+    transition: all 200ms ease;
+    border-radius: 0.5rem;
+  }
 
-/* Template management specific styles */
-.template-card {
-  transition: all 200ms ease;
-  border-radius: 0.5rem;
-}
+  .template-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  }
 
-.template-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-}
+  /* Collection section animations */
+  .collection-header {
+    transition: background-color 150ms ease;
+  }
 
-/* Collection section animations */
-.collection-header {
-  transition: background-color 150ms ease;
-}
+  .collection-content {
+    transition: max-height 300ms ease, opacity 200ms ease;
+  }
 
-.collection-content {
-  transition: max-height 300ms ease, opacity 200ms ease;
-}
+  /* Top navigation cards hover effects */
+  .nav-card {
+    transition: all 200ms ease;
+  }
 
-/* Top navigation cards hover effects */
-.nav-card {
-  transition: all 200ms ease;
-}
+  .nav-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  }
 
-.nav-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-}
+  /* Toggle switch styling */
+  .status-toggle {
+    transition: all 200ms ease;
+  }
 
-/* Toggle switch styling to match your theme */
-.status-toggle {
-  transition: all 200ms ease;
-}
+  .status-toggle:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
 
-.status-toggle:focus {
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-}
+  /* Badge hover effects */
+  .template-badge {
+    transition: all 150ms ease;
+  }
 
-/* Badge hover effects for better interactivity */
-.template-badge {
-  transition: all 150ms ease;
-}
+  .template-badge:hover {
+    transform: scale(1.02);
+  }
 
-.template-badge:hover {
-  transform: scale(1.02);
-}
+  /* Search input styling */
+  .template-search:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: rgb(99, 102, 241);
+  }
 
-/* Search input styling to match your existing forms */
-.template-search:focus {
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  border-color: rgb(139, 92, 246);
-}
+  /* Dropdown menu animations */
+  .dropdown-enter {
+    transform: scale(0.95) translateY(-10px);
+    opacity: 0;
+    transition: all 150ms ease;
+  }
 
-/* Dropdown menu animations */
-.dropdown-enter {
-  transform: scale(0.95) translateY(-10px);
-  opacity: 0;
-  transition: all 150ms ease;
-}
+  .dropdown-enter-active {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 
-.dropdown-enter-active {
-  transform: scale(1) translateY(0);
-  opacity: 1;
-}
+  /* Button hover states */
+  .template-action-btn {
+    transition: all 150ms ease;
+  }
 
-/* Button hover states to match your existing buttons */
-.template-action-btn {
-  transition: all 150ms ease;
-}
+  .template-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 
-.template-action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+  /* Loading spinner */
+  .template-loading {
+    animation: spin 1s linear infinite;
+  }
 
-/* Loading spinner to match your existing loading states */
-.template-loading {
-  animation: spin 1s linear infinite;
-}
+  /* Custom scrollbar */
+  .template-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
 
-/* Custom scrollbar for template areas to match your theme */
-.template-scroll::-webkit-scrollbar {
-  width: 6px;
-}
+  .template-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+  }
 
-.template-scroll::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
+  .template-scroll::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 3px;
+  }
 
-.template-scroll::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.3);
-  border-radius: 3px;
-}
-
-.template-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.5);
+  .template-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.5);
+  }
 }

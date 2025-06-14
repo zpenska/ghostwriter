@@ -1,11 +1,10 @@
-// src/components/template-builder/SaveTemplateModal.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { X, FolderPlus, Save, Plus } from 'lucide-react';
 import { templateService, TemplateCollection } from '@/lib/services/template-service';
-import { buttonStyles } from '@/lib/utils/button-styles';
-import { classNames } from '@/lib/utils/cn';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils/cn';
 
 interface SaveTemplateModalProps {
   isOpen: boolean;
@@ -190,12 +189,13 @@ export default function SaveTemplateModal({
           <h2 className="text-xl font-semibold text-gray-900">
             {existingTemplate ? 'Update Template' : 'Save Template'}
           </h2>
-          <button
+          <Button
+            plain
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 p-1"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}
@@ -209,7 +209,7 @@ export default function SaveTemplateModal({
               type="text"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Enter template name"
               required
             />
@@ -223,7 +223,7 @@ export default function SaveTemplateModal({
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               rows={3}
               placeholder="Describe this template..."
             />
@@ -238,7 +238,7 @@ export default function SaveTemplateModal({
               <select
                 value={formData.collectionId}
                 onChange={(e) => setFormData(prev => ({ ...prev, collectionId: e.target.value }))}
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               >
                 <option value="">Select a collection</option>
@@ -248,14 +248,15 @@ export default function SaveTemplateModal({
                   </option>
                 ))}
               </select>
-              <button
+              <Button
+                outline
                 type="button"
                 onClick={() => setShowNewCollection(true)}
-                className={classNames(buttonStyles.secondary, "flex items-center gap-1")}
+                className="flex items-center gap-1"
               >
                 <FolderPlus className="w-4 h-4" />
                 New
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -297,7 +298,7 @@ export default function SaveTemplateModal({
                       key={color}
                       type="button"
                       onClick={() => setNewCollectionData(prev => ({ ...prev, color }))}
-                      className={classNames(
+                      className={cn(
                         "w-6 h-6 rounded-full border-2",
                         newCollectionData.color === color ? "border-gray-800" : "border-gray-300"
                       )}
@@ -308,21 +309,23 @@ export default function SaveTemplateModal({
               </div>
 
               <div className="flex gap-2">
-                <button
+                <Button
+                  color="indigo"
                   type="button"
                   onClick={handleCreateCollection}
                   disabled={loading || !newCollectionData.name.trim()}
-                  className={classNames(buttonStyles.primary, "text-sm")}
+                  className="text-sm"
                 >
                   {loading ? 'Creating...' : 'Create Collection'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  outline
                   type="button"
                   onClick={() => setShowNewCollection(false)}
-                  className={classNames(buttonStyles.secondary, "text-sm")}
+                  className="text-sm"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -336,7 +339,7 @@ export default function SaveTemplateModal({
               <select
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {categories.map(cat => (
                   <option key={cat.value} value={cat.value}>
@@ -352,7 +355,7 @@ export default function SaveTemplateModal({
               <select
                 value={formData.status}
                 onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {statusOptions.map(status => (
                   <option key={status.value} value={status.value}>
@@ -374,33 +377,35 @@ export default function SaveTemplateModal({
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Add a tag..."
               />
-              <button
+              <Button
+                outline
                 type="button"
                 onClick={handleAddTag}
-                className={classNames(buttonStyles.secondary, "flex items-center gap-1")}
+                className="flex items-center gap-1"
               >
                 <Plus className="w-4 h-4" />
                 Add
-              </button>
+              </Button>
             </div>
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {formData.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded-full"
                   >
                     {tag}
-                    <button
+                    <Button
+                      plain
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="text-purple-600 hover:text-purple-800"
+                      className="text-indigo-600 hover:text-indigo-800 p-0"
                     >
                       <X className="w-3 h-3" />
-                    </button>
+                    </Button>
                   </span>
                 ))}
               </div>
@@ -409,15 +414,12 @@ export default function SaveTemplateModal({
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className={buttonStyles.secondary}
-            >
+            <Button outline type="button" onClick={onClose}>
               Cancel
-            </button>
+            </Button>
             {saveType === 'publish' && (
-              <button
+              <Button
+                outline
                 type="button"
                 onClick={() => {
                   const selectedCollection = collections.find(c => c.id === formData.collectionId);
@@ -428,22 +430,23 @@ export default function SaveTemplateModal({
                   });
                 }}
                 disabled={loading}
-                className={classNames(buttonStyles.secondary, "flex items-center gap-2")}
+                className="flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 Save as Draft
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              color="indigo"
               type="submit"
               disabled={loading}
-              className={classNames(buttonStyles.primary, "flex items-center gap-2")}
+              className="flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               {loading ? 'Saving...' : 
                 saveType === 'publish' ? 'Save & Close' : 
                 existingTemplate ? 'Update Template' : 'Save Template'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
