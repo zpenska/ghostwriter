@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { cn } from '@/lib/utils/cn';
-import { Send, AlertCircle, Loader2, Sparkles, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { X, Send, AlertCircle, Loader2, Bot } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'ai';
@@ -15,6 +13,10 @@ interface CasperAIWidgetProps {
   editor?: any;
   variables?: any[];
   onContentInserted?: () => void;
+}
+
+function classNames(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(' ');
 }
 
 export default function CasperAIWidget({ 
@@ -240,18 +242,17 @@ export default function CasperAIWidget({
 
   return (
     <div 
-      className={cn(
-        "fixed right-0 top-0 h-screen w-[450px] bg-white border-l border-gray-200 shadow-xl z-50",
+      className={classNames(
+        "fixed right-0 top-0 h-screen w-[450px] bg-white border-l border-zinc-200 shadow-xl z-50",
         "transition-transform duration-300 transform",
         open ? "translate-x-0" : "translate-x-full"
       )}
     >
       {/* Toggle Button */}
-      <Button
-        color="indigo"
-        className={cn(
+      <button
+        className={classNames(
           "absolute left-[-100px] bottom-16 min-w-[100px] shadow-lg",
-          "flex items-center gap-2"
+          "flex items-center gap-2 bg-zinc-900 text-white hover:bg-zinc-800 px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
         )}
         onClick={() => setOpen((prev) => !prev)}
       >
@@ -259,42 +260,40 @@ export default function CasperAIWidget({
           <X className="w-4 h-4" />
         ) : (
           <>
-            <Sparkles className="w-4 h-4" />
+            <Bot className="w-4 h-4" />
             <span className="whitespace-nowrap">Casper</span>
           </>
         )}
-      </Button>
+      </button>
 
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-200 bg-zinc-50 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Casper AI</h2>
+            <Bot className="w-5 h-5 text-zinc-700" />
+            <h2 className="text-lg font-semibold text-zinc-900">Casper AI</h2>
           </div>
-          <Button
-            plain
+          <button
             onClick={clearChat}
-            className="text-xs px-3 py-1"
+            className="text-xs px-3 py-1 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
           >
             Clear Chat
-          </Button>
+          </button>
         </div>
 
         {/* Quick Actions */}
         {messages.length <= 1 && (
-          <div className="p-4 border-b bg-gray-50">
-            <p className="text-xs text-gray-600 mb-2">Quick actions:</p>
+          <div className="p-4 border-b border-zinc-200 bg-zinc-50">
+            <p className="text-xs text-zinc-600 mb-2">Quick actions:</p>
             <div className="grid grid-cols-2 gap-2">
               {quickActions.map((action, index) => (
-                <Button
+                <button
                   key={index}
-                  plain
                   onClick={() => handleQuickAction(action.prompt)}
-                  className="text-left text-xs p-2 h-auto whitespace-normal"
+                  className="text-left text-xs p-2 h-auto whitespace-normal text-zinc-700 hover:bg-white border border-zinc-300 rounded hover:border-zinc-400 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
                 >
                   {action.label}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
@@ -305,19 +304,19 @@ export default function CasperAIWidget({
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={cn(
+              className={classNames(
                 'rounded-lg p-3 text-sm max-w-[90%] shadow-sm border',
                 msg.role === 'user' 
-                  ? 'bg-indigo-50 text-gray-800 ml-auto border-indigo-200' 
+                  ? 'bg-zinc-100 text-zinc-900 ml-auto border-zinc-200' 
                   : msg.error
-                    ? 'bg-red-50 text-red-800 border-red-200'
-                    : 'bg-green-50 text-gray-800 border-green-200'
+                    ? 'bg-red-50 text-red-900 border-red-200'
+                    : 'bg-white text-zinc-900 border-zinc-200'
               )}
             >
               {msg.error && (
                 <div className="flex items-center gap-1 mb-1">
-                  <AlertCircle className="w-3 h-3" />
-                  <span className="text-xs font-medium">Error</span>
+                  <AlertCircle className="w-3 h-3 text-red-600" />
+                  <span className="text-xs font-medium text-red-600">Error</span>
                 </div>
               )}
               <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -325,8 +324,8 @@ export default function CasperAIWidget({
           ))}
           
           {loading && (
-            <div className="bg-blue-50 text-blue-800 rounded-lg p-3 text-sm max-w-[90%] flex items-center gap-2 border border-blue-200">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="bg-zinc-50 text-zinc-800 rounded-lg p-3 text-sm max-w-[90%] flex items-center gap-2 border border-zinc-200">
+              <Loader2 className="w-4 h-4 animate-spin text-zinc-600" />
               <span>Casper is crafting your content...</span>
             </div>
           )}
@@ -335,38 +334,37 @@ export default function CasperAIWidget({
         </div>
 
         {/* Input Form */}
-        <div className="p-4 border-t bg-gray-50 flex flex-col gap-3">
+        <div className="p-4 border-t border-zinc-200 bg-zinc-50 flex flex-col gap-3">
           <div className="flex items-end gap-2">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none min-h-[80px] max-h-[120px]"
+              className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 resize-none min-h-[80px] max-h-[120px] bg-white"
               placeholder="Ask Casper to draft a letter, add variables, or rewrite content..."
               rows={3}
               disabled={loading}
             />
-            <Button
-              color="indigo"
+            <button
               onClick={handleSubmit}
               disabled={loading || !input.trim()}
-              className="flex-shrink-0 p-3"
+              className="flex-shrink-0 p-3 bg-zinc-900 text-white hover:bg-zinc-800 disabled:opacity-50 focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 rounded-lg transition-colors focus:outline-none"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />
               )}
-            </Button>
+            </button>
           </div>
           
-          <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center justify-between text-xs text-zinc-500">
             <span>
               💡 I can use {variables.reduce((acc, group) => acc + group.variables.length, 0)} variables
             </span>
-            <span className={cn(
+            <span className={classNames(
               "px-2 py-1 rounded-full text-xs",
-              editor ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              editor ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
             )}>
               {editor ? "Editor connected" : "Editor not connected"}
             </span>

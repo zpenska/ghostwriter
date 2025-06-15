@@ -3,7 +3,6 @@
 import { Editor } from '@tiptap/react';
 import { useState, useRef, useEffect } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
-import AiAgentChat from './AiAgentChat';
 
 interface AiMenuProps {
   editor: Editor;
@@ -46,11 +45,7 @@ export default function AiMenu({ editor, onClose }: AiMenuProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div ref={menuRef} className="w-[600px] h-[500px] bg-white rounded-lg shadow-xl">
-        <AiAgentChat
-          onInsertText={handleInsertText}
-          onClose={onClose}
-          selectedText={selectedText}
-        />
+        
       </div>
     </div>
   );
