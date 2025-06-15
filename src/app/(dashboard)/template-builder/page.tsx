@@ -63,12 +63,19 @@ export default function TemplateBuilderPage() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
+  
     if (over && over.id === 'editor-droppable' && editorRef) {
-      const variable = active.data.current;
-      if (variable) {
-        const variableHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-300 font-mono text-sm" contenteditable="false">{{${variable.name}}}</span>&nbsp;`;
-        editorRef.chain().focus().insertContent(variableHtml).run();
+      const draggedData = active.data.current;
+      if (draggedData) {
+        if (draggedData.type === 'component') {
+          // Handle component insertion - insert the full HTML content
+          const componentHtml = `<div class="component-block border-l-4 border-emerald-500 pl-4 my-4 bg-emerald-50 p-3 rounded-r-lg" contenteditable="true">${draggedData.content}</div>`;
+          editorRef.chain().focus().insertContent(componentHtml).run();
+        } else {
+          // Handle variable insertion - keep your existing functionality
+          const variableHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-300 font-mono text-sm" contenteditable="false">{{${draggedData.name}}}</span>&nbsp;`;
+          editorRef.chain().focus().insertContent(variableHtml).run();
+        }
         setHasUnsavedChanges(true);
       }
     }

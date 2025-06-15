@@ -27,14 +27,11 @@ import {
   ChevronDownIcon,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { classNames } from '@/lib/utils/cn';
 
 interface EditorToolbarProps {
   editor: Editor | null;
   onOpenAiChat?: () => void;
-}
-
-function classNames(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ');
 }
 
 export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarProps) {
@@ -62,12 +59,16 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
   }
 
   const highlightColors = [
-    { name: 'Yellow', color: '#fef08a' },
-    { name: 'Green', color: '#bbf7d0' },
-    { name: 'Blue', color: '#bfdbfe' },
-    { name: 'Pink', color: '#fbcfe8' },
+    { name: 'Swift', color: '#DFFC95' },
+    { name: 'Neural', color: '#D3C5E8' },
+    { name: 'Scrub', color: '#BAE5D6' },
+    { name: 'Yellow', color: '#d4c57f' },
     { name: 'Clear', color: 'transparent' },
   ];
+
+  // Catalyst UI button styling
+  const toolbarButtonClass = "inline-flex items-center justify-center rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 transition-colors";
+  const activeButtonClass = "bg-zinc-200 text-zinc-900";
 
   return (
     <div className="border-b border-zinc-200 bg-white p-2">
@@ -75,55 +76,50 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Text Formatting */}
         <div className="flex items-center space-x-1">
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('bold') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('bold') ? activeButtonClass : ''
             )}
             title="Bold"
           >
             <BoldIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('italic') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('italic') ? activeButtonClass : ''
             )}
             title="Italic"
           >
             <ItalicIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('underline') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('underline') ? activeButtonClass : ''
             )}
             title="Underline"
           >
             <UnderlineIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleStrike().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('strike') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('strike') ? activeButtonClass : ''
             )}
             title="Strikethrough"
           >
             <StrikethroughIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleCode().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('code') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('code') ? activeButtonClass : ''
             )}
             title="Code"
           >
@@ -136,44 +132,40 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Alignment */}
         <div className="flex items-center space-x-1">
           <button
-            type="button"
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive({ textAlign: 'left' }) ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive({ textAlign: 'left' }) ? activeButtonClass : ''
             )}
             title="Align Left"
           >
             <AlignLeftIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive({ textAlign: 'center' }) ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive({ textAlign: 'center' }) ? activeButtonClass : ''
             )}
             title="Align Center"
           >
             <AlignCenterIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive({ textAlign: 'right' }) ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive({ textAlign: 'right' }) ? activeButtonClass : ''
             )}
             title="Align Right"
           >
             <AlignRightIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().setTextAlign('justify').run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive({ textAlign: 'justify' }) ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive({ textAlign: 'justify' }) ? activeButtonClass : ''
             )}
             title="Justify"
           >
@@ -186,33 +178,30 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Headings */}
         <div className="flex items-center space-x-1">
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('heading', { level: 1 }) ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('heading', { level: 1 }) ? activeButtonClass : ''
             )}
             title="Heading 1"
           >
             <Heading1Icon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('heading', { level: 2 }) ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('heading', { level: 2 }) ? activeButtonClass : ''
             )}
             title="Heading 2"
           >
             <Heading2Icon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('heading', { level: 3 }) ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('heading', { level: 3 }) ? activeButtonClass : ''
             )}
             title="Heading 3"
           >
@@ -225,42 +214,38 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Lists */}
         <div className="flex items-center space-x-1">
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('bulletList') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('bulletList') ? activeButtonClass : ''
             )}
             title="Bullet List"
           >
             <ListIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('orderedList') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('orderedList') ? activeButtonClass : ''
             )}
             title="Numbered List"
           >
             <ListOrderedIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             className={classNames(
-              "p-1.5 rounded hover:bg-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-              editor.isActive('blockquote') ? 'bg-zinc-200 text-zinc-900' : 'text-zinc-600'
+              toolbarButtonClass,
+              editor.isActive('blockquote') ? activeButtonClass : ''
             )}
             title="Quote"
           >
             <QuoteIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
             onClick={() => editor.chain().focus().setHorizontalRule().run()}
-            className="p-1.5 rounded hover:bg-zinc-100 text-zinc-600 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
+            className={toolbarButtonClass}
             title="Horizontal Rule"
           >
             <MinusIcon className="h-4 w-4" />
@@ -272,21 +257,22 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Highlight */}
         <div className="relative" ref={highlightMenuRef}>
           <button
-            type="button"
             onClick={() => setShowHighlightMenu(!showHighlightMenu)}
-            className="p-1.5 rounded hover:bg-zinc-100 text-zinc-600 flex items-center space-x-1 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
+            className={classNames(
+              toolbarButtonClass,
+              'flex items-center space-x-1'
+            )}
             title="Highlight"
           >
             <HighlighterIcon className="h-4 w-4" />
             <ChevronDownIcon className="h-3 w-3" />
           </button>
           {showHighlightMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg ring-1 ring-zinc-200 z-10">
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
               <div className="p-2 space-y-1">
                 {highlightColors.map((color) => (
                   <button
                     key={color.name}
-                    type="button"
                     onClick={() => {
                       if (color.color === 'transparent') {
                         editor.chain().focus().unsetHighlight().run();
@@ -295,7 +281,7 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
                       }
                       setShowHighlightMenu(false);
                     }}
-                    className="flex items-center space-x-2 w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                    className="flex items-center space-x-2 w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
                   >
                     <div 
                       className="w-4 h-4 rounded border border-zinc-300"
@@ -312,74 +298,70 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Table */}
         <div className="relative" ref={tableMenuRef}>
           <button
-            type="button"
             onClick={() => setShowTableMenu(!showTableMenu)}
-            className="p-1.5 rounded hover:bg-zinc-100 text-zinc-600 flex items-center space-x-1 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
+            className={classNames(
+              toolbarButtonClass,
+              'flex items-center space-x-1'
+            )}
             title="Table"
           >
             <TableIcon className="h-4 w-4" />
             <ChevronDownIcon className="h-3 w-3" />
           </button>
           {showTableMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg ring-1 ring-zinc-200 z-10">
+            <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
               <div className="p-2 space-y-1">
                 <button
-                  type="button"
                   onClick={() => {
                     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
                     setShowTableMenu(false);
                   }}
-                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
                 >
                   Insert Table
                 </button>
                 <button
-                  type="button"
                   onClick={() => {
                     editor.chain().focus().addColumnAfter().run();
                     setShowTableMenu(false);
                   }}
-                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
                 >
                   Add Column
                 </button>
                 <button
-                  type="button"
                   onClick={() => {
                     editor.chain().focus().addRowAfter().run();
                     setShowTableMenu(false);
                   }}
-                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
                 >
                   Add Row
                 </button>
                 <button
-                  type="button"
                   onClick={() => {
                     editor.chain().focus().deleteColumn().run();
                     setShowTableMenu(false);
                   }}
-                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
                 >
                   Delete Column
                 </button>
                 <button
-                  type="button"
                   onClick={() => {
                     editor.chain().focus().deleteRow().run();
                     setShowTableMenu(false);
                   }}
-                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
                 >
                   Delete Row
                 </button>
                 <button
-                  type="button"
                   onClick={() => {
                     editor.chain().focus().deleteTable().run();
                     setShowTableMenu(false);
                   }}
-                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-red-600 focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                  className="w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded text-red-600"
                 >
                   Delete Table
                 </button>
@@ -393,20 +375,40 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* Undo/Redo */}
         <div className="flex items-center space-x-1">
           <button
-            type="button"
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
-            className="p-1.5 rounded hover:bg-zinc-100 text-zinc-600 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
-            title="Undo"
+            onClick={() => {
+              try {
+                // Try to use undo if available
+                if (editor.commands.undo) {
+                  editor.commands.undo();
+                } else {
+                  console.log('Undo not available - using CollaborationHistory');
+                }
+              } catch (e) {
+                console.log('Undo error:', e);
+              }
+            }}
+            disabled={false}
+            className={toolbarButtonClass}
+            title="Undo (Ctrl/Cmd+Z)"
           >
             <UndoIcon className="h-4 w-4" />
           </button>
           <button
-            type="button"
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!editor.can().redo()}
-            className="p-1.5 rounded hover:bg-zinc-100 text-zinc-600 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1"
-            title="Redo"
+            onClick={() => {
+              try {
+                // Try to use redo if available
+                if (editor.commands.redo) {
+                  editor.commands.redo();
+                } else {
+                  console.log('Redo not available - using CollaborationHistory');
+                }
+              } catch (e) {
+                console.log('Redo error:', e);
+              }
+            }}
+            disabled={false}
+            className={toolbarButtonClass}
+            title="Redo (Ctrl/Cmd+Shift+Z)"
           >
             <RedoIcon className="h-4 w-4" />
           </button>
@@ -417,9 +419,9 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
         {/* AI Button */}
         {onOpenAiChat && (
           <button
-            type="button"
             onClick={onOpenAiChat}
-            className="text-xs px-3 py-1 bg-zinc-900 text-white hover:bg-zinc-800 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
+            className="inline-flex items-center rounded-lg bg-zinc-900 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
+            title="AI Assistant"
           >
             AI
           </button>
