@@ -1,2 +1,150 @@
 @import "tailwindcss";
 @import url('https://rsms.me/inter/inter.css');
+
+/* Resizable Image Styles */
+.resizable-image-wrapper {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.resizable-image-wrapper img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Resize handle styles */
+.resizable-image-wrapper .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.resizable-image-wrapper:hover .resize-handle,
+.resizable-image-wrapper.selected .resize-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.resizable-image-wrapper .resize-handle:hover {
+  background: #2563eb;
+  transform: scale(1.2);
+}
+
+/* Cursor styles for different resize directions */
+.cursor-nw-resize { cursor: nw-resize; }
+.cursor-ne-resize { cursor: ne-resize; }
+.cursor-sw-resize { cursor: sw-resize; }
+.cursor-se-resize { cursor: se-resize; }
+.cursor-n-resize { cursor: n-resize; }
+.cursor-s-resize { cursor: s-resize; }
+.cursor-e-resize { cursor: e-resize; }
+.cursor-w-resize { cursor: w-resize; }
+
+/* Selection ring */
+.resizable-image-wrapper.selected {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Size indicator */
+.size-indicator {
+  position: absolute;
+  top: -32px;
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Prevent text selection during resize */
+.select-none {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Image wrapper when resizing */
+.resizing {
+  cursor: grabbing !important;
+}
+
+/* Ensure images don't exceed container */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Focus styles for accessibility */
+.resizable-image-wrapper:focus-within {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Make images resizable with native browser functionality */
+.ProseMirror img.editor-image {
+  max-width: 100%;
+  height: auto;
+  resize: both;
+  overflow: auto;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+.ProseMirror img.editor-image:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.ProseMirror img.editor-image:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Show resize handle on hover/focus */
+.ProseMirror img.editor-image:hover::after,
+.ProseMirror img.editor-image:focus::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background: #3b82f6;
+  cursor: se-resize;
+}
+
+/* Make images selectable */
+.ProseMirror img {
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
+}
+
+/* Node selection styling */
+.ProseMirror .ProseMirror-selectednode {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}

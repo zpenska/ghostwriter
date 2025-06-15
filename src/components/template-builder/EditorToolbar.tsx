@@ -66,6 +66,25 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
     { name: 'Clear', color: 'transparent' },
   ];
 
+  // Image upload handler
+  const handleImageUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const src = e.target?.result as string;
+          editor.chain().focus().setImage({ src, alt: file.name }).run();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
   // Catalyst UI button styling
   const toolbarButtonClass = "inline-flex items-center justify-center rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 transition-colors";
   const activeButtonClass = "bg-zinc-200 text-zinc-900";
@@ -249,6 +268,19 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
             title="Horizontal Rule"
           >
             <MinusIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="w-px h-6 bg-zinc-300" />
+
+        {/* Media */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={handleImageUpload}
+            className={toolbarButtonClass}
+            title="Insert Image"
+          >
+            <ImageIcon className="h-4 w-4" />
           </button>
         </div>
 

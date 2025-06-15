@@ -61,23 +61,49 @@ export default function TemplateBuilderPage() {
     }
   };
 
+  // FIXED: Simple handleDragEnd function without DOM parsing errors
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-  
+
+    console.log('🎯 Drag ended:', { active: active.data.current, over: over?.id });
+
     if (over && over.id === 'editor-droppable' && editorRef) {
       const draggedData = active.data.current;
-      if (draggedData) {
-        if (draggedData.type === 'component') {
-          // Handle component insertion - insert the full HTML content
-          const componentHtml = `<div class="component-block border-l-4 border-emerald-500 pl-4 my-4 bg-emerald-50 p-3 rounded-r-lg" contenteditable="true">${draggedData.content}</div>`;
-          editorRef.chain().focus().insertContent(componentHtml).run();
-        } else {
-          // Handle variable insertion - keep your existing functionality
-          const variableHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-300 font-mono text-sm" contenteditable="false">{{${draggedData.name}}}</span>&nbsp;`;
-          editorRef.chain().focus().insertContent(variableHtml).run();
-        }
-        setHasUnsavedChanges(true);
+      
+      if (!draggedData) {
+        console.log('❌ No data found in drag event');
+        return;
       }
+
+      console.log('📝 Inserting content:', draggedData);
+
+      if (draggedData.type === 'component') {
+        // Handle component insertion - simple HTML insertion
+        console.log('🧩 Inserting component:', draggedData.name);
+        
+        const wrappedContent = `
+          <div class="component-block border-l-4 border-emerald-500 pl-4 my-4 bg-emerald-50 p-3 rounded-r-lg">
+            <div class="text-xs text-emerald-700 font-medium mb-2">📄 ${draggedData.name}</div>
+            <div class="component-content">
+              ${draggedData.content}
+            </div>
+          </div>
+          <p>&nbsp;</p>
+        `;
+        
+        // Simple insertion - let Tiptap handle the HTML parsing
+        editorRef.chain().focus().insertContent(wrappedContent).run();
+          
+      } else {
+        // Handle variable insertion - keep existing functionality
+        console.log('🏷️ Inserting variable:', draggedData.name);
+        const variableHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-300 font-mono text-sm" contenteditable="false">{{${draggedData.name}}}</span>&nbsp;`;
+        editorRef.chain().focus().insertContent(variableHtml).run();
+      }
+      
+      setHasUnsavedChanges(true);
+    } else {
+      console.log('❌ Drop target not found or editor not ready');
     }
   };
 
@@ -253,7 +279,6 @@ export default function TemplateBuilderPage() {
       <DndContext onDragEnd={handleDragEnd}>
         <div className="flex h-screen bg-white">
           {/* Variable Panel Sidebar - GREY background like Catalyst UI */}
-            {/* Variable Panel Sidebar - GREY background like Catalyst UI */}
           <div className={classNames(
             'bg-zinc-50 border-r border-zinc-200 transition-all duration-300',
             variablePanelCollapsed ? 'w-20' : 'w-80'

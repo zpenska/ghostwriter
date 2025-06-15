@@ -24,8 +24,7 @@ export default function EditCollectionModal({
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    color: '#71717a',
-    icon: '📄'
+    color: '#71717a'
   });
   const [loading, setLoading] = useState(false);
 
@@ -35,26 +34,19 @@ export default function EditCollectionModal({
     '#f97316', '#ec4899', '#6366f1', '#14b8a6'
   ];
 
-  const iconOptions = [
-    '📄', '📋', '📝', '🏥', '💊', '🩺', '📊', '📑',
-    '📌', '📎', '📁', '🗂️', '📚', '📓', '📘', '📙'
-  ];
-
   useEffect(() => {
     if (isOpen) {
       if (collection) {
         setFormData({
           name: collection.name,
           description: collection.description || '',
-          color: collection.color,
-          icon: collection.icon
+          color: collection.color
         });
       } else {
         setFormData({
           name: '',
           description: '',
-          color: '#71717a',
-          icon: '📄'
+          color: '#71717a'
         });
       }
     }
@@ -78,7 +70,8 @@ export default function EditCollectionModal({
         await templateService.createCollection({
           ...formData,
           createdBy: 'current-user',
-          isActive: true
+          isActive: true,
+          icon: ''
         });
       }
       
@@ -142,28 +135,6 @@ export default function EditCollectionModal({
             />
           </div>
 
-          {/* Icon Selection */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-900 mb-2">
-              Icon
-            </label>
-            <div className="grid grid-cols-8 gap-2">
-              {iconOptions.map(icon => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, icon }))}
-                  className={classNames(
-                    "p-2 text-lg border rounded-md hover:bg-zinc-50 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1",
-                    formData.icon === icon ? "border-zinc-500 bg-zinc-100" : "border-zinc-300"
-                  )}
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Color Selection */}
           <div>
             <label className="block text-sm font-medium text-zinc-900 mb-2">
@@ -195,7 +166,7 @@ export default function EditCollectionModal({
                 className="w-4 h-4 rounded-full border border-zinc-200"
                 style={{ backgroundColor: formData.color }}
               />
-              <span className="text-lg">{formData.icon}</span>
+              <FolderIcon className="w-5 h-5 text-zinc-600" />
               <span className="font-medium text-zinc-900">
                 {formData.name || 'Collection Name'}
               </span>

@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
+import { 
+  DocumentTextIcon,
+  ArchiveBoxIcon, 
+  PencilIcon,
+  MapPinIcon,
+  ExclamationTriangleIcon,
+  WrenchScrewdriverIcon
+} from '@heroicons/react/24/outline';
 import { useDraggable } from '@dnd-kit/core';
 import { db } from '@/lib/firebase/config';
 import { collection, getDocs } from 'firebase/firestore';
@@ -80,7 +88,7 @@ function DraggableVariable({ variable }: { variable: any }) {
   );
 }
 
-// Simplified DraggableComponent for list view
+// Updated DraggableComponent with Heroicons
 function DraggableComponent({ component }: { component: Component }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `component-${component.id}`,
@@ -98,16 +106,24 @@ function DraggableComponent({ component }: { component: Component }) {
   } : undefined;
 
   const getCategoryIcon = (category: string) => {
-    const icons: { [key: string]: string } = {
-      'header': '📄',
-      'footer': '📑',
-      'signature': '✍️',
-      'disclaimer': '⚠️',
-      'address': '📍',
-      'contact': '📞',
-      'custom': '🔧'
-    };
-    return icons[category] || '🔧';
+    const iconProps = "h-4 w-4 text-zinc-500";
+    
+    switch (category) {
+      case 'header':
+        return <DocumentTextIcon className={iconProps} />;
+      case 'footer':
+        return <ArchiveBoxIcon className={iconProps} />;
+      case 'signature':
+        return <PencilIcon className={iconProps} />;
+      case 'address':
+        return <MapPinIcon className={iconProps} />;
+      case 'disclaimer':
+        return <ExclamationTriangleIcon className={iconProps} />;
+      case 'custom':
+        return <WrenchScrewdriverIcon className={iconProps} />;
+      default:
+        return <WrenchScrewdriverIcon className={iconProps} />;
+    }
   };
 
   return (
@@ -119,7 +135,7 @@ function DraggableComponent({ component }: { component: Component }) {
       className="flex items-center justify-between py-2 px-3 bg-white rounded-md border border-zinc-200 shadow-sm hover:border-zinc-300 hover:shadow cursor-grab active:cursor-grabbing group transition-all ml-4"
     >
       <div className="flex items-center space-x-2 flex-1 min-w-0">
-        <span className="text-sm">{getCategoryIcon(component.category)}</span>
+        {getCategoryIcon(component.category)}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-zinc-900 truncate">{component.name}</p>
           {component.description && (
@@ -146,15 +162,43 @@ export default function VariablePanel() {
   const [components, setComponents] = useState<Component[]>([]);
   const [loadingComponents, setLoadingComponents] = useState(false);
 
-  // Component categories for organization
+  // Updated component categories with Heroicons
   const componentCategories = [
-    { id: 'header', name: 'Headers', icon: '📄' },
-    { id: 'footer', name: 'Footers', icon: '📑' },
-    { id: 'signature', name: 'Signatures', icon: '✍️' },
-    { id: 'address', name: 'Address Blocks', icon: '📍' },
-    { id: 'contact', name: 'Contact Info', icon: '📞' },
-    { id: 'disclaimer', name: 'Disclaimers', icon: '⚠️' },
-    { id: 'custom', name: 'Custom Components', icon: '🔧' },
+    { 
+      id: 'header', 
+      name: 'Headers', 
+      icon: <DocumentTextIcon className="h-4 w-4 text-zinc-600" />
+    },
+    { 
+      id: 'footer', 
+      name: 'Footers', 
+      icon: <ArchiveBoxIcon className="h-4 w-4 text-zinc-600" />
+    },
+    { 
+      id: 'signature', 
+      name: 'Signatures', 
+      icon: <PencilIcon className="h-4 w-4 text-zinc-600" />
+    },
+    { 
+      id: 'address', 
+      name: 'Address Blocks', 
+      icon: <MapPinIcon className="h-4 w-4 text-zinc-600" />
+    },
+    { 
+      id: 'contact', 
+      name: 'Contact Info', 
+      icon: <MapPinIcon className="h-4 w-4 text-zinc-600" />
+    },
+    { 
+      id: 'disclaimer', 
+      name: 'Disclaimers', 
+      icon: <ExclamationTriangleIcon className="h-4 w-4 text-zinc-600" />
+    },
+    { 
+      id: 'custom', 
+      name: 'Custom Components', 
+      icon: <WrenchScrewdriverIcon className="h-4 w-4 text-zinc-600" />
+    },
   ];
 
   // Load components when switching to components tab
@@ -314,7 +358,7 @@ export default function VariablePanel() {
             ))}
           </>
         ) : (
-          /* Components Tab - Nested category view */
+          /* Components Tab - Nested category view with Heroicons */
           <div className="py-2">
             {loadingComponents ? (
               <div className="text-center py-8">
@@ -324,7 +368,7 @@ export default function VariablePanel() {
             ) : groupedComponents.length === 0 ? (
               <div className="text-center py-8 px-4">
                 <div className="w-12 h-12 bg-zinc-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <span className="text-zinc-400">🔧</span>
+                  <WrenchScrewdriverIcon className="h-6 w-6 text-zinc-400" />
                 </div>
                 <p className="text-sm text-zinc-500 mb-2">
                   {components.length === 0 ? 'No components found' : 'No matching components'}
@@ -342,7 +386,7 @@ export default function VariablePanel() {
                       className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
                     >
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm">{category.icon}</span>
+                        {category.icon}
                         <span className="text-sm font-medium text-zinc-900">{category.name}</span>
                         <span className="text-xs text-zinc-500">({category.components.length})</span>
                       </div>

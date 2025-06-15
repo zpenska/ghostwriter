@@ -25,9 +25,10 @@ import DragHandle from '@tiptap-pro/extension-drag-handle';
 import InvisibleCharacters from '@tiptap-pro/extension-invisible-characters';
 import { useCallback, useEffect, useState } from 'react';
 import * as Y from 'yjs';
-import { Plugin } from 'prosemirror-state';
 import EditorToolbar from './EditorToolbar';
+import { useDroppable } from '@dnd-kit/core';
 import 'katex/dist/katex.min.css';
+import Image from '@tiptap/extension-image';
 
 // Reusable component block support
 import { Node } from '@tiptap/core';
@@ -60,51 +61,6 @@ const ReusableBlock = Node.create({
   },
 });
 
-// Drag + Snap-to-Section
-import { Extension } from '@tiptap/core';
-const GhostwriterDropExtension = Extension.create({
-  name: 'ghostwriterDrop',
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        props: {
-          handleDrop(view, event) {
-            const data = event.dataTransfer?.getData('application/x-ghostwriter');
-            if (!data) return false;
-            const parsed = JSON.parse(data);
-            const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
-            if (!coords) return false;
-
-            let insertPos = coords.pos;
-            const $pos = view.state.doc.resolve(coords.pos);
-            for (let i = $pos.depth; i > 0; i--) {
-              const node = $pos.node(i);
-              if (node.type.name === 'heading') {
-                insertPos = $pos.before(i + 1);
-                break;
-              }
-            }
-
-            const tr = view.state.tr;
-            if (parsed.type === 'Text' || parsed.type === 'Date' || parsed.type === 'ID') {
-              tr.insertText(`{{${parsed.name}}}`, insertPos);
-            } else {
-              const node = view.state.schema.nodes.reusableBlock.create({
-                label: parsed.name,
-                imageUrl: parsed.imageUrl || '',
-              });
-              tr.insert(insertPos, node);
-            }
-
-            view.dispatch(tr);
-            return true;
-          },
-        },
-      }),
-    ];
-  },
-});
-
 interface TemplateEditorProps {
   documentId: string;
   userId: string;
@@ -130,6 +86,11 @@ export default function TemplateEditor({
   const [tokens, setTokens] = useState<any>(null);
   const [status, setStatus] = useState('Connecting...');
   const [ydoc] = useState(() => new Y.Doc());
+
+  // Add droppable zone for @dnd-kit
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'editor-droppable',
+  });
 
   useEffect(() => {
     async function getTokens() {
@@ -213,6 +174,14 @@ export default function TemplateEditor({
       Underline,
       CharacterCount.configure({ limit: null }),
       Mathematics,
+      // Image extension for proper image rendering
+      Image.configure({
+        inline: false,
+        allowBase64: true,
+        HTMLAttributes: {
+          class: 'editor-image',
+        },
+      }),
       Table.configure({ 
         resizable: true, 
         HTMLAttributes: { class: 'template-table' } 
@@ -253,7 +222,6 @@ export default function TemplateEditor({
       }),
       InvisibleCharacters.configure({ visible: false }),
       ReusableBlock,
-      GhostwriterDropExtension,
       // AI extension with proper configuration (only if tokens available)
       ...(tokens?.aiToken ? [
         AI.configure({
@@ -372,7 +340,13 @@ export default function TemplateEditor({
   return (
     <div className="template-editor-container flex flex-col h-full bg-white rounded-lg border border-zinc-200">
       <EditorToolbar editor={editor} />
-      <div className="flex-1 overflow-y-auto relative bg-zinc-50">
+      <div 
+        ref={setNodeRef}
+        className={classNames(
+          "flex-1 overflow-y-auto relative bg-zinc-50 transition-all duration-200",
+          isOver ? "ring-4 ring-blue-500 ring-opacity-30 bg-blue-50" : ""
+        )}
+      >
         <EditorContent editor={editor} id="editor-droppable" className="template-editor h-full" />
       </div>
       <div className="border-t border-zinc-200 px-4 py-2 flex items-center justify-between text-sm text-zinc-600 bg-white">

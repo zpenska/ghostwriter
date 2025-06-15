@@ -56,8 +56,7 @@ export default function SaveTemplateModal({
   const [newCollectionData, setNewCollectionData] = useState({
     name: '',
     description: '',
-    color: '#71717a',
-    icon: '📄'
+    color: '#71717a'
   });
   const [loading, setLoading] = useState(false);
   const [tagInput, setTagInput] = useState('');
@@ -79,8 +78,6 @@ export default function SaveTemplateModal({
     '#71717a', '#3b82f6', '#10b981', '#f59e0b', 
     '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'
   ];
-
-  const iconOptions = ['📄', '📋', '📝', '🏥', '💊', '🩺', '📊', '📑'];
 
   useEffect(() => {
     if (isOpen) {
@@ -132,12 +129,13 @@ export default function SaveTemplateModal({
       const collectionId = await templateService.createCollection({
         ...newCollectionData,
         createdBy: 'current-user', // Replace with actual user ID
-        isActive: true
+        isActive: true,
+        icon: 'folder' // Adding required icon property
       });
       
       setFormData(prev => ({ ...prev, collectionId }));
       setShowNewCollection(false);
-      setNewCollectionData({ name: '', description: '', color: '#71717a', icon: '📄' });
+      setNewCollectionData({ name: '', description: '', color: '#71717a' });
       await loadCollections();
     } catch (error) {
       console.error('Error creating collection:', error);
@@ -245,7 +243,7 @@ export default function SaveTemplateModal({
                 <option value="">Select a collection</option>
                 {collections.map((collection) => (
                   <option key={collection.id} value={collection.id}>
-                    {collection.icon} {collection.name}
+                    {collection.name}
                   </option>
                 ))}
               </select>
@@ -265,29 +263,15 @@ export default function SaveTemplateModal({
             <div className="bg-zinc-50 p-4 rounded-lg space-y-4 border border-zinc-200">
               <h3 className="text-sm font-medium text-zinc-900">Create New Collection</h3>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-700 mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={newCollectionData.name}
-                    onChange={(e) => setNewCollectionData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full border border-zinc-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 bg-white"
-                    placeholder="Collection name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-700 mb-1">Icon</label>
-                  <select
-                    value={newCollectionData.icon}
-                    onChange={(e) => setNewCollectionData(prev => ({ ...prev, icon: e.target.value }))}
-                    className="w-full border border-zinc-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 bg-white"
-                  >
-                    {iconOptions.map(icon => (
-                      <option key={icon} value={icon}>{icon}</option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-zinc-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={newCollectionData.name}
+                  onChange={(e) => setNewCollectionData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full border border-zinc-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 bg-white"
+                  placeholder="Collection name"
+                />
               </div>
 
               <div>
