@@ -30,11 +30,25 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+// Optional: Connect to Firestore emulator in development
+// Uncomment the lines below if you want to use Firestore emulator for local development
+/*
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+  try {
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    console.log('🔧 Connected to Firestore emulator');
+  } catch (error) {
+    console.log('⚠️ Firestore emulator connection skipped (already connected or not available)');
+  }
+}
+*/
+
 // Development mode check
 if (typeof window !== 'undefined') {
   console.log('🌐 Running in browser');
   console.log('🔑 API Key available:', !!firebaseConfig.apiKey);
   console.log('📁 Project ID:', firebaseConfig.projectId);
+  console.log('🏗️ Ready for AI Logic Builder');
 }
 
 export default app;

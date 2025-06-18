@@ -1,0 +1,51 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Ghostwriter FHIR API",
+    "version": "1.0.0",
+    "description": "FHIR-compliant API for interacting with Ghostwriter letter generation and delivery tracking services. Supports FHIR Task, DocumentReference, and Communication resources."
+  },
+  "paths": {
+    "/fhir/Task": {
+      "post": {
+        "summary": "Create a new Task to request a letter",
+        "responses": {
+          "200": {
+            "description": "Task created"
+          }
+        }
+      }
+    },
+    "/fhir/DocumentReference/{id}": {
+      "get": {
+        "summary": "Retrieve a generated letter",
+        "responses": {
+          "200": {
+            "description": "DocumentReference found"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/fhir/Communication": {
+      "get": {
+        "summary": "Get all communications for a patient",
+        "parameters": [
+          {
+            "name": "patient",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bundle of Communication resources"
+          }
+        }
+      }
+    }
+  }
+}

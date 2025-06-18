@@ -1,4 +1,4 @@
-export interface ReusableComponent {
+export interface ReusableBlock {
   id: string;
   name: string;
   type: string;

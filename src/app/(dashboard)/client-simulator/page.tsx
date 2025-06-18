@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { collection, addDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { PaperAirplaneIcon, PhoneIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon } from '@heroicons/react/20/solid';
+import { classNames } from '@/lib/utils/cn';
 
 interface Template {
   id: string;
@@ -21,12 +21,15 @@ interface Member {
   dob?: string;
 }
 
+type DeliveryMethod = 'mail' | 'fax';
+
 export default function ClientSimulatorPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [status, setStatus] = useState<'idle' | 'success'>('idle');
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('mail');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
 
   useEffect(() => {
     const unsubTemplates = onSnapshot(collection(db, 'templates'), (snap) => {
@@ -72,159 +75,293 @@ export default function ClientSimulatorPage() {
       .replace(/{{procedure_code}}/g, 'PROC-001');
   };
 
-  const sendLetter = async () => {
+  const sendLetter = async (method: DeliveryMethod = deliveryMethod) => {
     if (!selectedTemplate || !selectedMember) return;
 
-    console.log('✅ Sending letter to:', selectedMember.memberId);
+    setStatus('sending');
+    console.log(`✅ Sending letter via ${method} to:`, selectedMember.memberId);
 
     const filled = fillTemplate(selectedTemplate.content, selectedMember);
 
-    const docRef = await addDoc(collection(db, 'deliveries'), {
-      templateId: selectedTemplate.id,
-      memberId: selectedMember.id,
-      method: 'mail',
-      status: 'pending',
-      timestamp: new Date(),
-    });
+    try {
+      const docRef = await addDoc(collection(db, 'deliveries'), {
+        templateId: selectedTemplate.id,
+        memberId: selectedMember.id,
+        method: method,
+        status: 'pending',
+        timestamp: new Date(),
+      });
 
-    await fetch('/api/lob-send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        html: filled,
-        deliveryId: docRef.id,
-      }),
-    });
+      const apiEndpoint = method === 'fax' ? '/api/fax-send' : '/api/lob-send';
+      
+      await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          html: filled,
+          deliveryId: docRef.id,
+        }),
+      });
 
-    setStatus('success');
+      setStatus('success');
+      
+      // Reset success status after 3 seconds
+      setTimeout(() => {
+        setStatus('idle');
+      }, 3000);
+    } catch (error) {
+      console.error('Error sending letter:', error);
+      setStatus('idle');
+    }
   };
 
+  const isReadyToSend = selectedTemplate && selectedMember;
+
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-950">Client Simulator</h1>
-        <p className="text-zinc-600 mt-2">Select a member and a letter template to send.</p>
-      </div>
-
-      <div className="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm space-y-6">
-        {/* Selection Controls */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Member Selection */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-950">
-              Select Member
-            </label>
-            <select
-              value={selectedMember?.id || ''}
-              onChange={(e) => {
-                const member = members.find((m) => m.id === e.target.value) || null;
-                setSelectedMember(member);
-              }}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-950 focus:outline-none focus:ring-1 focus:ring-zinc-950"
-            >
-              <option value="">Choose a member</option>
-              {members
-                .filter((m) => m.firstName && m.lastName && m.memberId)
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.firstName} {m.lastName} ({m.memberId})
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          {/* Template Selection */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-zinc-950">
-              Select Template
-            </label>
-            <select
-              value={selectedTemplate?.id || ''}
-              onChange={(e) => {
-                const template = templates.find((t) => t.id === e.target.value) || null;
-                setSelectedTemplate(template);
-              }}
-              className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-950 focus:outline-none focus:ring-1 focus:ring-zinc-950"
-            >
-              <option value="">Choose a template</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="bg-white">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+            Client Simulator
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Select a member and a letter template to send via mail or fax
+          </p>
         </div>
 
-        {/* Selected Information Display */}
-        {(selectedMember || selectedTemplate) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-zinc-200">
-            {selectedMember && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-zinc-950">Selected Member</h3>
-                <div className="bg-zinc-50 rounded-md p-3 text-sm">
-                  <div><strong>Name:</strong> {selectedMember.firstName} {selectedMember.lastName}</div>
-                  <div><strong>Member ID:</strong> {selectedMember.memberId}</div>
-                  {selectedMember.dob && <div><strong>DOB:</strong> {selectedMember.dob}</div>}
-                </div>
+        {/* Main Content */}
+        <div className="space-y-6">
+          {/* Selection Panel */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* Member Selection */}
+              <div className="space-y-3">
+                <label htmlFor="member-select" className="block text-sm font-medium leading-6 text-gray-900">
+                  Select Member
+                </label>
+                <select
+                  id="member-select"
+                  value={selectedMember?.id || ''}
+                  onChange={(e) => {
+                    const member = members.find((m) => m.id === e.target.value) || null;
+                    setSelectedMember(member);
+                    setStatus('idle');
+                  }}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-zinc-500 sm:text-sm sm:leading-6"
+                >
+                  <option value="">Choose a member...</option>
+                  {members
+                    .filter((m) => m.firstName && m.lastName && m.memberId)
+                    .map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.firstName} {m.lastName} ({m.memberId})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Template Selection */}
+              <div className="space-y-3">
+                <label htmlFor="template-select" className="block text-sm font-medium leading-6 text-gray-900">
+                  Select Template
+                </label>
+                <select
+                  id="template-select"
+                  value={selectedTemplate?.id || ''}
+                  onChange={(e) => {
+                    const template = templates.find((t) => t.id === e.target.value) || null;
+                    setSelectedTemplate(template);
+                    setStatus('idle');
+                  }}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-zinc-500 sm:text-sm sm:leading-6"
+                >
+                  <option value="">Choose a template...</option>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Delivery Method Selection */}
+            {isReadyToSend && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <fieldset>
+                  <legend className="text-sm font-medium leading-6 text-gray-900">Delivery Method</legend>
+                  <div className="mt-3 space-y-3">
+                    <div className="flex items-center">
+                      <input
+                        id="delivery-mail"
+                        name="delivery-method"
+                        type="radio"
+                        checked={deliveryMethod === 'mail'}
+                        onChange={() => setDeliveryMethod('mail')}
+                        className="h-4 w-4 border-gray-300 text-zinc-600 focus:ring-zinc-600"
+                      />
+                      <label htmlFor="delivery-mail" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
+                        Mail Delivery
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        id="delivery-fax"
+                        name="delivery-method"
+                        type="radio"
+                        checked={deliveryMethod === 'fax'}
+                        onChange={() => setDeliveryMethod('fax')}
+                        className="h-4 w-4 border-gray-300 text-zinc-600 focus:ring-zinc-600"
+                      />
+                      <label htmlFor="delivery-fax" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
+                        Fax Delivery
+                      </label>
+                    </div>
+                  </div>
+                </fieldset>
               </div>
             )}
+          </div>
 
-            {selectedTemplate && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-zinc-950">Selected Template</h3>
-                <div className="bg-zinc-50 rounded-md p-3 text-sm">
-                  <div><strong>Template:</strong> {selectedTemplate.name}</div>
-                  <div className="text-zinc-600 mt-1 line-clamp-2">
-                    {selectedTemplate.content.replace(/<[^>]*>/g, '').substring(0, 100)}...
+          {/* Selected Information Display */}
+          {isReadyToSend && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Selected Information</h3>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-900">Member Details</h4>
+                  <div className="bg-gray-50 rounded-md p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Name:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {selectedMember.firstName} {selectedMember.lastName}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Member ID:</span>
+                      <span className="text-sm font-medium text-gray-900">{selectedMember.memberId}</span>
+                    </div>
+                    {selectedMember.dob && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">DOB:</span>
+                        <span className="text-sm font-medium text-gray-900">{selectedMember.dob}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-900">Template Details</h4>
+                  <div className="bg-gray-50 rounded-md p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Template:</span>
+                      <span className="text-sm font-medium text-gray-900">{selectedTemplate.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Delivery:</span>
+                      <span className="text-sm font-medium text-gray-900 capitalize">{deliveryMethod}</span>
+                    </div>
+                    <div className="mt-2">
+                      <span className="text-sm text-gray-500">Preview:</span>
+                      <p className="text-sm text-gray-700 mt-1 line-clamp-2">
+                        {selectedTemplate.content.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* Action Area */}
-        <div className="flex items-center justify-between pt-4 border-t border-zinc-200">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={sendLetter}
-              disabled={!selectedTemplate || !selectedMember}
-              className="flex items-center gap-2"
-            >
-              <PaperAirplaneIcon className="h-4 w-4" />
-              Send Letter
-            </Button>
+              {/* Action Buttons */}
+              <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => sendLetter('mail')}
+                    disabled={!isReadyToSend || status === 'sending'}
+                    className="inline-flex items-center rounded-md bg-zinc-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <PaperAirplaneIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+                    {status === 'sending' && deliveryMethod === 'mail' ? 'Sending...' : 'Send by Mail'}
+                  </button>
 
-            {status === 'success' && (
-              <Badge className="bg-green-100 text-green-800">
-                Letter sent successfully!
-              </Badge>
-            )}
-          </div>
+                  <button
+                    onClick={() => sendLetter('fax')}
+                    disabled={!isReadyToSend || status === 'sending'}
+                    className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <PhoneIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+                    {status === 'sending' && deliveryMethod === 'fax' ? 'Sending...' : 'Send by Fax'}
+                  </button>
 
-          {selectedTemplate && selectedMember && (
-            <div className="text-sm text-zinc-500">
-              Ready to send to {selectedMember.firstName} {selectedMember.lastName}
+                  {status === 'success' && (
+                    <div className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-sm font-medium text-green-800 ring-1 ring-inset ring-green-600/20">
+                      <CheckCircleIcon className="-ml-0.5 mr-1.5 h-4 w-4" aria-hidden="true" />
+                      Letter sent successfully!
+                    </div>
+                  )}
+                </div>
+
+                {isReadyToSend && status === 'idle' && (
+                  <div className="text-sm text-gray-500">
+                    Ready to send to {selectedMember.firstName} {selectedMember.lastName}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Letter Preview */}
+          {isReadyToSend && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Letter Preview</h3>
+                <div className="text-sm text-gray-500">
+                  Delivery method: <span className="font-medium capitalize">{deliveryMethod}</span>
+                </div>
+              </div>
+              
+              {/* Letter Preview Content */}
+              <div className="bg-white border border-gray-200 rounded-md">
+                {/* Letter Paper Simulation */}
+                <div className="mx-auto max-w-2xl">
+                  <div className="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="px-8 py-12 space-y-4">
+                      <div 
+                        className="prose prose-sm max-w-none text-gray-900"
+                        style={{ 
+                          fontFamily: 'system-ui, -apple-system, sans-serif',
+                          lineHeight: '1.6'
+                        }}
+                        dangerouslySetInnerHTML={{ 
+                          __html: fillTemplate(selectedTemplate.content, selectedMember) 
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isReadyToSend && (
+            <div className="text-center py-12">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                <PaperAirplaneIcon className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Send Letters</h3>
+              <p className="text-gray-600 mb-6">
+                Select both a member and a template to preview and send letters
+              </p>
+              <div className="text-sm text-gray-500">
+                {!selectedMember && !selectedTemplate && "Choose a member and template to get started"}
+                {selectedMember && !selectedTemplate && "Now select a template to use"}
+                {!selectedMember && selectedTemplate && "Now select a member to send to"}
+              </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* Preview Area */}
-      {selectedTemplate && selectedMember && (
-        <div className="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-medium text-zinc-950 mb-4">Letter Preview</h3>
-          <div className="bg-zinc-50 rounded-md p-4 max-h-96 overflow-y-auto">
-            <div 
-              className="prose prose-sm max-w-none prose-zinc"
-              dangerouslySetInnerHTML={{ 
-                __html: fillTemplate(selectedTemplate.content, selectedMember) 
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

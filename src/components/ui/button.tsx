@@ -1,69 +1,73 @@
-import React from 'react';
-import { cn } from '@/lib/utils/cn';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  // Support both new and old API
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  
-  // Legacy Catalyst UI props for compatibility
-  color?: 'indigo' | 'zinc' | 'emerald' | 'red' | 'amber' | 'yellow' | 'lime' | 'green' | 'teal' | 'sky' | 'blue' | 'violet' | 'purple' | 'fuchsia' | 'pink' | 'rose';
-  outline?: boolean;
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   plain?: boolean;
-  
-  children: React.ReactNode;
+  href?: string;
 }
 
-export function Button({
-  variant,
-  size = 'md',
-  color,
-  outline,
-  plain,
-  className,
-  children,
-  ...props
-}: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
-  
-  // Handle legacy props by converting to variant
-  let finalVariant = variant;
-  if (!finalVariant) {
-    if (plain) {
-      finalVariant = 'ghost';
-    } else if (outline) {
-      finalVariant = 'outline';
-    } else if (color) {
-      finalVariant = 'primary';
-    } else {
-      finalVariant = 'primary';
+const buttonVariants = {
+  variant: {
+    default: "bg-primary text-primary-foreground hover:bg-primary/90",
+    destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+    outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+    ghost: "hover:bg-accent hover:text-accent-foreground",
+    link: "text-primary underline-offset-4 hover:underline",
+  },
+  size: {
+    default: "h-10 px-4 py-2",
+    sm: "h-9 rounded-md px-3",
+    lg: "h-11 rounded-md px-8",
+    icon: "h-10 w-10",
+  },
+};
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = 'default', size = 'default', plain, href, ...props }, ref) => {
+    const baseClasses = cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      !plain && buttonVariants.variant[variant],
+      buttonVariants.size[size],
+      className
+    );
+
+    if (href) {
+      return (
+        <a
+          href={href}
+          className={baseClasses}
+          {...(props as any)}
+          ref={ref as any}
+        />
+      );
     }
+
+    return (
+      <button
+        className={baseClasses}
+        ref={ref}
+        {...props}
+      />
+    );
   }
-  
-  const variants = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
-    secondary: 'bg-white text-gray-900 border border-gray-300 hover:bg-gray-50 focus:ring-indigo-500',
-    outline: 'border border-gray-300 bg-transparent text-gray-700 hover:bg-gray-50 focus:ring-indigo-500',
-    ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-indigo-500',
-  };
-  
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
-  };
-  
-  return (
-    <button
-      className={cn(
-        baseClasses,
-        variants[finalVariant],
-        sizes[size],
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
+);
+Button.displayName = "Button";
+
+// TouchTarget component for compatibility
+export const TouchTarget = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("touch-manipulation", className)}
+    {...props}
+  />
+));
+TouchTarget.displayName = "TouchTarget";
+
+export { Button, buttonVariants };

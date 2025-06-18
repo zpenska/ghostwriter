@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import url('https://rsms.me/inter/inter.css');
 
+/* ========================================
+   EXISTING RESIZABLE IMAGE STYLES
+   (PRESERVED - DO NOT MODIFY)
+   ======================================== */
+
 /* Resizable Image Styles */
 .resizable-image-wrapper {
   position: relative;
@@ -147,4 +152,755 @@
 .ProseMirror .ProseMirror-selectednode {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* ========================================
+   NEW TEMPLATE BUILDER MODERNIZATION
+   (ADDED FOR CATALYST UI DESIGN)
+   ======================================== */
+
+/* Template Editor Specific Styles */
+.template-editor .ProseMirror {
+  /* Clean white background for editor content */
+  background-color: white;
+  border: none;
+  outline: none;
+}
+
+.template-editor .ProseMirror.is-editor-empty:first-child::before {
+  /* Style for placeholder text */
+  color: #71717a;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Block container styling (renamed from component-block) */
+.block-container {
+  border-left: 4px solid #10b981;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  background-color: #ecfdf5;
+  padding: 0.75rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.block-container .block-content {
+  /* Content within blocks */
+  color: #374151;
+}
+
+/* Variable styling in editor - Enhanced to work with existing styles */
+.template-editor .ProseMirror span[contenteditable="false"] {
+  /* Variables should be non-editable and styled */
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  background-color: #f4f4f5;
+  color: #27272a;
+  border: 1px solid #d4d4d8;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.875rem;
+  user-select: none;
+  /* Ensure it doesn't interfere with image selection */
+  position: relative;
+  z-index: 1;
+}
+
+/* Drag handle styling - Positioned to not interfere with image resize handles */
+.drag-handle {
+  position: absolute;
+  left: -1.5rem;
+  top: 0;
+  bottom: 0;
+  width: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #9ca3af;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2; /* Above images but below modals */
+}
+
+.drag-handle:hover {
+  opacity: 1;
+  color: #6b7280;
+}
+
+/* Editor toolbar improvements */
+.editor-toolbar {
+  border-bottom: 1px solid rgba(9, 9, 11, 0.1);
+  padding: 0.75rem 1rem;
+  background: white;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.editor-toolbar button {
+  /* Modern button styling for toolbar */
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  color: #6b7280;
+}
+
+.editor-toolbar button:hover {
+  background-color: #f9fafb;
+  color: #374151;
+}
+
+.editor-toolbar button.is-active {
+  background-color: #f3f4f6;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+/* Variable panel improvements */
+.variable-panel {
+  /* Clean background and borders */
+  background: white;
+  border-right: 1px solid rgba(9, 9, 11, 0.1);
+}
+
+/* Disclosure button improvements */
+.disclosure-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  text-align: left;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease;
+}
+
+.disclosure-button:hover {
+  background-color: #f9fafb;
+}
+
+/* Draggable item hover effects - Enhanced to work with existing drag functionality */
+.draggable-item {
+  transition: all 0.15s ease;
+  cursor: grab;
+}
+
+.draggable-item:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.draggable-item:active {
+  cursor: grabbing;
+}
+
+/* Tab navigation improvements */
+.tab-navigation {
+  border-bottom: 1px solid rgba(9, 9, 11, 0.1);
+}
+
+.tab-button {
+  border-bottom: 2px solid transparent;
+  padding: 1rem 0.25rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+}
+
+.tab-button:hover {
+  border-bottom-color: #d1d5db;
+  color: #374151;
+}
+
+.tab-button.active {
+  border-bottom-color: #18181b;
+  color: #111827;
+}
+
+/* Status indicators */
+.status-indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.status-indicator.connected {
+  background-color: #10b981;
+}
+
+.status-indicator.disconnected {
+  background-color: #6b7280;
+}
+
+.status-indicator.local {
+  background-color: #3b82f6;
+}
+
+/* Modern badges - Designed to not conflict with existing styles */
+.modern-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.modern-badge.zinc {
+  background-color: #f4f4f5;
+  color: #52525b;
+}
+
+.modern-badge.emerald {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.modern-badge.amber {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Search input improvements - Scoped to not affect other inputs */
+.template-builder .search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.template-builder .search-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Drop zone styling for drag and drop */
+.editor-droppable {
+  transition: all 0.2s ease;
+}
+
+.editor-droppable.drag-over {
+  background-color: rgba(59, 130, 246, 0.05);
+  border: 2px dashed #3b82f6;
+  border-radius: 0.5rem;
+}
+
+/* Variable and block styling in the sidebar panels */
+.variable-item,
+.block-item {
+  border-radius: 0.5rem;
+  border: 1px solid rgba(9, 9, 11, 0.1);
+  transition: all 0.15s ease;
+}
+
+.variable-item:hover,
+.block-item:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Type icon styling for variables */
+.type-icon {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background-color: #f4f4f5;
+  color: #71717a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Category icon styling for blocks */
+.category-icon {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background-color: #f4f4f5;
+  flex-shrink: 0;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .variable-panel {
+    /* Stack on mobile */
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .variable-panel.open {
+    transform: translateX(0);
+  }
+
+  .template-editor-container {
+    margin-left: 0;
+  }
+
+  /* Ensure drag handles don't interfere on mobile */
+  .drag-handle {
+    display: none;
+  }
+}
+
+/* Print styles - Hide UI elements when printing */
+@media print {
+  .editor-toolbar,
+  .variable-panel,
+  .status-bar,
+  .drag-handle,
+  .resize-handle {
+    display: none !important;
+  }
+
+  .template-editor .ProseMirror {
+    padding: 0;
+    background: white;
+  }
+
+  /* Ensure images print properly */
+  .ProseMirror img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .draggable-item,
+  .tab-button,
+  .disclosure-button,
+  .drag-handle,
+  .resize-handle {
+    transition: none;
+  }
+}
+
+/* Focus improvements for keyboard navigation */
+.template-builder *:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Ensure no conflicts with existing selection styles */
+.template-editor .ProseMirror-selectednode {
+  /* Maintain existing selection while adding template builder specific styling */
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   UTILITY CLASSES FOR TEMPLATE BUILDER
+   ======================================== */
+
+/* Collapse/expand animations */
+.collapse-enter {
+  max-height: 0;
+  overflow: hidden;
+}
+
+.collapse-enter-active {
+  max-height: 500px;
+  transition: max-height 0.3s ease;
+}
+
+.collapse-exit {
+  max-height: 500px;
+}
+
+.collapse-exit-active {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+/* Loading states */
+.loading-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty state styling */
+.empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-state-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  color: #d1d5db;
+}
+
+/* ========================================
+   DOCUMENT EDITOR ADDITIONS
+   (ADD TO EXISTING globals.css)
+   ======================================== */
+
+/* Document Container Styling - Preserves existing template-editor functionality */
+.document-container {
+  font-family: 'Times New Roman', 'Times', serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  background: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Document with margins - works alongside existing functionality */
+.document-with-margins {
+  position: relative;
+}
+
+.document-with-margins::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px dashed #e2e8f0;
+  pointer-events: none;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+/* Document Editor Content - Additive to existing template-editor styles */
+.template-editor-content.document-editor {
+  line-height: 1.6;
+  font-family: 'Times New Roman', serif;
+  font-size: 12pt;
+  position: relative;
+  z-index: 2;
+}
+
+/* Typography Enhancements - Scoped to document editor */
+.document-editor h1 {
+  font-size: 18pt;
+  font-weight: bold;
+  margin: 0 0 18pt 0;
+  color: #1f2937;
+}
+
+.document-editor h2 {
+  font-size: 14pt;
+  font-weight: bold;
+  margin: 0 0 14pt 0;
+  color: #374151;
+}
+
+.document-editor h3 {
+  font-size: 12pt;
+  font-weight: bold;
+  margin: 0 0 12pt 0;
+  color: #4b5563;
+}
+
+.document-editor p {
+  margin: 0 0 12pt 0;
+  text-align: justify;
+  hyphens: auto;
+}
+
+.document-editor ul, .document-editor ol {
+  margin: 0 0 12pt 0;
+  padding-left: 24pt;
+}
+
+.document-editor li {
+  margin: 0 0 6pt 0;
+}
+
+.document-editor blockquote {
+  margin: 12pt 0;
+  padding-left: 24pt;
+  border-left: 3px solid #d1d5db;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.document-editor table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12pt 0;
+  font-size: 11pt;
+}
+
+.document-editor th, .document-editor td {
+  border: 1px solid #d1d5db;
+  padding: 6pt 8pt;
+  text-align: left;
+}
+
+.document-editor th {
+  background-color: #f9fafb;
+  font-weight: bold;
+}
+
+/* Page Break Styling - New functionality */
+.document-editor .page-break,
+.document-editor div[data-page-break] {
+  page-break-after: always;
+  break-after: page;
+  height: 1px;
+  margin: 24pt 0;
+  border: none;
+  border-bottom: 2px dashed #94a3b8;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.document-editor .page-break::before,
+.document-editor div[data-page-break]::before {
+  content: 'Page Break';
+  position: absolute;
+  background: white;
+  padding: 4px 12px;
+  font-size: 10pt;
+  color: #64748b;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Enhanced Variable Styling - Works with existing variable styles */
+.document-editor .ProseMirror span[contenteditable="false"] {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 11pt;
+  color: #374151;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Enhanced Component Block Styling - Additive to existing block-container */
+.document-editor .component-block,
+.document-editor .block-container {
+  margin: 12pt 0;
+  padding: 12pt;
+  border-left: 4px solid #10b981;
+  background-color: #f0fdf4;
+  border-radius: 0 6px 6px 0;
+}
+
+.document-editor .component-block .component-title,
+.document-editor .block-container .block-title {
+  font-size: 10pt;
+  color: #059669;
+  font-weight: 600;
+  margin-bottom: 6pt;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Margin Guidelines - New functionality */
+.document-container .margin-guide {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  border: 1px dashed #bfdbfe;
+  opacity: 0.6;
+}
+
+.document-container .margin-guide.top {
+  top: 1in;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed #bfdbfe;
+}
+
+.document-container .margin-guide.bottom {
+  bottom: 1in;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-bottom: 1px dashed #bfdbfe;
+}
+
+.document-container .margin-guide.left {
+  left: 1in;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed #bfdbfe;
+}
+
+.document-container .margin-guide.right {
+  right: 1in;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-right: 1px dashed #bfdbfe;
+}
+
+/* Document Content Area */
+.document-content {
+  position: relative;
+  z-index: 2;
+  min-height: calc(11in - 2in); /* Full page minus top/bottom margins */
+}
+
+/* Enhanced Print Styles - Additive to existing print styles */
+@media print {
+  .document-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 1in !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  
+  .document-editor .page-break,
+  .document-editor div[data-page-break] {
+    page-break-after: always !important;
+    border: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .document-editor .page-break::before,
+  .document-editor div[data-page-break]::before {
+    display: none !important;
+  }
+  
+  /* Hide margin guidelines in print */
+  .document-with-margins::before,
+  .document-container .margin-guide,
+  .document-container .absolute {
+    display: none !important;
+  }
+  
+  /* Preserve existing image print functionality */
+  .document-editor .ProseMirror img.editor-image {
+    page-break-inside: avoid;
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Page Setup for Document Editor */
+@page {
+  size: letter;
+  margin: 0;
+}
+
+/* Responsive adjustments for document editor */
+@media (max-width: 768px) {
+  .document-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5in !important;
+  }
+  
+  /* Hide margin guides on mobile */
+  .document-container .margin-guide {
+    display: none;
+  }
+}
+
+/* Animation for margin toggle - Preserves existing transitions */
+.document-container {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Placeholder styling for document editor - Additive to existing placeholder styles */
+.template-editor-content.document-editor .ProseMirror.is-editor-empty:first-child::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  font-style: italic;
+}
+
+/* Ensure existing drag handle functionality is preserved */
+.template-editor-content.document-editor .drag-handle {
+  z-index: 3; /* Above document content but below modals */
+}
+
+/* Ensure existing resizable image functionality is preserved */
+.template-editor-content.document-editor .ProseMirror img.editor-image {
+  /* Inherit all existing resizable functionality */
+  position: relative;
+  z-index: 2;
+}
+
+.template-editor-content.document-editor .resizable-image-wrapper {
+  /* Preserve existing resizable wrapper functionality */
+  z-index: 2;
+}
+
+/* Ensure existing variable styling is preserved while adding document enhancements */
+.template-editor-content.document-editor .template-editor .ProseMirror span[contenteditable="false"] {
+  /* Let existing styles take precedence, only add document-specific enhancements */
+  font-family: 'Courier New', monospace;
+}
+
+/* Status Bar Enhancements - Additive to existing status styles */
+.template-editor-container .status-bar {
+  border-top: 1px solid #e5e7eb;
+  background: white;
+  padding: 0.5rem 1rem;
+}
+
+.template-editor-container .status-bar .status-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.template-editor-container .status-bar .status-indicator .status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.template-editor-container .status-bar .status-indicator .status-dot.connected {
+  background-color: #10b981;
+}
+
+.template-editor-container .status-bar .status-indicator .status-dot.local {
+  background-color: #3b82f6;
+}
+
+.template-editor-container .status-bar .status-indicator .status-dot.disconnected {
+  background-color: #6b7280;
 }

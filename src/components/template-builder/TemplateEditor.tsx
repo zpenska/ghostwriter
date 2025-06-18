@@ -29,6 +29,7 @@ import EditorToolbar from './EditorToolbar';
 import { useDroppable } from '@dnd-kit/core';
 import 'katex/dist/katex.min.css';
 import Image from '@tiptap/extension-image';
+import { PageBreak } from '@/lib/tiptap/extensions/page-break';
 
 // Reusable component block support
 import { Node } from '@tiptap/core';
@@ -66,6 +67,8 @@ interface TemplateEditorProps {
   userId: string;
   userName: string;
   templateName?: string;
+  initialContent?: string; // Add this prop for Firebase content
+  isExistingTemplate?: boolean; // Add this prop to know if we're editing
   onEditorReady?: (editor: any) => void;
   onContentChange?: (content: string) => void;
 }
@@ -79,6 +82,8 @@ export default function TemplateEditor({
   userId,
   userName,
   templateName = 'Untitled Template',
+  initialContent = '', // Firebase content
+  isExistingTemplate = false, // Whether this is an existing template
   onEditorReady,
   onContentChange,
 }: TemplateEditorProps) {
@@ -86,6 +91,8 @@ export default function TemplateEditor({
   const [tokens, setTokens] = useState<any>(null);
   const [status, setStatus] = useState('Connecting...');
   const [ydoc] = useState(() => new Y.Doc());
+  const [contentLoaded, setContentLoaded] = useState(false);
+  const [showPageMargins, setShowPageMargins] = useState(true);
 
   // Add droppable zone for @dnd-kit
   const { setNodeRef, isOver } = useDroppable({
@@ -174,12 +181,12 @@ export default function TemplateEditor({
       Underline,
       CharacterCount.configure({ limit: null }),
       Mathematics,
-      // Image extension for proper image rendering
+      // Image extension for proper image rendering - PRESERVE EXISTING FUNCTIONALITY
       Image.configure({
         inline: false,
         allowBase64: true,
         HTMLAttributes: {
-          class: 'editor-image',
+          class: 'editor-image', // Keep existing class for resizable functionality
         },
       }),
       Table.configure({ 
@@ -222,6 +229,8 @@ export default function TemplateEditor({
       }),
       InvisibleCharacters.configure({ visible: false }),
       ReusableBlock,
+      // Page Break Extension
+      PageBreak,
       // AI extension with proper configuration (only if tokens available)
       ...(tokens?.aiToken ? [
         AI.configure({
@@ -233,7 +242,7 @@ export default function TemplateEditor({
     ],
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[600px] px-8 py-6 text-zinc-900',
+        class: 'template-editor-content prose prose-sm max-w-none focus:outline-none text-zinc-900 document-editor',
       },
     },
     onCreate: ({ editor }) => {
@@ -244,9 +253,11 @@ export default function TemplateEditor({
       // This will be called for all changes, including collaborative ones
       const content = editor.getHTML();
       
-      // Only save to localStorage and call onChange for local changes
-      // Collaboration changes are automatically synced via Y.js
-      localStorage.setItem(`template-${documentId}`, content);
+      // Only save to localStorage for NEW templates (not existing ones)
+      if (!isExistingTemplate) {
+        localStorage.setItem(`template-${documentId}`, content);
+      }
+      
       onContentChange?.(content);
     },
     // Handle collaboration events
@@ -254,7 +265,41 @@ export default function TemplateEditor({
       // This fires for every transaction, including collaborative ones
       // Use this for real-time features like live cursors, etc.
     },
-  }, [provider, tokens, onEditorReady, ydoc, userName, documentId, onContentChange]);
+  }, [provider, tokens, onEditorReady, ydoc, userName, documentId, onContentChange, isExistingTemplate]);
+
+  // FIXED: Proper content loading logic
+  useEffect(() => {
+    if (!editor || contentLoaded) return;
+
+    console.log('🔄 Loading content...', {
+      isExistingTemplate,
+      hasInitialContent: !!initialContent,
+      documentId
+    });
+
+    if (isExistingTemplate && initialContent) {
+      // For existing templates, prioritize Firebase content
+      console.log('📄 Loading Firebase content for existing template');
+      editor.commands.setContent(initialContent);
+      setContentLoaded(true);
+    } else if (!isExistingTemplate) {
+      // For new templates, try localStorage first
+      const saved = localStorage.getItem(`template-${documentId}`);
+      if (saved && saved !== '<p></p>') {
+        console.log('💾 Loading localStorage content for new template');
+        editor.commands.setContent(saved);
+      }
+      setContentLoaded(true);
+    }
+  }, [editor, initialContent, isExistingTemplate, documentId, contentLoaded]);
+
+  // Update content when initialContent changes (for existing templates)
+  useEffect(() => {
+    if (editor && isExistingTemplate && initialContent && contentLoaded) {
+      console.log('🔄 Updating content from Firebase');
+      editor.commands.setContent(initialContent);
+    }
+  }, [editor, initialContent, isExistingTemplate, contentLoaded]);
 
   const takeSnapshot = useCallback(() => {
     if (!editor) return;
@@ -316,15 +361,10 @@ export default function TemplateEditor({
     editor?.chain().focus().toggleInvisibleCharacters().run();
   }, [editor]);
 
-  // Load saved content on mount
-  useEffect(() => {
-    if (editor && documentId) {
-      const saved = localStorage.getItem(`template-${documentId}`);
-      if (saved && saved !== '<p></p>') {
-        editor.commands.setContent(saved);
-      }
-    }
-  }, [editor, documentId]);
+  const toggleMargins = useCallback(() => {
+    setShowPageMargins(!showPageMargins);
+    console.log('Toggling margins:', !showPageMargins);
+  }, [showPageMargins]);
 
   if (!editor) {
     return (
@@ -339,16 +379,63 @@ export default function TemplateEditor({
 
   return (
     <div className="template-editor-container flex flex-col h-full bg-white rounded-lg border border-zinc-200">
-      <EditorToolbar editor={editor} />
-      <div 
-        ref={setNodeRef}
-        className={classNames(
-          "flex-1 overflow-y-auto relative bg-zinc-50 transition-all duration-200",
-          isOver ? "ring-4 ring-blue-500 ring-opacity-30 bg-blue-50" : ""
-        )}
-      >
-        <EditorContent editor={editor} id="editor-droppable" className="template-editor h-full" />
+      <EditorToolbar 
+        editor={editor} 
+        showPageMargins={showPageMargins}
+        onToggleMargins={toggleMargins}
+      />
+      
+      {/* Document Container with Letter Size */}
+      <div className="flex-1 overflow-y-auto bg-zinc-100 p-6">
+        <div 
+          ref={setNodeRef}
+          className={classNames(
+            "document-container mx-auto bg-white shadow-lg transition-all duration-200",
+            isOver ? "ring-4 ring-blue-500 ring-opacity-30" : "",
+            showPageMargins ? "document-with-margins" : ""
+          )}
+          style={{
+            width: '8.5in',
+            minHeight: '11in',
+            maxWidth: '100%',
+            padding: showPageMargins ? '1in 1in 1in 1in' : '0.75in',
+            position: 'relative',
+          }}
+        >
+          {/* Margin Guidelines */}
+          {showPageMargins && (
+            <>
+              {/* Top margin line */}
+              <div 
+                className="absolute left-0 right-0 border-t-2 border-blue-400 border-dashed pointer-events-none"
+                style={{ top: '1in', opacity: 0.7, zIndex: 10 }}
+              />
+              {/* Bottom margin line */}
+              <div 
+                className="absolute left-0 right-0 border-b-2 border-blue-400 border-dashed pointer-events-none"
+                style={{ bottom: '1in', opacity: 0.7, zIndex: 10 }}
+              />
+              {/* Left margin line */}
+              <div 
+                className="absolute top-0 bottom-0 border-l-2 border-blue-400 border-dashed pointer-events-none"
+                style={{ left: '1in', opacity: 0.7, zIndex: 10 }}
+              />
+              {/* Right margin line */}
+              <div 
+                className="absolute top-0 bottom-0 border-r-2 border-blue-400 border-dashed pointer-events-none"
+                style={{ right: '1in', opacity: 0.7, zIndex: 10 }}
+              />
+            </>
+          )}
+          
+          <EditorContent 
+            editor={editor} 
+            id="editor-droppable" 
+            className="template-editor h-full document-content" 
+          />
+        </div>
       </div>
+      
       <div className="border-t border-zinc-200 px-4 py-2 flex items-center justify-between text-sm text-zinc-600 bg-white">
         <div className="flex items-center space-x-4">
           <span className="flex items-center">
@@ -361,7 +448,6 @@ export default function TemplateEditor({
             {status}
           </span>
           <span>Document: {templateName}</span>
-          <span className="text-zinc-600">Ask Casper AI to help</span>
         </div>
         <div className="flex items-center space-x-2">
           <span>{editor.storage.characterCount?.characters() || 0} characters</span>
@@ -384,8 +470,22 @@ export default function TemplateEditor({
           >
             ¶
           </button>
+          <button 
+            onClick={toggleMargins} 
+            className={classNames(
+              "inline-flex items-center justify-center rounded-md px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-inset focus:ring-zinc-500",
+              showPageMargins 
+                ? "bg-blue-100 text-blue-900 hover:bg-blue-200" 
+                : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
+            )}
+            title={showPageMargins ? "Hide Margins" : "Show Margins"}
+          >
+            {showPageMargins ? "Hide Margins" : "Show Margins"}
+          </button>
         </div>
       </div>
+      
+      {/* CSS for document styling - moved to external CSS file */}
     </div>
   );
 }

@@ -25,6 +25,9 @@ import {
   AlignJustifyIcon,
   HighlighterIcon,
   ChevronDownIcon,
+  FileTextIcon,
+  RulerIcon,
+  SeparatorHorizontalIcon,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { classNames } from '@/lib/utils/cn';
@@ -32,13 +35,22 @@ import { classNames } from '@/lib/utils/cn';
 interface EditorToolbarProps {
   editor: Editor | null;
   onOpenAiChat?: () => void;
+  showPageMargins?: boolean;
+  onToggleMargins?: () => void;
 }
 
-export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarProps) {
+export default function EditorToolbar({ 
+  editor, 
+  onOpenAiChat, 
+  showPageMargins = true, 
+  onToggleMargins 
+}: EditorToolbarProps) {
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
+  const [showPageMenu, setShowPageMenu] = useState(false);
   const highlightMenuRef = useRef<HTMLDivElement>(null);
   const tableMenuRef = useRef<HTMLDivElement>(null);
+  const pageMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -47,6 +59,9 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
       }
       if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
         setShowTableMenu(false);
+      }
+      if (pageMenuRef.current && !pageMenuRef.current.contains(event.target as Node)) {
+        setShowPageMenu(false);
       }
     };
 
@@ -83,6 +98,14 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
       }
     };
     input.click();
+  };
+
+  // Page break handler
+  const insertPageBreak = () => {
+    if (editor) {
+      editor.chain().focus().setPageBreak().run();
+      setShowPageMenu(false);
+    }
   };
 
   // Catalyst UI button styling
@@ -273,7 +296,7 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
 
         <div className="w-px h-6 bg-zinc-300" />
 
-        {/* Media */}
+        {/* Media & Document */}
         <div className="flex items-center space-x-1">
           <button
             onClick={handleImageUpload}
@@ -282,6 +305,53 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
           >
             <ImageIcon className="h-4 w-4" />
           </button>
+          
+          {/* Page Layout Menu */}
+          <div className="relative" ref={pageMenuRef}>
+            <button
+              onClick={() => setShowPageMenu(!showPageMenu)}
+              className={classNames(
+                toolbarButtonClass,
+                'flex items-center space-x-1'
+              )}
+              title="Page Layout"
+            >
+              <FileTextIcon className="h-4 w-4" />
+              <ChevronDownIcon className="h-3 w-3" />
+            </button>
+            {showPageMenu && (
+              <div className="absolute top-full left-0 mt-1 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+                <div className="p-2 space-y-1">
+                  <button
+                    onClick={insertPageBreak}
+                    className="flex items-center space-x-2 w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
+                  >
+                    <SeparatorHorizontalIcon className="h-4 w-4" />
+                    <span>Insert Page Break</span>
+                  </button>
+                  {onToggleMargins && (
+                    <button
+                      onClick={() => {
+                        onToggleMargins();
+                        setShowPageMenu(false);
+                      }}
+                      className="flex items-center space-x-2 w-full px-3 py-1 text-sm text-left hover:bg-zinc-100 rounded"
+                    >
+                      <RulerIcon className="h-4 w-4" />
+                      <span>{showPageMargins ? 'Hide Margins' : 'Show Margins'}</span>
+                    </button>
+                  )}
+                  <div className="border-t border-zinc-200 my-1" />
+                  <div className="px-3 py-1 text-xs text-zinc-500">
+                    Document Size: Letter (8.5" × 11")
+                  </div>
+                  <div className="px-3 py-1 text-xs text-zinc-500">
+                    Margins: 1" all sides
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="w-px h-6 bg-zinc-300" />
@@ -445,6 +515,22 @@ export default function EditorToolbar({ editor, onOpenAiChat }: EditorToolbarPro
             <RedoIcon className="h-4 w-4" />
           </button>
         </div>
+
+        <div className="w-px h-6 bg-zinc-300" />
+
+        {/* Margins Toggle - Quick Access */}
+        {onToggleMargins && (
+          <button
+            onClick={onToggleMargins}
+            className={classNames(
+              toolbarButtonClass,
+              showPageMargins ? activeButtonClass : ''
+            )}
+            title={showPageMargins ? "Hide Margins" : "Show Margins"}
+          >
+            <RulerIcon className="h-4 w-4" />
+          </button>
+        )}
 
         <div className="w-px h-6 bg-zinc-300" />
 

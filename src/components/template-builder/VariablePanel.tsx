@@ -56,7 +56,7 @@ const variableGroups = [
   },
 ];
 
-// Keep existing DraggableVariable component
+// Keep existing DraggableVariable component with consistent width
 function DraggableVariable({ variable }: { variable: any }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: variable.id,
@@ -74,7 +74,7 @@ function DraggableVariable({ variable }: { variable: any }) {
       style={style}
       {...listeners}
       {...attributes}
-      className="flex items-center justify-between py-2 px-3 bg-white rounded-md border border-zinc-200 shadow-sm hover:border-zinc-300 hover:shadow cursor-grab active:cursor-grabbing group transition-all"
+      className="flex items-center justify-between py-2 px-3 mx-2 bg-white rounded-md border border-zinc-200 shadow-sm hover:border-zinc-300 hover:shadow cursor-grab active:cursor-grabbing group transition-all"
     >
       <div className="flex-1 min-w-0">
         <span className="text-sm text-zinc-700 font-mono">
@@ -88,14 +88,14 @@ function DraggableVariable({ variable }: { variable: any }) {
   );
 }
 
-// Updated DraggableComponent with Heroicons
-function DraggableComponent({ component }: { component: Component }) {
+// Updated DraggableBlock component - removed icon and made narrower
+function DraggableBlock({ block }: { block: Component }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `component-${component.id}`,
+    id: `component-${block.id}`,
     data: {
-      id: component.id,
-      name: component.name,
-      content: component.content,
+      id: block.id,
+      name: block.name,
+      content: block.content,
       type: 'component', // This is crucial for your template builder
     },
   });
@@ -105,43 +105,19 @@ function DraggableComponent({ component }: { component: Component }) {
     opacity: isDragging ? 0.5 : 1,
   } : undefined;
 
-  const getCategoryIcon = (category: string) => {
-    const iconProps = "h-4 w-4 text-zinc-500";
-    
-    switch (category) {
-      case 'header':
-        return <DocumentTextIcon className={iconProps} />;
-      case 'footer':
-        return <ArchiveBoxIcon className={iconProps} />;
-      case 'signature':
-        return <PencilIcon className={iconProps} />;
-      case 'address':
-        return <MapPinIcon className={iconProps} />;
-      case 'disclaimer':
-        return <ExclamationTriangleIcon className={iconProps} />;
-      case 'custom':
-        return <WrenchScrewdriverIcon className={iconProps} />;
-      default:
-        return <WrenchScrewdriverIcon className={iconProps} />;
-    }
-  };
-
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...listeners}
       {...attributes}
-      className="flex items-center justify-between py-2 px-3 bg-white rounded-md border border-zinc-200 shadow-sm hover:border-zinc-300 hover:shadow cursor-grab active:cursor-grabbing group transition-all ml-4"
+      className="flex items-center justify-between py-2 px-3 mx-2 bg-white rounded-md border border-zinc-200 shadow-sm hover:border-zinc-300 hover:shadow cursor-grab active:cursor-grabbing group transition-all"
     >
-      <div className="flex items-center space-x-2 flex-1 min-w-0">
-        {getCategoryIcon(component.category)}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-zinc-900 truncate">{component.name}</p>
-          {component.description && (
-            <p className="text-xs text-zinc-600 truncate">{component.description}</p>
-          )}
-        </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-zinc-900 truncate">{block.name}</p>
+        {block.description && (
+          <p className="text-xs text-zinc-600 truncate">{block.description}</p>
+        )}
       </div>
       <div className="text-xs text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
         Drag
@@ -151,7 +127,7 @@ function DraggableComponent({ component }: { component: Component }) {
 }
 
 export default function VariablePanel() {
-  const [activeTab, setActiveTab] = useState<'variables' | 'components'>('variables');
+  const [activeTab, setActiveTab] = useState<'variables' | 'blocks'>('variables');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(variableGroups.map(g => g.name))
@@ -159,11 +135,11 @@ export default function VariablePanel() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(['header', 'footer', 'signature', 'address', 'contact', 'disclaimer', 'custom'])
   );
-  const [components, setComponents] = useState<Component[]>([]);
-  const [loadingComponents, setLoadingComponents] = useState(false);
+  const [blocks, setBlocks] = useState<Component[]>([]);
+  const [loadingBlocks, setLoadingBlocks] = useState(false);
 
-  // Updated component categories with Heroicons
-  const componentCategories = [
+  // Updated block categories with Heroicons
+  const blockCategories = [
     { 
       id: 'header', 
       name: 'Headers', 
@@ -196,42 +172,42 @@ export default function VariablePanel() {
     },
     { 
       id: 'custom', 
-      name: 'Custom Components', 
+      name: 'Custom Blocks', 
       icon: <WrenchScrewdriverIcon className="h-4 w-4 text-zinc-600" />
     },
   ];
 
-  // Load components when switching to components tab
+  // Load blocks when switching to blocks tab
   useEffect(() => {
-    if (activeTab === 'components') {
-      loadComponents();
+    if (activeTab === 'blocks') {
+      loadBlocks();
     }
   }, [activeTab]);
 
-  const loadComponents = async () => {
+  const loadBlocks = async () => {
     try {
-      setLoadingComponents(true);
-      console.log('🔍 Loading components...');
+      setLoadingBlocks(true);
+      console.log('🔍 Loading blocks...');
       
-      const componentsRef = collection(db, 'components');
-      const querySnapshot = await getDocs(componentsRef);
+      const blocksRef = collection(db, 'blocks');
+      const querySnapshot = await getDocs(blocksRef);
       
-      const componentsData: Component[] = [];
+      const blocksData: Component[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        componentsData.push({
+        blocksData.push({
           id: doc.id,
           ...data
         } as Component);
       });
       
-      console.log('✅ Components loaded:', componentsData.length);
-      setComponents(componentsData);
+      console.log('✅ Blocks loaded:', blocksData.length);
+      setBlocks(blocksData);
       
     } catch (error) {
-      console.error('❌ Error loading components:', error);
+      console.error('❌ Error loading blocks:', error);
     } finally {
-      setLoadingComponents(false);
+      setLoadingBlocks(false);
     }
   };
 
@@ -265,62 +241,60 @@ export default function VariablePanel() {
     ),
   })).filter(group => group.variables.length > 0);
 
-  // Group components by category and filter
-  const groupedComponents = componentCategories.map(category => {
-    const categoryComponents = components.filter(component => 
-      component.category === category.id &&
-      (component.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       component.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Group blocks by category and filter
+  const groupedBlocks = blockCategories.map(category => {
+    const categoryBlocks = blocks.filter(block => 
+      block.category === category.id &&
+      (block.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       block.description?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     
     return {
       ...category,
-      components: categoryComponents
+      blocks: categoryBlocks
     };
-  }).filter(category => category.components.length > 0);
+  }).filter(category => category.blocks.length > 0);
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-zinc-200">
-        <h2 className="text-lg font-semibold text-zinc-900 mb-3">
-          Variables & Components
-        </h2>
-        
-        {/* Tabs */}
-        <div className="flex border-b border-zinc-200 -mb-4">
-          <button
-            onClick={() => setActiveTab('variables')}
-            className={classNames(
-              'flex-1 py-2 text-sm font-medium transition-colors',
-              activeTab === 'variables'
-                ? 'text-zinc-900 border-b-2 border-zinc-900'
-                : 'text-zinc-600 hover:text-zinc-900'
-            )}
-          >
-            Variables
-          </button>
-          <button
-            onClick={() => setActiveTab('components')}
-            className={classNames(
-              'flex-1 py-2 text-sm font-medium transition-colors',
-              activeTab === 'components'
-                ? 'text-zinc-900 border-b-2 border-zinc-900'
-                : 'text-zinc-600 hover:text-zinc-900'
-            )}
-          >
-            Components ({components.length})
-          </button>
+    <div className="h-full flex flex-col min-w-80 w-80">
+      {/* Compact Header - Removed main heading and reduced padding */}
+      <div className="p-3 border-b border-zinc-200">
+        {/* Tabs - Fixed for better visual centering */}
+        <div className="flex border-b border-zinc-200 -mb-3 justify-center">
+          <div className="flex space-x-12">
+            <button
+              onClick={() => setActiveTab('variables')}
+              className={classNames(
+                'py-2 text-sm font-medium transition-colors',
+                activeTab === 'variables'
+                  ? 'text-zinc-900 border-b-2 border-zinc-900'
+                  : 'text-zinc-600 hover:text-zinc-900'
+              )}
+            >
+              Variables
+            </button>
+            <button
+              onClick={() => setActiveTab('blocks')}
+              className={classNames(
+                'py-2 text-sm font-medium transition-colors',
+                activeTab === 'blocks'
+                  ? 'text-zinc-900 border-b-2 border-zinc-900'
+                  : 'text-zinc-600 hover:text-zinc-900'
+              )}
+            >
+              Blocks
+            </button>
+          </div>
         </div>
         
         {/* Search */}
-        <div className="relative mt-4">
+        <div className="relative mt-5">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <MagnifyingGlassIcon className="h-5 w-5 text-zinc-400" aria-hidden="true" />
+            <MagnifyingGlassIcon className="h-4 w-4 text-zinc-400" aria-hidden="true" />
           </div>
           <input
             type="search"
-            className="block w-full rounded-md border-zinc-300 py-1.5 pl-10 pr-3 text-zinc-900 ring-1 ring-inset ring-zinc-300 placeholder:text-zinc-400 focus:ring-2 focus:ring-inset focus:ring-zinc-500 sm:text-sm sm:leading-6"
+            className="block w-full rounded-md border-zinc-300 py-1.5 pl-9 pr-3 text-zinc-900 ring-1 ring-inset ring-zinc-300 placeholder:text-zinc-400 focus:ring-2 focus:ring-inset focus:ring-zinc-500 sm:text-sm sm:leading-6"
             placeholder={`Search ${activeTab}...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -337,18 +311,18 @@ export default function VariablePanel() {
               <div key={group.name} className="border-b border-zinc-200">
                 <button
                   onClick={() => toggleGroup(group.name)}
-                  className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+                  className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
                 >
                   <span className="text-sm font-medium text-zinc-900">{group.name}</span>
                   {expandedGroups.has(group.name) ? (
-                    <ChevronDownIcon className="h-5 w-5 text-zinc-400" />
+                    <ChevronDownIcon className="h-4 w-4 text-zinc-400" />
                   ) : (
-                    <ChevronRightIcon className="h-5 w-5 text-zinc-400" />
+                    <ChevronRightIcon className="h-4 w-4 text-zinc-400" />
                   )}
                 </button>
                 
                 {expandedGroups.has(group.name) && (
-                  <div className="px-4 pb-3 space-y-2">
+                  <div className="px-3 pb-3 space-y-2">
                     {group.variables.map((variable) => (
                       <DraggableVariable key={variable.id} variable={variable} />
                     ))}
@@ -358,49 +332,49 @@ export default function VariablePanel() {
             ))}
           </>
         ) : (
-          /* Components Tab - Nested category view with Heroicons */
-          <div className="py-2">
-            {loadingComponents ? (
+          /* Blocks Tab - Nested category view with smaller collapse buttons */
+          <div className="py-1">
+            {loadingBlocks ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-zinc-900 mx-auto"></div>
-                <p className="text-sm text-zinc-500 mt-2">Loading components...</p>
+                <p className="text-sm text-zinc-500 mt-2">Loading blocks...</p>
               </div>
-            ) : groupedComponents.length === 0 ? (
+            ) : groupedBlocks.length === 0 ? (
               <div className="text-center py-8 px-4">
                 <div className="w-12 h-12 bg-zinc-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                   <WrenchScrewdriverIcon className="h-6 w-6 text-zinc-400" />
                 </div>
                 <p className="text-sm text-zinc-500 mb-2">
-                  {components.length === 0 ? 'No components found' : 'No matching components'}
+                  {blocks.length === 0 ? 'No blocks found' : 'No matching blocks'}
                 </p>
                 <p className="text-xs text-zinc-400">
-                  {components.length === 0 ? 'Create components to see them here' : 'Try a different search term'}
+                  {blocks.length === 0 ? 'Create blocks to see them here' : 'Try a different search term'}
                 </p>
               </div>
             ) : (
               <>
-                {groupedComponents.map((category) => (
+                {groupedBlocks.map((category) => (
                   <div key={category.id} className="border-b border-zinc-200">
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
+                      className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-zinc-50 transition-colors"
                     >
                       <div className="flex items-center space-x-2">
                         {category.icon}
                         <span className="text-sm font-medium text-zinc-900">{category.name}</span>
-                        <span className="text-xs text-zinc-500">({category.components.length})</span>
+                        <span className="text-xs text-zinc-500">({category.blocks.length})</span>
                       </div>
                       {expandedCategories.has(category.id) ? (
-                        <ChevronDownIcon className="h-5 w-5 text-zinc-400" />
+                        <ChevronDownIcon className="h-4 w-4 text-zinc-400" />
                       ) : (
-                        <ChevronRightIcon className="h-5 w-5 text-zinc-400" />
+                        <ChevronRightIcon className="h-4 w-4 text-zinc-400" />
                       )}
                     </button>
                     
                     {expandedCategories.has(category.id) && (
                       <div className="pb-3 space-y-2">
-                        {category.components.map((component) => (
-                          <DraggableComponent key={component.id} component={component} />
+                        {category.blocks.map((block) => (
+                          <DraggableBlock key={block.id} block={block} />
                         ))}
                       </div>
                     )}
@@ -413,9 +387,9 @@ export default function VariablePanel() {
       </div>
 
       {/* Instructions */}
-      <div className="p-4 bg-zinc-50 border-t border-zinc-200">
+      <div className="p-3 bg-zinc-50 border-t border-zinc-200">
         <p className="text-xs text-zinc-600">
-          Drag {activeTab === 'variables' ? 'variables' : 'components'} into your template to {activeTab === 'variables' ? 'create dynamic content' : 'insert reusable blocks'}
+          Drag {activeTab === 'variables' ? 'variables' : 'blocks'} into your template to {activeTab === 'variables' ? 'create dynamic content' : 'insert reusable blocks'}
         </p>
       </div>
     </div>

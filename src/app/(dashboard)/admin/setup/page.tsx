@@ -135,7 +135,7 @@ export default function AdminSetupPage() {
     setLogs([]);
   };
 
-  // Initialize check on component mount
+  // Initialize check on block mount
   useState(() => {
     checkExistingData();
   });

@@ -7,6 +7,7 @@ import TemplateEditor from '@/components/template-builder/TemplateEditor';
 import VariablePanel from '@/components/template-builder/VariablePanel';
 import CasperAIWidget from '@/components/template-builder/CasperAIWidget';
 import SaveTemplateModal from '@/components/template-builder/SaveTemplateModal';
+import LogicPreview from '@/components/template-builder/LogicPreview';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { EditorContext } from '@/hooks/useEditorContext';
@@ -78,8 +79,8 @@ export default function TemplateBuilderPage() {
       console.log('📝 Inserting content:', draggedData);
 
       if (draggedData.type === 'component') {
-        // Handle component insertion - simple HTML insertion
-        console.log('🧩 Inserting component:', draggedData.name);
+        // Handle block insertion - simple HTML insertion
+        console.log('🧩 Inserting block:', draggedData.name);
         
         const wrappedContent = `
           <div class="component-block border-l-4 border-emerald-500 pl-4 my-4 bg-emerald-50 p-3 rounded-r-lg">
@@ -280,37 +281,26 @@ export default function TemplateBuilderPage() {
         <div className="flex h-screen bg-white">
           {/* Variable Panel Sidebar - GREY background like Catalyst UI */}
           <div className={classNames(
-            'bg-zinc-50 border-r border-zinc-200 transition-all duration-300',
-            variablePanelCollapsed ? 'w-20' : 'w-80'
+            'bg-zinc-50 border-r border-zinc-200 transition-all duration-300 relative',
+            variablePanelCollapsed ? 'w-12' : 'w-80'
           )}>
-            <div className={classNames(
-              "border-b border-zinc-200",
-              variablePanelCollapsed ? "p-2" : "p-4"
-            )}>
-              <div className="flex items-center justify-between">
-                <h2 className={classNames(
-                  'text-lg font-semibold text-zinc-900',
-                  variablePanelCollapsed ? 'hidden' : ''
-                )}>
-                  Template Builder
-                </h2>
-                <button
-                  onClick={() => setVariablePanelCollapsed(!variablePanelCollapsed)}
-                  className={classNames(
-                    "inline-flex items-center justify-center rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-50",
-                    variablePanelCollapsed ? "w-12 h-12 mx-auto" : "p-2"
-                  )}
-                >
-                  {variablePanelCollapsed ? (
-                    <ChevronRightIcon className="h-5 w-5" />
-                  ) : (
-                    <ChevronLeftIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
+            {/* Collapse button positioned to align with main nav */}
+            <button
+              onClick={() => setVariablePanelCollapsed(!variablePanelCollapsed)}
+              className={classNames(
+                "absolute top-6 right-3 z-10 inline-flex items-center justify-center w-7 h-7 rounded-md text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-50",
+                variablePanelCollapsed && "right-2"
+              )}
+            >
+              {variablePanelCollapsed ? (
+                <ChevronRightIcon className="h-4 w-4" />
+              ) : (
+                <ChevronLeftIcon className="h-4 w-4" />
+              )}
+            </button>
+            
             {!variablePanelCollapsed && (
-              <div className="px-4 py-2">
+              <div className="h-full pt-2">
                 <VariablePanel />
               </div>
             )}
@@ -397,18 +387,36 @@ export default function TemplateBuilderPage() {
                       />
                     </div>
                   )}
+                  
                   {activeTab === 'Logic' && (
-                    <div className="h-full bg-zinc-50 rounded-lg border border-zinc-200 p-6">
-                      <h3 className="text-lg font-medium text-zinc-900 mb-4">Template Logic</h3>
-                      <div className="space-y-4">
-                        <p className="text-zinc-600">Configure conditional logic and rules for your template.</p>
-                        <div className="border-2 border-dashed border-zinc-300 rounded-lg p-6 text-center">
-                          <p className="text-sm text-zinc-500">Logic builder coming soon...</p>
-                          <p className="text-xs text-zinc-400 mt-2">Ask Casper AI to help create conditional logic</p>
+                    <div className="h-full">
+                      {currentTemplate?.id ? (
+                        <LogicPreview templateId={currentTemplate.id} />
+                      ) : (
+                        <div className="h-full bg-zinc-50 rounded-lg border border-zinc-200 p-6">
+                          <h3 className="text-lg font-medium text-zinc-900 mb-4">Template Logic</h3>
+                          <div className="border-2 border-dashed border-zinc-300 rounded-lg p-8 text-center h-80 flex flex-col items-center justify-center">
+                            <div className="text-zinc-500 mb-4">
+                              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            </div>
+                            <h4 className="text-lg font-medium text-zinc-900 mb-2">Save Template First</h4>
+                            <p className="text-zinc-600 mb-4">
+                              Please save your template before adding logic flows.
+                            </p>
+                            <Button
+                              onClick={handleSaveDraft}
+                              className="bg-zinc-900 text-white hover:bg-zinc-800"
+                            >
+                              Save Template
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
+                  
                   {activeTab === 'Properties' && (
                     <div className="h-full bg-zinc-50 rounded-lg border border-zinc-200 p-6">
                       <h3 className="text-lg font-medium text-zinc-900 mb-4">Template Properties</h3>
@@ -458,6 +466,7 @@ export default function TemplateBuilderPage() {
                       </div>
                     </div>
                   )}
+                  
                   {activeTab === 'Preview' && (
                     <div className="h-full bg-zinc-50 rounded-lg border border-zinc-200 p-6">
                       <h3 className="text-lg font-medium text-zinc-900 mb-4">Template Preview</h3>

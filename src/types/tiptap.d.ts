@@ -25,3 +25,19 @@ declare module '@tiptap/extension-subscript' {
     const CodeBlockLowlight: Extension<CodeBlockLowlightOptions>;
     export default CodeBlockLowlight;
   }
+
+  // src/types/tiptap.d.ts
+// Additional TypeScript declarations for Tiptap extensions
+
+import '@tiptap/core';
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    pageBreak: {
+      /**
+       * Insert a page break element
+       */
+      setPageBreak: () => ReturnType;
+    };
+  }
+}
