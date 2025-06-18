@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import LogicCanvas from './LogicCanvas';
+import LogicCanvas from './EnhancedLogicCanvas.tsx';
 
 interface ReactFlowWrapperProps {
   templateId: string;

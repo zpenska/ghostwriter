@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/16/solid';
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/16/solid';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core';
 import TemplateEditor from '@/components/template-builder/TemplateEditor';
 import VariablePanel from '@/components/template-builder/VariablePanel';
 import CasperAIWidget from '@/components/template-builder/CasperAIWidget';
@@ -23,6 +23,7 @@ export default function TemplateBuilderPage() {
   const [activeTab, setActiveTab] = useState('Builder');
   const [showAiChat, setShowAiChat] = useState(false);
   const [variablePanelCollapsed, setVariablePanelCollapsed] = useState(false);
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const [editorRef, setEditorRef] = useState<Editor | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveType, setSaveType] = useState<'draft' | 'publish'>('draft');
@@ -62,11 +63,34 @@ export default function TemplateBuilderPage() {
     }
   };
 
-  // FIXED: Simple handleDragEnd function without DOM parsing errors
+  // Enhanced debugging for drag events
+  const handleDragStart = (event: DragStartEvent) => {
+    console.log('🚀 DRAG START:', {
+      activeId: event.active.id,
+      activeData: event.active.data.current,
+    });
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    console.log('🎯 DRAG OVER:', {
+      activeId: event.active.id,
+      overId: event.over?.id,
+    });
+  };
+
+  // Enhanced handleDragEnd with better content insertion
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    console.log('🎯 Drag ended:', { active: active.data.current, over: over?.id });
+    console.log('🎯 DRAG END EVENT FIRED!', { 
+      activeId: active.id,
+      activeData: active.data.current, 
+      overId: over?.id,
+      overData: over?.data,
+      hasEditor: !!editorRef,
+      editorIsEditable: editorRef?.isEditable,
+      editorIsFocused: editorRef?.isFocused,
+    });
 
     if (over && over.id === 'editor-droppable' && editorRef) {
       const draggedData = active.data.current;
@@ -76,35 +100,100 @@ export default function TemplateBuilderPage() {
         return;
       }
 
-      console.log('📝 Inserting content:', draggedData);
+      console.log('📝 Processing drop for:', draggedData);
 
       if (draggedData.type === 'component') {
-        // Handle block insertion - simple HTML insertion
+        // Handle block insertion
         console.log('🧩 Inserting block:', draggedData.name);
+        console.log('🧩 Block content preview:', draggedData.content?.substring(0, 100) + '...');
         
-        const wrappedContent = `
-          <div class="component-block border-l-4 border-emerald-500 pl-4 my-4 bg-emerald-50 p-3 rounded-r-lg">
-            <div class="text-xs text-emerald-700 font-medium mb-2">📄 ${draggedData.name}</div>
-            <div class="component-content">
-              ${draggedData.content}
+        // Simplified HTML for testing
+        const simpleContent = `
+          <div style="border-left: 4px solid #10b981; padding: 16px; margin: 16px 0; background-color: #ecfdf5; border-radius: 8px;">
+            <h4 style="margin: 0 0 8px 0; color: #065f46;">📄 ${draggedData.name}</h4>
+            <div style="color: #374151;">
+              ${draggedData.content || 'Block content'}
             </div>
           </div>
-          <p>&nbsp;</p>
+          <p></p>
         `;
         
-        // Simple insertion - let Tiptap handle the HTML parsing
-        editorRef.chain().focus().insertContent(wrappedContent).run();
+        console.log('🧩 Attempting to insert simplified block HTML...');
+        try {
+          // Try to focus first
+          editorRef.commands.focus();
+          console.log('📍 Editor focused, now inserting...');
+          
+          const result = editorRef.chain().insertContent(simpleContent).run();
+          console.log('✅ Block insertion result:', result);
+          
+          if (result) {
+            console.log('✅ Block inserted successfully!');
+            setHasUnsavedChanges(true);
+          } else {
+            console.log('❌ Block insertion failed - result was false');
+            // Try alternative method
+            console.log('🔄 Trying alternative insertion method...');
+            editorRef.commands.insertContent('<p>Block: ' + draggedData.name + '</p>');
+          }
+        } catch (error) {
+          console.error('❌ Block insertion error:', error);
+          // Ultimate fallback
+          try {
+            editorRef.commands.insertContent('<p>📄 ' + draggedData.name + '</p>');
+            console.log('✅ Fallback insertion successful');
+            setHasUnsavedChanges(true);
+          } catch (fallbackError) {
+            console.error('❌ Even fallback failed:', fallbackError);
+          }
+        }
           
       } else {
-        // Handle variable insertion - keep existing functionality
-        console.log('🏷️ Inserting variable:', draggedData.name);
-        const variableHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-300 font-mono text-sm" contenteditable="false">{{${draggedData.name}}}</span>&nbsp;`;
-        editorRef.chain().focus().insertContent(variableHtml).run();
+        // Handle variable insertion
+        console.log('🏷️ Inserting variable:', draggedData.displayName || draggedData.name);
+        
+        // Simplified variable HTML
+        const simpleVariableHtml = `<span style="background-color: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;">{{${draggedData.displayName || draggedData.name}}}</span> `;
+        
+        console.log('🏷️ Attempting to insert simplified variable HTML...');
+        try {
+          editorRef.commands.focus();
+          const result = editorRef.chain().insertContent(simpleVariableHtml).run();
+          console.log('✅ Variable insertion result:', result);
+          
+          if (result) {
+            console.log('✅ Variable inserted successfully!');
+            setHasUnsavedChanges(true);
+          } else {
+            console.log('❌ Variable insertion failed - result was false');
+            // Try alternative
+            editorRef.commands.insertContent('{{' + (draggedData.displayName || draggedData.name) + '}} ');
+          }
+        } catch (error) {
+          console.error('❌ Variable insertion error:', error);
+          // Ultimate fallback
+          try {
+            editorRef.commands.insertContent('{{' + (draggedData.displayName || draggedData.name) + '}} ');
+            console.log('✅ Variable fallback insertion successful');
+            setHasUnsavedChanges(true);
+          } catch (fallbackError) {
+            console.error('❌ Variable fallback failed:', fallbackError);
+          }
+        }
       }
       
-      setHasUnsavedChanges(true);
     } else {
-      console.log('❌ Drop target not found or editor not ready');
+      console.log('❌ Drop conditions not met:', {
+        hasOver: !!over,
+        overId: over?.id,
+        correctDropZone: over?.id === 'editor-droppable',
+        hasEditor: !!editorRef,
+        editorState: editorRef ? {
+          isDestroyed: editorRef.isDestroyed,
+          isEditable: editorRef.isEditable,
+          isFocused: editorRef.isFocused,
+        } : null
+      });
     }
   };
 
@@ -177,8 +266,8 @@ export default function TemplateBuilderPage() {
       };
 
       if (currentTemplate?.id) {
-        // Update existing template - this will work with Tiptap collaboration
-        await templateService.updateTemplate(currentTemplate.id, saveData, true); // Increment version
+        // Update existing template
+        await templateService.updateTemplate(currentTemplate.id, saveData, true);
         
         // Update current template state
         setCurrentTemplate({ ...currentTemplate, ...saveData, version: (currentTemplate.version || 1) + 1 });
@@ -229,6 +318,11 @@ export default function TemplateBuilderPage() {
   };
 
   const handleEditorReady = (editor: Editor) => {
+    console.log('🎉 Editor ready! State:', {
+      isDestroyed: editor.isDestroyed,
+      isEditable: editor.isEditable,
+      isFocused: editor.isFocused,
+    });
     setEditorRef(editor);
     
     // Set content if we have a loaded template
@@ -237,7 +331,7 @@ export default function TemplateBuilderPage() {
     }
   };
 
-  // Auto-save functionality - preserve Tiptap collaboration state
+  // Auto-save functionality
   useEffect(() => {
     if (!hasUnsavedChanges || !currentTemplate?.id) return;
 
@@ -250,14 +344,13 @@ export default function TemplateBuilderPage() {
             content: templateContent,
             variables
           },
-          false // Don't increment version for auto-saves to preserve collaboration
+          false // Don't increment version for auto-saves
         );
         console.log('📄 Template auto-saved');
-        // Don't reset hasUnsavedChanges for auto-saves to maintain collaboration state
       } catch (error) {
         console.error('Auto-save failed:', error);
       }
-    }, 10000); // Auto-save after 10 seconds to reduce conflicts with collaboration
+    }, 10000);
 
     return () => clearTimeout(autoSaveTimer);
   }, [templateContent, hasUnsavedChanges, currentTemplate]);
@@ -277,14 +370,18 @@ export default function TemplateBuilderPage() {
 
   return (
     <EditorContext.Provider value={{ editor: editorRef }}>
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext 
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
         <div className="flex h-screen bg-white">
-          {/* Variable Panel Sidebar - GREY background like Catalyst UI */}
+          {/* Variable Panel Sidebar */}
           <div className={classNames(
             'bg-zinc-50 border-r border-zinc-200 transition-all duration-300 relative',
             variablePanelCollapsed ? 'w-12' : 'w-80'
           )}>
-            {/* Collapse button positioned to align with main nav */}
+            {/* Collapse button */}
             <button
               onClick={() => setVariablePanelCollapsed(!variablePanelCollapsed)}
               className={classNames(
@@ -308,87 +405,116 @@ export default function TemplateBuilderPage() {
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
-            {/* Header - WHITE background */}
-            <div className="bg-white border-b border-zinc-200 px-6 py-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <h1 className="text-xl font-semibold text-zinc-900">
-                    {currentTemplate?.name || 'New Template'}
-                  </h1>
-                  {hasUnsavedChanges && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                      Unsaved changes
-                    </span>
-                  )}
-                  {currentTemplate?.status && (
-                    <span className={classNames(
-                      "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-                      currentTemplate.status === 'published' 
-                        ? "bg-emerald-100 text-emerald-800" 
-                        : "bg-zinc-100 text-zinc-800"
-                    )}>
-                      {currentTemplate.status}
-                    </span>
-                  )}
+            {/* Collapsible Header */}
+            {!headerCollapsed && (
+              <>
+                {/* Header */}
+                <div className="bg-white border-b border-zinc-200 px-6 py-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <h1 className="text-xl font-semibold text-zinc-900">
+                        {currentTemplate?.name || 'New Template'}
+                      </h1>
+                      {hasUnsavedChanges && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                          Unsaved changes
+                        </span>
+                      )}
+                      {currentTemplate?.status && (
+                        <span className={classNames(
+                          "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                          currentTemplate.status === 'published' 
+                            ? "bg-emerald-100 text-emerald-800" 
+                            : "bg-zinc-100 text-zinc-800"
+                        )}>
+                          {currentTemplate.status}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Button
+                        outline
+                        onClick={handleSaveDraft}
+                        disabled={saving}
+                        className="text-zinc-700 border-zinc-300 hover:bg-zinc-50"
+                      >
+                        {saving ? 'Saving...' : 'Save Draft'}
+                      </Button>
+                      <Button
+                        onClick={handleSaveAndClose}
+                        className="bg-zinc-900 text-white hover:bg-zinc-800"
+                      >
+                        Save & Close
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex space-x-3">
-                  <Button
-                    outline
-                    onClick={handleSaveDraft}
-                    disabled={saving}
-                    className="text-zinc-700 border-zinc-300 hover:bg-zinc-50"
-                  >
-                    {saving ? 'Saving...' : 'Save Draft'}
-                  </Button>
-                  <Button
-                    onClick={handleSaveAndClose}
-                    className="bg-zinc-900 text-white hover:bg-zinc-800"
-                  >
-                    Save & Close
-                  </Button>
+
+                {/* Tabs */}
+                <div className="bg-white border-b border-zinc-200">
+                  <nav className="flex space-x-8 px-6" aria-label="Tabs">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={classNames(
+                          tab === activeTab
+                            ? 'border-zinc-900 text-zinc-900'
+                            : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300',
+                          'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors'
+                        )}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </nav>
                 </div>
-              </div>
+              </>
+            )}
+
+            {/* Header Collapse Button */}
+            <div className="bg-white border-b border-zinc-200 px-6 py-1">
+              <button
+                onClick={() => setHeaderCollapsed(!headerCollapsed)}
+                className="inline-flex items-center justify-center w-full py-1 text-xs text-zinc-500 hover:text-zinc-700 transition-colors"
+                title={headerCollapsed ? "Show header" : "Hide header for more editing space"}
+              >
+                {headerCollapsed ? (
+                  <>
+                    <ChevronDownIcon className="h-3 w-3 mr-1" />
+                    Show Header
+                  </>
+                ) : (
+                  <>
+                    <ChevronUpIcon className="h-3 w-3 mr-1" />
+                    Hide Header
+                  </>
+                )}
+              </button>
             </div>
 
-            {/* Tabs - WHITE background */}
-            <div className="bg-white border-b border-zinc-200">
-              <nav className="flex space-x-8 px-6" aria-label="Tabs">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={classNames(
-                      tab === activeTab
-                        ? 'border-zinc-900 text-zinc-900'
-                        : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300',
-                      'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors'
-                    )}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            {/* Content Area - WHITE background */}
+            {/* Content Area */}
             <div className="flex-1 p-6 overflow-hidden bg-white">
               <div className="h-full flex gap-6">
-                {/* Editor Area - GREY background like Catalyst UI */}
+                {/* Editor Area */}
                 <div className="flex-1 bg-zinc-50 rounded-lg border border-zinc-200">
-                  {activeTab === 'Builder' && (
+                  {(headerCollapsed || activeTab === 'Builder') && (
                     <div className="h-full">
                       <TemplateEditor
                         documentId={currentTemplate?.id || 'new-template'}
                         userId="zach-dev"
                         userName="Zach"
                         templateName={currentTemplate?.name || 'New Template'}
+                        initialContent={currentTemplate?.content || ''}
+                        isExistingTemplate={!!currentTemplate?.id}
                         onEditorReady={handleEditorReady}
                         onContentChange={handleContentChange}
+                        headerCollapsed={headerCollapsed}
                       />
                     </div>
                   )}
                   
-                  {activeTab === 'Logic' && (
+                  {!headerCollapsed && activeTab === 'Logic' && (
                     <div className="h-full">
                       {currentTemplate?.id ? (
                         <LogicPreview templateId={currentTemplate.id} />
@@ -417,7 +543,7 @@ export default function TemplateBuilderPage() {
                     </div>
                   )}
                   
-                  {activeTab === 'Properties' && (
+                  {!headerCollapsed && activeTab === 'Properties' && (
                     <div className="h-full bg-zinc-50 rounded-lg border border-zinc-200 p-6">
                       <h3 className="text-lg font-medium text-zinc-900 mb-4">Template Properties</h3>
                       <div className="space-y-4">
@@ -467,7 +593,7 @@ export default function TemplateBuilderPage() {
                     </div>
                   )}
                   
-                  {activeTab === 'Preview' && (
+                  {!headerCollapsed && activeTab === 'Preview' && (
                     <div className="h-full bg-zinc-50 rounded-lg border border-zinc-200 p-6">
                       <h3 className="text-lg font-medium text-zinc-900 mb-4">Template Preview</h3>
                       <div className="space-y-4">

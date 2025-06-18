@@ -28,6 +28,7 @@ import {
   FileTextIcon,
   RulerIcon,
   SeparatorHorizontalIcon,
+  BookmarkPlusIcon,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { classNames } from '@/lib/utils/cn';
@@ -37,13 +38,19 @@ interface EditorToolbarProps {
   onOpenAiChat?: () => void;
   showPageMargins?: boolean;
   onToggleMargins?: () => void;
+  onSaveAsBlock?: () => void;
+  hasSelection?: boolean;
+  savingBlock?: boolean;
 }
 
 export default function EditorToolbar({ 
   editor, 
   onOpenAiChat, 
   showPageMargins = true, 
-  onToggleMargins 
+  onToggleMargins,
+  onSaveAsBlock,
+  hasSelection = false,
+  savingBlock = false
 }: EditorToolbarProps) {
   const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const [showTableMenu, setShowTableMenu] = useState(false);
@@ -517,6 +524,21 @@ export default function EditorToolbar({
         </div>
 
         <div className="w-px h-6 bg-zinc-300" />
+
+        {/* Save as Block - only show when text is selected */}
+        {hasSelection && onSaveAsBlock && (
+          <>
+            <button
+              onClick={onSaveAsBlock}
+              disabled={savingBlock}
+              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+            >
+              <BookmarkPlusIcon className="h-3 w-3 mr-1" />
+              {savingBlock ? 'Saving...' : 'Save as Block'}
+            </button>
+            <div className="w-px h-6 bg-zinc-300" />
+          </>
+        )}
 
         {/* Margins Toggle - Quick Access */}
         {onToggleMargins && (
