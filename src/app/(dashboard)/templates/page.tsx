@@ -19,10 +19,6 @@ import {
   XMarkIcon,
   CheckIcon,
   FolderIcon,
-  ChartBarIcon,
-  ArrowDownTrayIcon,
-  CalendarIcon,
-  TagIcon,
   EllipsisVerticalIcon,
   DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
@@ -41,22 +37,13 @@ interface FilterState {
 }
 
 interface SortConfig {
-  key: keyof Template | 'collectionName' | 'analytics';
+  key: keyof Template | 'collectionName';
   direction: 'asc' | 'desc';
-}
-
-interface TemplateAnalytics {
-  templateId: string;
-  usageCount: number;
-  lastUsed: Date | null;
-  avgProcessingTime: number;
-  successRate: number;
 }
 
 export default function TemplatesPage() {
   const [collections, setCollections] = useState<TemplateCollection[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [analytics, setAnalytics] = useState<TemplateAnalytics[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -117,14 +104,12 @@ export default function TemplatesPage() {
 
   const loadData = async () => {
     try {
-      const [collectionsData, templatesData, analyticsData] = await Promise.all([
+      const [collectionsData, templatesData] = await Promise.all([
         templateService.getCollections(),
-        templateService.getTemplates(),
-        loadAnalytics()
+        templateService.getTemplates()
       ]);
       setCollections(collectionsData);
       setTemplates(templatesData);
-      setAnalytics(analyticsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -132,27 +117,10 @@ export default function TemplatesPage() {
     }
   };
 
-  const loadAnalytics = async (): Promise<TemplateAnalytics[]> => {
-    // Mock analytics data - replace with actual API call
-    return [
-      { templateId: 'template1', usageCount: 45, lastUsed: new Date('2024-06-10'), avgProcessingTime: 2.3, successRate: 98.5 },
-      { templateId: 'template2', usageCount: 23, lastUsed: new Date('2024-06-08'), avgProcessingTime: 1.8, successRate: 95.2 },
-    ];
-  };
-
   // Move helper functions BEFORE they're used
   const getCollectionName = (collectionId: string) => {
     const collection = collections.find(c => c.id === collectionId);
     return collection?.name || 'Unknown Collection';
-  };
-
-  const getCollectionColor = (collectionId: string) => {
-    const collection = collections.find(c => c.id === collectionId);
-    return collection?.color || '#71717a';
-  };
-
-  const getTemplateAnalytics = (templateId: string): TemplateAnalytics | null => {
-    return analytics.find(a => a.templateId === templateId) || null;
   };
 
   const getAllTags = (): string[] => {
@@ -208,11 +176,6 @@ export default function TemplatesPage() {
     if (sortConfig.key === 'collectionName') {
       aValue = getCollectionName(a.collectionId);
       bValue = getCollectionName(b.collectionId);
-    } else if (sortConfig.key === 'analytics') {
-      const aAnalytics = getTemplateAnalytics(a.id!);
-      const bAnalytics = getTemplateAnalytics(b.id!);
-      aValue = aAnalytics?.usageCount || 0;
-      bValue = bAnalytics?.usageCount || 0;
     } else {
       aValue = a[sortConfig.key as keyof Template];
       bValue = b[sortConfig.key as keyof Template];
@@ -610,10 +573,7 @@ export default function TemplatesPage() {
                               : 'text-gray-700 hover:bg-gray-50'
                           )}
                         >
-                          <div 
-                            className="w-2.5 h-2.5 rounded-full mr-2"
-                            style={{ backgroundColor: collection.color }}
-                          />
+                          <FolderIcon className="w-4 h-4 mr-2 text-gray-400" />
                           <span className="flex-1 truncate text-sm">{collection.name}</span>
                           <span className={classNames(
                             "text-xs px-1.5 py-0.5 rounded-full",
@@ -628,36 +588,6 @@ export default function TemplatesPage() {
                     </div>
                   );
                 })}
-              </div>
-
-              {/* Analytics Summary */}
-              <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
-                  <ChartBarIcon className="w-4 h-4 mr-1" />
-                  Analytics
-                </h4>
-                <div className="grid grid-cols-1 gap-2">
-                  <div className="bg-white rounded-lg p-2 border border-gray-200">
-                    <div className="text-lg font-bold text-gray-900">
-                      {analytics.reduce((sum, a) => sum + a.usageCount, 0)}
-                    </div>
-                    <div className="text-xs text-gray-600">Total Usage</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-2 border border-gray-200">
-                    <div className="text-lg font-bold text-green-600">
-                      {templates.filter(t => t.isActive !== false).length}
-                    </div>
-                    <div className="text-xs text-gray-600">Active Templates</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-2 border border-gray-200">
-                    <div className="text-lg font-bold text-blue-600">
-                      {analytics.length > 0 
-                        ? (analytics.reduce((sum, a) => sum + a.successRate, 0) / analytics.length).toFixed(1)
-                        : '0'}%
-                    </div>
-                    <div className="text-xs text-gray-600">Success Rate</div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -712,7 +642,7 @@ export default function TemplatesPage() {
                           onChange={(e) => handleSelectAllTemplates(e.target.checked)}
                         />
                       </th>
-                      <th scope="col" className="min-w-[280px] py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
+                      <th scope="col" className="min-w-[320px] py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
                         <button
                           className="group inline-flex items-center"
                           onClick={() => handleSort('name')}
@@ -745,17 +675,6 @@ export default function TemplatesPage() {
                           </span>
                         </button>
                       </th>
-                      <th scope="col" className="w-28 px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        <button
-                          className="group inline-flex items-center"
-                          onClick={() => handleSort('analytics')}
-                        >
-                          Usage
-                          <span className="ml-2 flex-none rounded text-gray-400 group-hover:text-gray-600">
-                            <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        </button>
-                      </th>
                       <th scope="col" className="w-32 px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                         <button
                           className="group inline-flex items-center"
@@ -778,7 +697,7 @@ export default function TemplatesPage() {
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {templates.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-6 py-14 text-center">
+                        <td colSpan={7} className="px-6 py-14 text-center">
                           <DocumentTextIcon className="mx-auto h-16 w-16 text-gray-300" />
                           <h3 className="mt-4 text-lg font-semibold text-gray-900">No templates found</h3>
                           <p className="mt-2 text-gray-600 max-w-sm mx-auto">
@@ -800,211 +719,171 @@ export default function TemplatesPage() {
                         </td>
                       </tr>
                     ) : (
-                      sortedTemplates.map((template, templateIdx) => {
-                        const templateAnalytics = getTemplateAnalytics(template.id!);
-                        return (
-                          <tr
-                            key={template.id}
-                            className={classNames(
-                              selectedTemplates.has(template.id!) ? 'bg-gray-50' : 'bg-white',
-                              'hover:bg-gray-50'
-                            )}
-                          >
-                            <td className="relative w-12 px-4 sm:w-16 sm:px-6">
-                              <input
-                                type="checkbox"
-                                className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-zinc-600 focus:ring-zinc-500"
-                                checked={selectedTemplates.has(template.id!)}
-                                onChange={(e) => handleSelectTemplate(template.id!, e.target.checked)}
-                              />
-                            </td>
-                            <td className="whitespace-nowrap py-3 pl-4 pr-3 text-sm max-w-[280px]">
-                              <div>
-                                <div className="font-medium text-gray-900 truncate">
-                                  {template.name}
-                                </div>
-                                {template.description && (
-                                  <div className="text-gray-500 truncate">
-                                    {template.description}
-                                  </div>
-                                )}
-                                {template.tags && template.tags.length > 0 && (
-                                  <div className="mt-1 flex flex-wrap gap-1">
-                                    {template.tags.slice(0, 2).map((tag, index) => (
-                                      <span
-                                        key={index}
-                                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                                      >
-                                        {tag}
-                                      </span>
-                                    ))}
-                                    {template.tags.length > 2 && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                        +{template.tags.length - 2}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
+                      sortedTemplates.map((template, templateIdx) => (
+                        <tr
+                          key={template.id}
+                          className={classNames(
+                            selectedTemplates.has(template.id!) ? 'bg-gray-50' : 'bg-white',
+                            'hover:bg-gray-50'
+                          )}
+                        >
+                          <td className="relative w-12 px-4 sm:w-16 sm:px-6">
+                            <input
+                              type="checkbox"
+                              className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-zinc-600 focus:ring-zinc-500"
+                              checked={selectedTemplates.has(template.id!)}
+                              onChange={(e) => handleSelectTemplate(template.id!, e.target.checked)}
+                            />
+                          </td>
+                          <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm max-w-[320px]">
+                            <div>
+                              <div className="font-medium text-gray-900 truncate">
+                                {template.name}
                               </div>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-500 w-44">
-                              <div className="flex items-center">
-                                <div 
-                                  className="w-2 h-2 rounded-full mr-2"
-                                  style={{ backgroundColor: getCollectionColor(template.collectionId) }}
-                                />
-                                <span className="text-gray-900 font-medium truncate">
-                                  {getCollectionName(template.collectionId)}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-500 w-28">
-                              <span
-                                className={classNames(
-                                  'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                                  template.status === 'published'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                                )}
-                              >
-                                {template.status}
-                              </span>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-500 w-28">
-                              {templateAnalytics ? (
-                                <div>
-                                  <div className="text-gray-900 font-medium">
-                                    {templateAnalytics.usageCount} uses
-                                  </div>
-                                  <div className="text-gray-500">
-                                    {templateAnalytics.successRate}% success
-                                  </div>
+                              {template.description && (
+                                <div className="text-gray-500 truncate mt-1">
+                                  {template.description}
                                 </div>
-                              ) : (
-                                <span className="text-gray-400">No data</span>
                               )}
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-500 w-32">
-                              <div className="text-gray-900">
-                                {formatDate(template.updatedAt || template.createdAt)}
-                              </div>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-500 w-20">
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 w-44">
+                            <span className="text-gray-900 font-medium truncate">
+                              {getCollectionName(template.collectionId)}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 w-28">
+                            <span
+                              className={classNames(
+                                'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                                template.status === 'published'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              )}
+                            >
+                              {template.status}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 w-32">
+                            <div className="text-gray-900">
+                              {formatDate(template.updatedAt || template.createdAt)}
+                            </div>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 w-20">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleActive(template)}
+                              className={classNames(
+                                template.isActive !== false
+                                  ? 'bg-zinc-600'
+                                  : 'bg-gray-200',
+                                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2'
+                              )}
+                              role="switch"
+                              aria-checked={template.isActive !== false}
+                            >
+                              <span className="sr-only">Toggle active status</span>
+                              <span
+                                aria-hidden="true"
+                                className={classNames(
+                                  template.isActive !== false ? 'translate-x-5' : 'translate-x-0',
+                                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                )}
+                              />
+                            </button>
+                          </td>
+                          <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium w-16">
+                            <div className="relative">
                               <button
                                 type="button"
-                                onClick={() => handleToggleActive(template)}
-                                className={classNames(
-                                  template.isActive !== false
-                                    ? 'bg-zinc-600'
-                                    : 'bg-gray-200',
-                                  'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2'
-                                )}
-                                role="switch"
-                                aria-checked={template.isActive !== false}
+                                data-dropdown-button="true"
+                                className="inline-flex items-center rounded-full bg-white p-2 text-gray-400 shadow-sm hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 border border-gray-200 hover:border-gray-300"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  console.log('🔄 Dropdown button clicked for template:', { id: template.id, name: template.name });
+                                  setOpenDropdown(openDropdown === template.id ? null : template.id!);
+                                }}
                               >
-                                <span className="sr-only">Toggle active status</span>
-                                <span
-                                  aria-hidden="true"
-                                  className={classNames(
-                                    template.isActive !== false ? 'translate-x-5' : 'translate-x-0',
-                                    'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
-                                  )}
-                                />
+                                <span className="sr-only">Open options</span>
+                                <EllipsisHorizontalIcon className="h-5 w-5" aria-hidden="true" />
                               </button>
-                            </td>
-                            <td className="relative whitespace-nowrap py-3 pl-3 pr-4 text-right text-sm font-medium w-16">
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  data-dropdown-button="true"
-                                  className="inline-flex items-center rounded-full bg-white p-2 text-gray-400 shadow-sm hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 border border-gray-200 hover:border-gray-300"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('🔄 Dropdown button clicked for template:', { id: template.id, name: template.name });
-                                    setOpenDropdown(openDropdown === template.id ? null : template.id!);
-                                  }}
+                              
+                              {openDropdown === template.id && (
+                                <div 
+                                  ref={(el) => { dropdownRefs.current[template.id!] = el; }}
+                                  className="absolute right-0 z-50 mt-2 w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                 >
-                                  <span className="sr-only">Open options</span>
-                                  <EllipsisHorizontalIcon className="h-5 w-5" aria-hidden="true" />
-                                </button>
-                                
-                                {openDropdown === template.id && (
-                                  <div 
-                                    ref={(el) => { dropdownRefs.current[template.id!] = el; }}
-                                    className="absolute right-0 z-50 mt-2 w-48 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                  >
-                                    <div className="py-1">
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setOpenDropdown(null);
-                                          handleEditTemplate(template);
-                                        }}
-                                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                      >
-                                        <PencilIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
-                                        Edit Template
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setOpenDropdown(null);
-                                          handlePreviewTemplate(template);
-                                        }}
-                                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                      >
-                                        <EyeIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
-                                        Preview
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setOpenDropdown(null);
-                                          handleDuplicateTemplate(template);
-                                        }}
-                                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                      >
-                                        <DocumentDuplicateIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
-                                        Duplicate
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setOpenDropdown(null);
-                                          exportToPDF(template);
-                                        }}
-                                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                      >
-                                        <DocumentArrowDownIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
-                                        Export PDF
-                                      </button>
-                                    </div>
-                                    <div className="py-1">
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setOpenDropdown(null);
-                                          handleDeleteTemplate(template);
-                                        }}
-                                        className="group flex w-full items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:text-red-900"
-                                      >
-                                        <TrashIcon className="mr-3 h-4 w-4 text-red-400 group-hover:text-red-500" />
-                                        Delete
-                                      </button>
-                                    </div>
+                                  <div className="py-1">
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setOpenDropdown(null);
+                                        handleEditTemplate(template);
+                                      }}
+                                      className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    >
+                                      <PencilIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
+                                      Edit Template
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setOpenDropdown(null);
+                                        handlePreviewTemplate(template);
+                                      }}
+                                      className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    >
+                                      <EyeIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
+                                      Preview
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setOpenDropdown(null);
+                                        handleDuplicateTemplate(template);
+                                      }}
+                                      className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    >
+                                      <DocumentDuplicateIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
+                                      Duplicate
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setOpenDropdown(null);
+                                        exportToPDF(template);
+                                      }}
+                                      className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    >
+                                      <DocumentArrowDownIcon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" />
+                                      Export PDF
+                                    </button>
                                   </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
+                                  <div className="py-1">
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setOpenDropdown(null);
+                                        handleDeleteTemplate(template);
+                                      }}
+                                      className="group flex w-full items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:text-red-900"
+                                    >
+                                      <TrashIcon className="mr-3 h-4 w-4 text-red-400 group-hover:text-red-500" />
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </table>

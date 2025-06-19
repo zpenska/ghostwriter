@@ -1,4 +1,3 @@
-// src/components/logic/custom/LoopNode.tsx
 'use client';
 import React from 'react';
 import { RotateCcw, GripVertical } from 'lucide-react';

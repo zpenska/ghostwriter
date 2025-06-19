@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { GitBranch, GripVertical, Edit2, Check, X } from 'lucide-react';
+import { GitBranch, GripVertical, Check, X } from 'lucide-react';
 
 const Handle: React.FC<{type: 'source'|'target'; position: string; className?: string}> = ({ type, position, className }) => (
   <div 
