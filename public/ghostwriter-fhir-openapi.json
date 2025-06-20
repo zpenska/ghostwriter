@@ -19,6 +19,17 @@
     "/fhir/DocumentReference/{id}": {
       "get": {
         "summary": "Retrieve a generated letter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The unique identifier of the DocumentReference"
+          }
+        ],
         "responses": {
           "200": {
             "description": "DocumentReference found"

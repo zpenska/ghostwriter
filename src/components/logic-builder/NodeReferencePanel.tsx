@@ -2,48 +2,27 @@
 
 import { useState } from 'react';
 import { ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
-import { nodeTypes } from './custom/nodeTypes'; // ✅ Adjust path to your structure
-import classNames from 'classnames';
+import nodeTypes, { NodeTypeDef } from './custom/nodeTypes';
 
-interface NodeReferencePanelProps {
-  onPromptInsert: (prompt: string) => void;
-}
+export default function NodeReferencePanel({ onPromptInsert }: { onPromptInsert: (prompt: string) => void }) {
+  const grouped: Record<string, NodeTypeDef[]> = {};
 
-interface NodeType {
-  label: string;
-  icon?: React.ElementType;
-  color?: string;
-  group: string;
-  description?: string;
-  prompt?: string;
-}
-
-export default function NodeReferencePanel({ onPromptInsert }: NodeReferencePanelProps) {
-  const groupMap: Record<string, NodeType[]> = {};
-
-  Object.values(nodeTypes).forEach((node) => {
-    const group = node.group || 'General';
-    if (!groupMap[group]) groupMap[group] = [];
-    groupMap[group].push(node);
+  Object.entries(nodeTypes).forEach(([_, def]) => {
+    if (!grouped[def.group]) grouped[def.group] = [];
+    grouped[def.group].push(def);
   });
 
-  const groupKeys = Object.keys(groupMap).sort();
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(groupKeys));
+  const [expanded, setExpanded] = useState(new Set(Object.keys(grouped)));
 
   const toggle = (group: string) => {
-    const copy = new Set(expanded);
-    copy.has(group) ? copy.delete(group) : copy.add(group);
-    setExpanded(copy);
-  };
-
-  const handleInsert = (node: NodeType) => {
-    const prompt = node.prompt || `Insert a ${node.label} rule into the logic.`;
-    onPromptInsert(prompt);
+    const next = new Set(expanded);
+    next.has(group) ? next.delete(group) : next.add(group);
+    setExpanded(next);
   };
 
   return (
     <div className="divide-y divide-zinc-200">
-      {groupKeys.map((group) => (
+      {Object.entries(grouped).map(([group, nodes]) => (
         <div key={group} className="border-b border-zinc-100">
           <button
             onClick={() => toggle(group)}
@@ -59,24 +38,15 @@ export default function NodeReferencePanel({ onPromptInsert }: NodeReferencePane
 
           {expanded.has(group) && (
             <div className="px-3 pb-2 space-y-1">
-              {groupMap[group].map((node) => (
+              {nodes.map((node) => (
                 <button
                   key={node.label}
-                  onClick={() => handleInsert(node)}
-                  title={node.description || `Insert logic for ${node.label}`}
-                  className={classNames(
-                    'w-full text-left rounded px-3 py-2 text-xs border shadow-sm bg-white border-zinc-200',
-                    'hover:border-blue-400 hover:bg-blue-50 flex items-center gap-2 transition-all'
-                  )}
+                  onClick={() => onPromptInsert(node.prompt || `Use ${node.label}`)}
+                  className="flex items-center gap-2 px-3 py-2 border rounded text-sm hover:bg-blue-50 w-full"
                 >
                   {node.icon && <node.icon className="w-4 h-4 text-zinc-500" />}
-                  <span className="font-medium text-zinc-900">{node.label}</span>
-                  <span
-                    className={classNames(
-                      'ml-auto rounded-full px-2 py-0.5 text-[10px]',
-                      node.color
-                    )}
-                  >
+                  <span className="text-zinc-900">{node.label}</span>
+                  <span className={`ml-auto px-2 py-0.5 text-[10px] rounded-full ${node.color}`}>
                     {group}
                   </span>
                 </button>

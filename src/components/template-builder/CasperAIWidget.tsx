@@ -203,7 +203,7 @@ export default function CasperAIWidget({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      void handleSubmit();
     }
   };
 
@@ -254,7 +254,7 @@ export default function CasperAIWidget({
           "absolute left-[-100px] bottom-16 min-w-[100px] shadow-lg",
           "flex items-center gap-2 bg-zinc-900 text-white hover:bg-zinc-800 px-4 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
         )}
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => { setOpen((prev) => !prev); }}
       >
         {open ? (
           <X className="w-4 h-4" />
@@ -289,7 +289,7 @@ export default function CasperAIWidget({
               {quickActions.map((action, index) => (
                 <button
                   key={index}
-                  onClick={() => handleQuickAction(action.prompt)}
+                  onClick={() => { handleQuickAction(action.prompt); }}
                   className="text-left text-xs p-2 h-auto whitespace-normal text-zinc-700 hover:bg-white border border-zinc-300 rounded hover:border-zinc-400 transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2"
                 >
                   {action.label}

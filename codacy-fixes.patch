@@ -1,0 +1,1530 @@
+diff --git a/src/app/(dashboard)/settings/page.tsx b/src/app/(dashboard)/settings/page.tsx
+--- a/src/app/(dashboard)/settings/page.tsx
++++ b/src/app/(dashboard)/settings/page.tsx
+@@ -135,1 +135,1 @@
+-                    onClick={() => setActiveTab(tab.id)}
++                    onClick={() => { setActiveTab(tab.id); }}
+@@ -164,1 +164,1 @@
+-                        onClick={() => setShowAddUser(true)}
++                        onClick={() => { setShowAddUser(true); }}
+@@ -181,1 +181,1 @@
+-                            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
++                            onChange={(e) => { setNewUser({ ...newUser, name: e.target.value }); }}
+@@ -191,1 +191,1 @@
+-                            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
++                            onChange={(e) => { setNewUser({ ...newUser, email: e.target.value }); }}
+@@ -200,1 +200,1 @@
+-                            onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
++                            onChange={(e) => { setNewUser({ ...newUser, role: e.target.value }); }}
+@@ -211,1 +211,1 @@
+-                          onClick={() => setShowAddUser(false)}
++                          onClick={() => { setShowAddUser(false); }}
+@@ -263,1 +263,1 @@
+-                                onClick={() => handleRemoveUser(user.id)}
++                                onClick={() => { handleRemoveUser(user.id); }}
+@@ -515,1 +515,1 @@
+-                              onClick={() => handleRemoveNotificationEmail(email)}
++                              onClick={() => { handleRemoveNotificationEmail(email); }}
+@@ -527,1 +527,1 @@
+-                          onChange={(e) => setNewEmail(e.target.value)}
++                          onChange={(e) => { setNewEmail(e.target.value); }}
+diff --git a/src/components/template-builder/ResizableImage.ts b/src/components/template-builder/ResizableImage.ts
+--- a/src/components/template-builder/ResizableImage.ts
++++ b/src/components/template-builder/ResizableImage.ts
+@@ -10,1 +10,1 @@
+-  HTMLAttributes: Record<string, any>;
++  HTMLAttributes: Record<string, unknown>;
+diff --git a/src/components/ui/text.jsx b/src/components/ui/text.jsx
+--- a/src/components/ui/text.jsx
++++ b/src/components/ui/text.jsx
+@@ -1,1 +1,1 @@
+-import clsx from 'clsx'
++import clsx from "clsx";
+diff --git a/src/lib/services/variable-test-service.ts b/src/lib/services/variable-test-service.ts
+--- a/src/lib/services/variable-test-service.ts
++++ b/src/lib/services/variable-test-service.ts
+@@ -17,1 +17,1 @@
+-    data: Record<string, any>;
++    data: Record<string, unknown>;
+@@ -18,1 +18,1 @@
+-    createdAt?: any;
++    createdAt?: unknown;
+@@ -297,1 +297,1 @@
+-        return allData.find(data => data.name === name) || null;
++        return allData.find(data => data.name === name) ?? null;
+diff --git a/src/components/template-builder/CasperAIWidget.tsx b/src/components/template-builder/CasperAIWidget.tsx
+--- a/src/components/template-builder/CasperAIWidget.tsx
++++ b/src/components/template-builder/CasperAIWidget.tsx
+@@ -13,1 +13,1 @@
+-  editor?: any;
++  editor?: unknown;
+@@ -14,1 +14,1 @@
+-  variables?: any[];
++  variables?: unknown[];
+@@ -47,1 +47,1 @@
+-      group.variables.map((v: any) => `{{${v.key}}}: ${v.name} - ${v.description}`)
++      group.variables.map((v: unknown) => `{{${v.key}}}: ${v.name} - ${v.description}`)
+@@ -112,1 +112,1 @@
+-      if (!contentType || !contentType.includes('application/json')) {
++      if (!contentType?.includes('application/json')) {
+@@ -173,1 +173,1 @@
+-    } catch (err: any) {
++    } catch (err: unknown) {
+@@ -206,1 +206,1 @@
+-      handleSubmit();
++      void handleSubmit();
+@@ -257,1 +257,1 @@
+-        onClick={() => setOpen((prev) => !prev)}
++        onClick={() => { setOpen((prev) => !prev); }}
+@@ -292,1 +292,1 @@
+-                  onClick={() => handleQuickAction(action.prompt)}
++                  onClick={() => { handleQuickAction(action.prompt); }}
+@@ -341,1 +341,1 @@
+-              onChange={(e) => setInput(e.target.value)}
++              onChange={(e) => { setInput(e.target.value); }}
+diff --git a/src/lib/tiptap/extensions/languagetool.ts b/src/lib/tiptap/extensions/languagetool.ts
+--- a/src/lib/tiptap/extensions/languagetool.ts
++++ b/src/lib/tiptap/extensions/languagetool.ts
+@@ -87,1 +87,1 @@
+-          .catch(error => {
++          .catch((error: unknown) => {
+diff --git a/src/app/(dashboard)/client-simulator/page.tsx b/src/app/(dashboard)/client-simulator/page.tsx
+--- a/src/app/(dashboard)/client-simulator/page.tsx
++++ b/src/app/(dashboard)/client-simulator/page.tsx
+@@ -145,1 +145,1 @@
+-                  value={selectedMember?.id || ''}
++                  value={selectedMember?.id ?? ''}
+@@ -147,1 +147,1 @@
+-                    const member = members.find((m) => m.id === e.target.value) || null;
++                    const member = members.find((m) => m.id === e.target.value) ?? null;
+@@ -171,1 +171,1 @@
+-                  value={selectedTemplate?.id || ''}
++                  value={selectedTemplate?.id ?? ''}
+@@ -173,1 +173,1 @@
+-                    const template = templates.find((t) => t.id === e.target.value) || null;
++                    const template = templates.find((t) => t.id === e.target.value) ?? null;
+@@ -201,1 +201,1 @@
+-                        onChange={() => setDeliveryMethod('mail')}
++                        onChange={() => { setDeliveryMethod('mail'); }}
+@@ -214,1 +214,1 @@
+-                        onChange={() => setDeliveryMethod('fax')}
++                        onChange={() => { setDeliveryMethod('fax'); }}
+diff --git a/src/components/ui/input.tsx b/src/components/ui/input.tsx
+--- a/src/components/ui/input.tsx
++++ b/src/components/ui/input.tsx
+@@ -4,1 +4,1 @@
+-export interface InputProps
++export type InputProps = React.InputHTMLAttributes<HTMLInputElement>
+diff --git a/migration/migration-simple.js b/migration/migration-simple.js
+--- a/migration/migration-simple.js
++++ b/migration/migration-simple.js
+@@ -92,1 +92,1 @@
+-    console.error('â Migration failed:', error);
++    console.error("â Migration failed:", error);
+diff --git a/src/lib/tiptap/ai-config.ts b/src/lib/tiptap/ai-config.ts
+--- a/src/lib/tiptap/ai-config.ts
++++ b/src/lib/tiptap/ai-config.ts
+@@ -108,1 +108,1 @@
+-    appId: process.env.NEXT_PUBLIC_TIPTAP_AI_APP_ID || 'jkver1dm',
++    appId: process.env.NEXT_PUBLIC_TIPTAP_AI_APP_ID ?? 'jkver1dm',
+@@ -109,1 +109,1 @@
+-    token: process.env.NEXT_PUBLIC_TIPTAP_AI_SECRET || 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
++    token: process.env.NEXT_PUBLIC_TIPTAP_AI_SECRET ?? 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk',
+@@ -112,1 +112,1 @@
+-    onError: (error: any) => {
++    onError: (error: unknown) => {
+@@ -115,1 +115,1 @@
+-  } as any);
++  } as unknown);
+diff --git a/src/types/modules.d.ts b/src/types/modules.d.ts
+--- a/src/types/modules.d.ts
++++ b/src/types/modules.d.ts
+@@ -33,1 +33,1 @@
+-        defaultValue?: any;
++        defaultValue?: unknown;
+diff --git a/src/app/(dashboard)/analytics/page.tsx b/src/app/(dashboard)/analytics/page.tsx
+--- a/src/app/(dashboard)/analytics/page.tsx
++++ b/src/app/(dashboard)/analytics/page.tsx
+@@ -32,1 +32,1 @@
+-  topUsers: Array<{ name: string; count: number; cost: number }>;
++  topUsers: { name: string; count: number; cost: number }[];
+@@ -33,1 +33,1 @@
+-  topCollections: Array<{ name: string; usage: number; successRate: number }>;
++  topCollections: { name: string; usage: number; successRate: number }[];
+@@ -34,1 +34,1 @@
+-  topTemplates: Array<{ name: string; usage: number; cost: number }>;
++  topTemplates: { name: string; usage: number; cost: number }[];
+@@ -35,1 +35,1 @@
+-  deliveryTrends: Array<{ date: string; mail: number; fax: number; cost: number }>;
++  deliveryTrends: { date: string; mail: number; fax: number; cost: number }[];
+@@ -52,1 +52,1 @@
+-    loadAnalyticsData();
++    void loadAnalyticsData();
+@@ -158,1 +158,1 @@
+-                  onChange={(e) => setTimeFrame(e.target.value)}
++                  onChange={(e) => { setTimeFrame(e.target.value); }}
+@@ -184,1 +184,1 @@
+-                onClick={() => setActiveTab(tab.id)}
++                onClick={() => { setActiveTab(tab.id); }}
+@@ -214,1 +214,1 @@
+-                          {formatCurrency(analytics?.totalCost.amount || 0)}
++                          {formatCurrency(analytics?.totalCost.amount ?? 0)}
+@@ -226,1 +226,1 @@
+-                            {Math.abs(analytics?.totalCost.change || 0)}%
++                            {Math.abs(analytics?.totalCost.change ?? 0)}%
+@@ -298,1 +298,1 @@
+-                          {formatCurrency(analytics?.avgCostPerLetter.amount || 0)}
++                          {formatCurrency(analytics?.avgCostPerLetter.amount ?? 0)}
+@@ -310,1 +310,1 @@
+-                            {Math.abs(analytics?.avgCostPerLetter.change || 0)}%
++                            {Math.abs(analytics?.avgCostPerLetter.change ?? 0)}%
+@@ -389,1 +389,1 @@
+-                          <span className="text-sm text-gray-600">{analytics?.methodPerformance.mail.successRate || 0}%</span>
++                          <span className="text-sm text-gray-600">{analytics?.methodPerformance.mail.successRate ?? 0}%</span>
+@@ -394,1 +394,1 @@
+-                            style={{ width: `${analytics?.methodPerformance.mail.successRate || 0}%` }}
++                            style={{ width: `${analytics?.methodPerformance.mail.successRate ?? 0}%` }}
+@@ -407,1 +407,1 @@
+-                          <span className="text-sm text-gray-600">{analytics?.methodPerformance.fax.successRate || 0}%</span>
++                          <span className="text-sm text-gray-600">{analytics?.methodPerformance.fax.successRate ?? 0}%</span>
+@@ -412,1 +412,1 @@
+-                            style={{ width: `${analytics?.methodPerformance.fax.successRate || 0}%` }}
++                            style={{ width: `${analytics?.methodPerformance.fax.successRate ?? 0}%` }}
+diff --git a/src/components/template-builder/AiToolbarButton.tsx b/src/components/template-builder/AiToolbarButton.tsx
+--- a/src/components/template-builder/AiToolbarButton.tsx
++++ b/src/components/template-builder/AiToolbarButton.tsx
+@@ -27,1 +27,1 @@
+-            if (aiExtension && aiExtension.options.appId) {
++            if (aiExtension?.options.appId) {
+@@ -161,1 +161,1 @@
+-  const handleAction = (action: any) => {
++  const handleAction = (action: unknown) => {
+@@ -170,1 +170,1 @@
+-        onClick={() => setShowMenu(!showMenu)}
++        onClick={() => { setShowMenu(!showMenu); }}
+@@ -186,1 +186,1 @@
+-                onClick={() => handleAction(action)}
++                onClick={() => { handleAction(action); }}
+diff --git a/src/components/ui/radio.jsx b/src/components/ui/radio.jsx
+--- a/src/components/ui/radio.jsx
++++ b/src/components/ui/radio.jsx
+@@ -46,1 +46,1 @@
+-  'before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-white before:shadow-sm',
++  "before:absolute before:inset-0 before:-z-10 before:rounded-full before:bg-white before:shadow-sm",
+@@ -69,1 +69,1 @@
+-]
++];
+@@ -73,1 +73,1 @@
+-    '[--radio-checked-bg:var(--color-zinc-900)] [--radio-checked-border:var(--color-zinc-950)]/90 [--radio-checked-indicator:var(--color-white)]',
++    "[--radio-checked-bg:var(--color-zinc-900)] [--radio-checked-border:var(--color-zinc-950)]/90 [--radio-checked-indicator:var(--color-white)]",
+diff --git a/src/app/api/casper-ai/route.ts b/src/app/api/casper-ai/route.ts
+--- a/src/app/api/casper-ai/route.ts
++++ b/src/app/api/casper-ai/route.ts
+@@ -7,1 +7,1 @@
+-let openai: any = null;
++let openai: unknown = null;
+@@ -34,1 +34,1 @@
+-let firestore: any = null;
++let firestore: unknown = null;
+@@ -128,1 +128,1 @@
+-    let variableList: any[] = [];
++    let variableList: unknown[] = [];
+@@ -129,1 +129,1 @@
+-    let codeList: any[] = [];
++    let codeList: unknown[] = [];
+@@ -137,1 +137,1 @@
+-        variableList = variableSnapshot.docs.map((doc: any) => doc.data());
++        variableList = variableSnapshot.docs.map((doc: unknown) => doc.data());
+@@ -142,1 +142,1 @@
+-          codeList = codeSnapshot.docs.map((doc: any) => doc.data());
++          codeList = codeSnapshot.docs.map((doc: unknown) => doc.data());
+@@ -201,1 +201,1 @@
+-    const hasSystemMessage = messages.some((msg: any) => msg.role === 'system');
++    const hasSystemMessage = messages.some((msg: unknown) => msg.role === 'system');
+@@ -215,1 +215,1 @@
+-    processedMessages = processedMessages.map((msg: any) => ({
++    processedMessages = processedMessages.map((msg: unknown) => ({
+@@ -222,1 +222,1 @@
+-      hasSystem: processedMessages.some((m: any) => m.role === 'system'),
++      hasSystem: processedMessages.some((m: unknown) => m.role === 'system'),
+@@ -223,1 +223,1 @@
+-      lastUserMessage: processedMessages.filter((m: any) => m.role === 'user').slice(-1)[0]?.content?.substring(0, 100)
++      lastUserMessage: processedMessages.filter((m: unknown) => m.role === 'user').slice(-1)[0]?.content?.substring(0, 100)
+@@ -237,1 +237,1 @@
+-    } catch (openaiError: any) {
++    } catch (openaiError: unknown) {
+@@ -271,1 +271,1 @@
+-    let result: any = {
++    let result: unknown = {
+@@ -283,1 +283,1 @@
+-  } catch (error: any) {
++  } catch (error: unknown) {
+diff --git a/src/lib/services/tiptap-ai-service.ts b/src/lib/services/tiptap-ai-service.ts
+--- a/src/lib/services/tiptap-ai-service.ts
++++ b/src/lib/services/tiptap-ai-service.ts
+@@ -22,1 +22,1 @@
+-      this.appId = process.env.NEXT_PUBLIC_TIPTAP_AI_APP_ID || 'jkver1dm';
++      this.appId = process.env.NEXT_PUBLIC_TIPTAP_AI_APP_ID ?? 'jkver1dm';
+@@ -23,1 +23,1 @@
+-      this.token = process.env.NEXT_PUBLIC_TIPTAP_AI_SECRET || 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk';
++      this.token = process.env.NEXT_PUBLIC_TIPTAP_AI_SECRET ?? 'IJZWrFYTgJMh4scmhn3Y3aYGugYP6GkRNEqFrm6c3UNFr97gEVYLp98WbqJghjlk';
+@@ -41,1 +41,1 @@
+-            context: request.text || '',
++            context: request.text ?? '',
+@@ -42,1 +42,1 @@
+-            operation: request.operation || 'generate',
++            operation: request.operation ?? 'generate',
+diff --git a/src/types/react-flow-globals.d.ts b/src/types/react-flow-globals.d.ts
+--- a/src/types/react-flow-globals.d.ts
++++ b/src/types/react-flow-globals.d.ts
+@@ -5,1 +5,1 @@
+-    interface Node<T = any> {
++    interface Node<T = unknown> {
+@@ -27,1 +27,1 @@
+-      [key: string]: any;
++      [key: string]: unknown;
+@@ -30,1 +30,1 @@
+-    interface Edge<T = any> {
++    interface Edge<T = unknown> {
+diff --git a/src/components/CasperAIBlockWidget.tsx b/src/components/CasperAIBlockWidget.tsx
+--- a/src/components/CasperAIBlockWidget.tsx
++++ b/src/components/CasperAIBlockWidget.tsx
+@@ -38,1 +38,1 @@
+-  editor?: any;
++  editor?: unknown;
+@@ -91,1 +91,1 @@
+-      blockForm.usedVariables?.length ? `Currently using variables: ${blockForm.usedVariables.join(', ')}` : ''
++      blockForm.usedVariables.length ? `Currently using variables: ${blockForm.usedVariables.join(', ')}` : ''
+@@ -174,1 +174,1 @@
+-      if (!contentType || !contentType.includes('application/json')) {
++      if (!contentType?.includes('application/json')) {
+@@ -251,1 +251,1 @@
+-    } catch (err: any) {
++    } catch (err: unknown) {
+@@ -279,1 +279,1 @@
+-      handleSubmit();
++      void handleSubmit();
+@@ -310,1 +310,1 @@
+-        onClick={() => setOpen((prev) => !prev)}
++        onClick={() => { setOpen((prev) => !prev); }}
+@@ -383,1 +383,1 @@
+-              onChange={(e) => setInput(e.target.value)}
++              onChange={(e) => { setInput(e.target.value); }}
+@@ -386,1 +386,1 @@
+-              placeholder={`Ask me to create ${blockForm?.category || 'block'} content, add variables, or format for ${blockForm?.defaultLocation || 'body'} placement...`}
++              placeholder={`Ask me to create ${blockForm?.category ?? 'block'} content, add variables, or format for ${blockForm?.defaultLocation || 'body'} placement...`}
+diff --git a/src/components/ui/button.tsx b/src/components/ui/button.tsx
+--- a/src/components/ui/button.tsx
++++ b/src/components/ui/button.tsx
+@@ -43,1 +43,1 @@
+-          {...(props as any)}
++          {...(props as unknown)}
+@@ -44,1 +44,1 @@
+-          ref={ref as any}
++          ref={ref as unknown}
+diff --git a/src/components/template-builder/TemplateEditor.tsx b/src/components/template-builder/TemplateEditor.tsx
+--- a/src/components/template-builder/TemplateEditor.tsx
++++ b/src/components/template-builder/TemplateEditor.tsx
+@@ -290,1 +290,1 @@
+-  onEditorReady?: (editor: any) => void;
++  onEditorReady?: (editor: unknown) => void;
+@@ -293,1 +293,1 @@
+-  currentTemplate?: any;
++  currentTemplate?: unknown;
+@@ -319,1 +319,1 @@
+-  const [tokens, setTokens] = useState<any>(null);
++  const [tokens, setTokens] = useState<unknown>(null);
+@@ -326,1 +326,1 @@
+-  const [complianceViolations, setComplianceViolations] = useState<any[]>([]);
++  const [complianceViolations, setComplianceViolations] = useState<unknown[]>([]);
+@@ -392,1 +392,1 @@
+-        runComplianceCheck(content);
++        void runComplianceCheck(content);
+@@ -399,1 +399,1 @@
+-    const components: any[] = [];
++    const components: unknown[] = [];
+@@ -486,1 +486,1 @@
+-    getTokens();
++    void getTokens();
+@@ -498,1 +498,1 @@
+-        onOpen: () => setStatus('Connected'),
++        onOpen: () => { setStatus('Connected'); },
+@@ -499,1 +499,1 @@
+-        onClose: () => setStatus('Disconnected'),
++        onClose: () => { setStatus('Disconnected'); },
+@@ -500,1 +500,1 @@
+-        onError: (error: any) => {
++        onError: (error: unknown) => {
+@@ -504,1 +504,1 @@
+-      } as any);
++      } as unknown);
+@@ -564,1 +564,1 @@
+-        onDrop: (currentEditor: any, files: File[], pos: number) => {
++        onDrop: (currentEditor: unknown, files: File[], pos: number) => {
+@@ -737,1 +737,1 @@
+-    const snapshots = JSON.parse(localStorage.getItem('template-snapshots') || '[]');
++    const snapshots = JSON.parse(localStorage.getItem('template-snapshots') ?? '[]');
+@@ -755,1 +755,1 @@
+-    if (!text) return alert('Please select some text to check.');
++    if (!text) { alert('Please select some text to check.'); return; }
+@@ -771,1 +771,1 @@
+-          apiKey: process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY || '',
++          apiKey: process.env.NEXT_PUBLIC_LANGUAGETOOL_API_KEY ?? '',
+@@ -778,1 +778,1 @@
+-        const errors = data.matches.map((m: any) => 
++        const errors = data.matches.map((m: unknown) => 
+@@ -845,1 +845,1 @@
+-        onToggleCompliance={() => setShowCompliancePanel(!showCompliancePanel)}
++        onToggleCompliance={() => { setShowCompliancePanel(!showCompliancePanel); }}
+@@ -960,1 +960,1 @@
+-                onClick={() => setShowCompliancePanel(!showCompliancePanel)}
++                onClick={() => { setShowCompliancePanel(!showCompliancePanel); }}
+diff --git a/src/components/template-builder/SaveTemplateModal.tsx b/src/components/template-builder/SaveTemplateModal.tsx
+--- a/src/components/template-builder/SaveTemplateModal.tsx
++++ b/src/components/template-builder/SaveTemplateModal.tsx
+@@ -84,1 +84,1 @@
+-      loadCollections();
++      void loadCollections();
+@@ -90,1 +90,1 @@
+-          description: existingTemplate.description || '',
++          description: existingTemplate.description ?? '',
+@@ -210,1 +210,1 @@
+-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
++              onChange={(e) => { setFormData(prev => ({ ...prev, name: e.target.value })); }}
+@@ -224,1 +224,1 @@
+-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
++              onChange={(e) => { setFormData(prev => ({ ...prev, description: e.target.value })); }}
+@@ -239,1 +239,1 @@
+-                onChange={(e) => setFormData(prev => ({ ...prev, collectionId: e.target.value }))}
++                onChange={(e) => { setFormData(prev => ({ ...prev, collectionId: e.target.value })); }}
+@@ -252,1 +252,1 @@
+-                onClick={() => setShowNewCollection(true)}
++                onClick={() => { setShowNewCollection(true); }}
+@@ -271,1 +271,1 @@
+-                  onChange={(e) => setNewCollectionData(prev => ({ ...prev, name: e.target.value }))}
++                  onChange={(e) => { setNewCollectionData(prev => ({ ...prev, name: e.target.value })); }}
+@@ -284,1 +284,1 @@
+-                      onClick={() => setNewCollectionData(prev => ({ ...prev, color }))}
++                      onClick={() => { setNewCollectionData(prev => ({ ...prev, color })); }}
+@@ -306,1 +306,1 @@
+-                  onClick={() => setShowNewCollection(false)}
++                  onClick={() => { setShowNewCollection(false); }}
+@@ -323,1 +323,1 @@
+-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
++                onChange={(e) => { setFormData(prev => ({ ...prev, category: e.target.value })); }}
+@@ -339,1 +339,1 @@
+-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
++                onChange={(e) => { setFormData(prev => ({ ...prev, status: e.target.value })); }}
+@@ -360,1 +360,1 @@
+-                onChange={(e) => setTagInput(e.target.value)}
++                onChange={(e) => { setTagInput(e.target.value); }}
+@@ -384,1 +384,1 @@
+-                      onClick={() => handleRemoveTag(tag)}
++                      onClick={() => { handleRemoveTag(tag); }}
+diff --git a/src/components/template-builder/EditorToolbar.tsx b/src/components/template-builder/EditorToolbar.tsx
+--- a/src/components/template-builder/EditorToolbar.tsx
++++ b/src/components/template-builder/EditorToolbar.tsx
+@@ -76,1 +76,1 @@
+-    return () => document.removeEventListener('mousedown', handleClickOutside);
++    return () => { document.removeEventListener('mousedown', handleClickOutside); };
+@@ -319,1 +319,1 @@
+-              onClick={() => setShowPageMenu(!showPageMenu)}
++              onClick={() => { setShowPageMenu(!showPageMenu); }}
+@@ -369,1 +369,1 @@
+-            onClick={() => setShowHighlightMenu(!showHighlightMenu)}
++            onClick={() => { setShowHighlightMenu(!showHighlightMenu); }}
+@@ -410,1 +410,1 @@
+-            onClick={() => setShowTableMenu(!showTableMenu)}
++            onClick={() => { setShowTableMenu(!showTableMenu); }}
+diff --git a/src/components/ui/select.jsx b/src/components/ui/select.jsx
+--- a/src/components/ui/select.jsx
++++ b/src/components/ui/select.jsx
+@@ -37,1 +37,1 @@
+-          'text-base/6 text-zinc-950 placeholder:text-zinc-500 sm:text-sm/6 dark:text-white dark:*:text-white',
++          "text-base/6 text-zinc-950 placeholder:text-zinc-500 sm:text-sm/6 dark:text-white dark:*:text-white",
+@@ -64,1 +64,1 @@
+-  )
++  );
+diff --git a/src/components/ui/dialog.jsx b/src/components/ui/dialog.jsx
+--- a/src/components/ui/dialog.jsx
++++ b/src/components/ui/dialog.jsx
+@@ -68,1 +68,1 @@
+-        'mt-8 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto'
++        "mt-8 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto"
+diff --git a/src/components/ui/link.jsx b/src/components/ui/link.jsx
+--- a/src/components/ui/link.jsx
++++ b/src/components/ui/link.jsx
+@@ -10,1 +10,1 @@
+-import React, { forwardRef } from 'react'
++import React, { forwardRef } from "react";
+@@ -17,1 +17,1 @@
+-  )
++  );
+diff --git a/src/components/template-builder/LogicPreview.tsx b/src/components/template-builder/LogicPreview.tsx
+--- a/src/components/template-builder/LogicPreview.tsx
++++ b/src/components/template-builder/LogicPreview.tsx
+@@ -18,1 +18,1 @@
+-  data: any;
++  data: unknown;
+diff --git a/src/components/ui/textarea.jsx b/src/components/ui/textarea.jsx
+--- a/src/components/ui/textarea.jsx
++++ b/src/components/ui/textarea.jsx
+@@ -46,1 +46,1 @@
+-  )
++  );
+diff --git a/src/app/(auth)/login/page.tsx b/src/app/(auth)/login/page.tsx
+--- a/src/app/(auth)/login/page.tsx
++++ b/src/app/(auth)/login/page.tsx
+@@ -25,1 +25,1 @@
+-    } catch (err: any) {
++    } catch (err: unknown) {
+@@ -113,1 +113,1 @@
+-                  onChange={(e) => setEmail(e.target.value)}
++                  onChange={(e) => { setEmail(e.target.value); }}
+@@ -132,1 +132,1 @@
+-                  onChange={(e) => setPassword(e.target.value)}
++                  onChange={(e) => { setPassword(e.target.value); }}
+diff --git a/src/app/(dashboard)/home/page.tsx b/src/app/(dashboard)/home/page.tsx
+--- a/src/app/(dashboard)/home/page.tsx
++++ b/src/app/(dashboard)/home/page.tsx
+@@ -67,1 +67,1 @@
+-  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
++  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+@@ -70,1 +70,1 @@
+-    loadData();
++    void loadData();
+@@ -87,1 +87,1 @@
+-    return () => document.removeEventListener('click', handleClickOutside);
++    return () => { document.removeEventListener('click', handleClickOutside); };
+@@ -173,1 +173,1 @@
+-                         (letter.createdBy && letter.createdBy.toLowerCase().includes(searchQuery.toLowerCase()));
++                         (letter.createdBy?.toLowerCase().includes(searchQuery.toLowerCase()));
+@@ -192,1 +192,1 @@
+-    let aValue: any;
++    let aValue: unknown;
+@@ -193,1 +193,1 @@
+-    let bValue: any;
++    let bValue: unknown;
+@@ -202,1 +202,1 @@
+-      aValue = a[sortConfig.key as keyof LetterWithUser];
++      aValue = a[sortConfig.key];
+@@ -203,1 +203,1 @@
+-      bValue = b[sortConfig.key as keyof LetterWithUser];
++      bValue = b[sortConfig.key];
+@@ -328,1 +328,1 @@
+-  const formatDate = (date: Date | string | Timestamp | any): string => {
++  const formatDate = (date: Date | string | Timestamp | unknown): string => {
+@@ -412,1 +412,1 @@
+-                  onChange={(e) => setTimeFrame(e.target.value)}
++                  onChange={(e) => { setTimeFrame(e.target.value); }}
+@@ -563,1 +563,1 @@
+-                onChange={(e) => setSearchQuery(e.target.value)}
++                onChange={(e) => { setSearchQuery(e.target.value); }}
+@@ -568,1 +568,1 @@
+-              onClick={() => setShowFilters(true)}
++              onClick={() => { setShowFilters(true); }}
+@@ -632,1 +632,1 @@
+-                      onChange={(e) => handleSelectAllLetters(e.target.checked)}
++                      onChange={(e) => { handleSelectAllLetters(e.target.checked); }}
+@@ -638,1 +638,1 @@
+-                      onClick={() => handleSort('referenceNumber')}
++                      onClick={() => { handleSort('referenceNumber'); }}
+@@ -649,1 +649,1 @@
+-                      onClick={() => handleSort('memberName')}
++                      onClick={() => { handleSort('memberName'); }}
+@@ -660,1 +660,1 @@
+-                      onClick={() => handleSort('deliveryMethod')}
++                      onClick={() => { handleSort('deliveryMethod'); }}
+@@ -671,1 +671,1 @@
+-                      onClick={() => handleSort('status')}
++                      onClick={() => { handleSort('status'); }}
+@@ -682,1 +682,1 @@
+-                      onClick={() => handleSort('sentAt')}
++                      onClick={() => { handleSort('sentAt'); }}
+@@ -722,1 +722,1 @@
+-                          onChange={(e) => handleSelectLetter(letter.id, e.target.checked)}
++                          onChange={(e) => { handleSelectLetter(letter.id, e.target.checked); }}
+@@ -816,1 +816,1 @@
+-                                      handleResendLetter(letter);
++                                      void handleResendLetter(letter);
+@@ -832,1 +832,1 @@
+-                                      handleCancelLetter(letter);
++                                      void handleCancelLetter(letter);
+@@ -845,1 +845,1 @@
+-                                    handleVoidLetter(letter);
++                                    void handleVoidLetter(letter);
+@@ -870,1 +870,1 @@
+-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowFilters(false)}></div>
++            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => { setShowFilters(false); }}></div>
+@@ -877,1 +877,1 @@
+-                  onClick={() => setShowFilters(false)}
++                  onClick={() => { setShowFilters(false); }}
+diff --git a/src/lib/services/user-profile-service.ts b/src/lib/services/user-profile-service.ts
+--- a/src/lib/services/user-profile-service.ts
++++ b/src/lib/services/user-profile-service.ts
+@@ -26,1 +26,1 @@
+-    lastLoginAt?: any; // Firestore timestamp
++    lastLoginAt?: unknown; // Firestore timestamp
+@@ -27,1 +27,1 @@
+-    createdAt?: any; // Firestore timestamp
++    createdAt?: unknown; // Firestore timestamp
+@@ -28,1 +28,1 @@
+-    updatedAt?: any; // Firestore timestamp
++    updatedAt?: unknown; // Firestore timestamp
+@@ -236,1 +236,1 @@
+-    async getAllUsers(limit: number = 50): Promise<UserProfile[]> {
++    async getAllUsers(limit = 50): Promise<UserProfile[]> {
+diff --git a/src/components/logic/custom/EditableEdge.tsx b/src/components/logic/custom/EditableEdge.tsx
+--- a/src/components/logic/custom/EditableEdge.tsx
++++ b/src/components/logic/custom/EditableEdge.tsx
+@@ -69,1 +69,1 @@
+-            onChange={(e) => setLabel(e.target.value)}
++            onChange={(e) => { setLabel(e.target.value); }}
+diff --git a/src/lib/services/template-service.ts b/src/lib/services/template-service.ts
+--- a/src/lib/services/template-service.ts
++++ b/src/lib/services/template-service.ts
+@@ -65,1 +65,1 @@
+-    } catch (error: any) {
++    } catch (error: unknown) {
+@@ -107,1 +107,1 @@
+-        .filter(collection => collection.isActive !== false)
++        .filter(collection => collection.isActive)
+@@ -174,1 +174,1 @@
+-          description: templateData.description || '',
++          description: templateData.description ?? '',
+@@ -177,1 +177,1 @@
+-          category: templateData.category || 'general',
++          category: templateData.category ?? 'general',
+@@ -178,1 +178,1 @@
+-          status: templateData.status || 'draft',
++          status: templateData.status ?? 'draft',
+@@ -179,1 +179,1 @@
+-          tags: templateData.tags || [],
++          tags: templateData.tags ?? [],
+@@ -181,1 +181,1 @@
+-          createdBy: templateData.createdBy || 'user',
++          createdBy: templateData.createdBy ?? 'user',
+@@ -295,1 +295,1 @@
+-      const updateData: any = {
++      const updateData: unknown = {
+diff --git a/src/components/template-builder/VersionHistory.tsx b/src/components/template-builder/VersionHistory.tsx
+--- a/src/components/template-builder/VersionHistory.tsx
++++ b/src/components/template-builder/VersionHistory.tsx
+@@ -11,1 +11,1 @@
+-  snapshot?: any;
++  snapshot?: unknown;
+@@ -60,1 +60,1 @@
+-            onClick={() => handleVersionSelect(version.id)}
++            onClick={() => { handleVersionSelect(version.id); }}
+diff --git a/src/components/ui/listbox.jsx b/src/components/ui/listbox.jsx
+--- a/src/components/ui/listbox.jsx
++++ b/src/components/ui/listbox.jsx
+@@ -42,1 +42,1 @@
+-            'text-left text-base/6 text-zinc-950 placeholder:text-zinc-500 sm:text-sm/6 dark:text-white forced-colors:text-[CanvasText]',
++            "text-left text-base/6 text-zinc-950 placeholder:text-zinc-500 sm:text-sm/6 dark:text-white forced-colors:text-[CanvasText]",
+@@ -76,1 +76,1 @@
+-          'overflow-y-scroll overscroll-contain',
++          "overflow-y-scroll overscroll-contain",
+diff --git a/src/lib/services/delivery-service.ts b/src/lib/services/delivery-service.ts
+--- a/src/lib/services/delivery-service.ts
++++ b/src/lib/services/delivery-service.ts
+@@ -77,1 +77,1 @@
+-  async testConnection(): Promise<{ success: boolean; count: number; sampleData?: any }> {
++  async testConnection(): Promise<{ success: boolean; count: number; sampleData?: unknown }> {
+@@ -87,1 +87,1 @@
+-      const sampleDocs: any[] = [];
++      const sampleDocs: unknown[] = [];
+@@ -163,1 +163,1 @@
+-          return timestamp >= filters.dateRange!.start && timestamp <= filters.dateRange!.end;
++          return timestamp >= filters.dateRange?.start && timestamp <= filters.dateRange!.end;
+@@ -211,1 +211,1 @@
+-        const data = ds as any; // Cast to access all possible fields
++        const data = ds as unknown; // Cast to access all possible fields
+@@ -294,1 +294,1 @@
+-          id: ds.id || ds.deliveryId || `letter-${index}`,
++          id: (ds.id ?? ds.deliveryId) || `letter-${index}`,
+@@ -319,1 +319,1 @@
+-    const typeMap: { [key: string]: string } = {
++    const typeMap: Record<string, string> = {
+@@ -332,1 +332,1 @@
+-  async getAnalytics(timeFrame: string = 'last-week'): Promise<AnalyticsData> {
++  async getAnalytics(timeFrame = 'last-week'): Promise<AnalyticsData> {
+@@ -370,1 +370,1 @@
+-      const isSuccessful = (ds: any): boolean => {
++      const isSuccessful = (ds: unknown): boolean => {
+@@ -378,1 +378,1 @@
+-      const getDeliveryMethod = (ds: any): 'mail' | 'fax' => {
++      const getDeliveryMethod = (ds: unknown): 'mail' | 'fax' => {
+@@ -498,1 +498,1 @@
+-    const templateNames: { [key: string]: string } = {
++    const templateNames: Record<string, string> = {
+diff --git a/src/components/ui/sidebar-layout.tsx b/src/components/ui/sidebar-layout.tsx
+--- a/src/components/ui/sidebar-layout.tsx
++++ b/src/components/ui/sidebar-layout.tsx
+@@ -60,1 +60,1 @@
+-      <MobileSidebar open={showSidebar} close={() => setShowSidebar(false)}>
++      <MobileSidebar open={showSidebar} close={() => { setShowSidebar(false); }}>
+@@ -67,1 +67,1 @@
+-          <NavbarItem onClick={() => setShowSidebar(true)} aria-label="Open navigation">
++          <NavbarItem onClick={() => { setShowSidebar(true); }} aria-label="Open navigation">
+diff --git a/src/components/ui/combobox.jsx b/src/components/ui/combobox.jsx
+--- a/src/components/ui/combobox.jsx
++++ b/src/components/ui/combobox.jsx
+@@ -39,1 +39,1 @@
+-          'dark:before:hidden',
++          "dark:before:hidden",
+@@ -45,1 +45,1 @@
+-          'has-data-invalid:before:shadow-red-500/10',
++          "has-data-invalid:before:shadow-red-500/10",
+@@ -70,1 +70,1 @@
+-            'data-invalid:border-red-500 data-invalid:data-hover:border-red-500 dark:data-invalid:border-red-500 dark:data-invalid:data-hover:border-red-500',
++            "data-invalid:border-red-500 data-invalid:data-hover:border-red-500 dark:data-invalid:border-red-500 dark:data-invalid:data-hover:border-red-500",
+diff --git a/src/components/logic/LogicCanvas.tsx b/src/components/logic/LogicCanvas.tsx
+--- a/src/components/logic/LogicCanvas.tsx
++++ b/src/components/logic/LogicCanvas.tsx
+@@ -15,1 +15,1 @@
+-  data: any;
++  data: unknown;
+@@ -338,1 +338,1 @@
+-        'logic.edges': updatedEdges || edges,
++        'logic.edges': updatedEdges ?? edges,
+@@ -357,1 +357,1 @@
+-    clearTimeout((window as any).dragSaveTimeout);
++    clearTimeout((window as unknown).dragSaveTimeout);
+@@ -358,1 +358,1 @@
+-    (window as any).dragSaveTimeout = setTimeout(() => {
++    (window as unknown).dragSaveTimeout = setTimeout(() => {
+@@ -359,1 +359,1 @@
+-      saveLogicToFirestore(updatedNodes);
++      void saveLogicToFirestore(updatedNodes);
+@@ -400,1 +400,1 @@
+-  const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3));
++  const handleZoomIn = () => { setZoom(prev => Math.min(prev * 1.2, 3)); };
+@@ -401,1 +401,1 @@
+-  const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.3));
++  const handleZoomOut = () => { setZoom(prev => Math.max(prev / 1.2, 0.3)); };
+diff --git a/src/app/(dashboard)/admin/setup/page.tsx b/src/app/(dashboard)/admin/setup/page.tsx
+--- a/src/app/(dashboard)/admin/setup/page.tsx
++++ b/src/app/(dashboard)/admin/setup/page.tsx
+@@ -14,1 +14,1 @@
+-  const [existingTestData, setExistingTestData] = useState<any[]>([]);
++  const [existingTestData, setExistingTestData] = useState<unknown[]>([]);
+@@ -15,1 +15,1 @@
+-  const [existingCollections, setExistingCollections] = useState<any[]>([]);
++  const [existingCollections, setExistingCollections] = useState<unknown[]>([]);
+@@ -16,1 +16,1 @@
+-  const [existingDeliveries, setExistingDeliveries] = useState<any[]>([]);
++  const [existingDeliveries, setExistingDeliveries] = useState<unknown[]>([]);
+@@ -17,1 +17,1 @@
+-  const [deliveryStats, setDeliveryStats] = useState<any>(null);
++  const [deliveryStats, setDeliveryStats] = useState<unknown>(null);
+@@ -140,1 +140,1 @@
+-    checkExistingData();
++    void checkExistingData();
+diff --git a/src/app/(dashboard)/template-builder/page.tsx b/src/app/(dashboard)/template-builder/page.tsx
+--- a/src/app/(dashboard)/template-builder/page.tsx
++++ b/src/app/(dashboard)/template-builder/page.tsx
+@@ -31,1 +31,1 @@
+-  const [currentTemplate, setCurrentTemplate] = useState<any>(null);
++  const [currentTemplate, setCurrentTemplate] = useState<unknown>(null);
+@@ -44,1 +44,1 @@
+-      loadTemplate(templateId);
++      void loadTemplate(templateId);
+@@ -253,1 +253,1 @@
+-  const saveTemplate = async (templateData: any) => {
++  const saveTemplate = async (templateData: unknown) => {
+@@ -303,1 +303,1 @@
+-  const handleSaveTemplate = async (templateData: any) => {
++  const handleSaveTemplate = async (templateData: unknown) => {
+@@ -355,1 +355,1 @@
+-    return () => clearTimeout(autoSaveTimer);
++    return () => { clearTimeout(autoSaveTimer); };
+@@ -368,1 +368,1 @@
+-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
++    return () => { window.removeEventListener('beforeunload', handleBeforeUnload); };
+@@ -386,1 +386,1 @@
+-              onClick={() => setVariablePanelCollapsed(!variablePanelCollapsed)}
++              onClick={() => { setVariablePanelCollapsed(!variablePanelCollapsed); }}
+@@ -459,1 +459,1 @@
+-                        onClick={() => setActiveTab(tab)}
++                        onClick={() => { setActiveTab(tab); }}
+@@ -478,1 +478,1 @@
+-                onClick={() => setHeaderCollapsed(!headerCollapsed)}
++                onClick={() => { setHeaderCollapsed(!headerCollapsed); }}
+@@ -652,1 +652,1 @@
+-            onClose={() => setShowSaveModal(false)}
++            onClose={() => { setShowSaveModal(false); }}
+diff --git a/src/app/(dashboard)/layout.tsx b/src/app/(dashboard)/layout.tsx
+--- a/src/app/(dashboard)/layout.tsx
++++ b/src/app/(dashboard)/layout.tsx
+@@ -30,1 +30,1 @@
+-  [key: string]: any;
++  [key: string]: unknown;
+@@ -123,1 +123,1 @@
+-                onClick={() => setSidebarCollapsed(true)}
++                onClick={() => { setSidebarCollapsed(true); }}
+@@ -135,1 +135,1 @@
+-                onClick={() => setSidebarCollapsed(false)}
++                onClick={() => { setSidebarCollapsed(false); }}
+@@ -212,1 +212,1 @@
+-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
++                  onClick={() => { setProfileDropdownOpen(!profileDropdownOpen); }}
+@@ -247,1 +247,1 @@
+-                      onClick={() => setProfileDropdownOpen(false)}
++                      onClick={() => { setProfileDropdownOpen(false); }}
+diff --git a/src/app/test-api/page.tsx b/src/app/test-api/page.tsx
+--- a/src/app/test-api/page.tsx
++++ b/src/app/test-api/page.tsx
+@@ -7,1 +7,1 @@
+-  const [testResult, setTestResult] = useState<any>(null);
++  const [testResult, setTestResult] = useState<unknown>(null);
+@@ -20,1 +20,1 @@
+-    } catch (error: any) {
++    } catch (error: unknown) {
+diff --git a/src/components/ui/badge.tsx b/src/components/ui/badge.tsx
+--- a/src/components/ui/badge.tsx
++++ b/src/components/ui/badge.tsx
+@@ -37,1 +37,1 @@
+-type BadgeProps = { color?: keyof typeof colors }
++interface BadgeProps { color?: keyof typeof colors }
+diff --git a/bulkExportForFirefoo.js b/bulkExportForFirefoo.js
+--- a/bulkExportForFirefoo.js
++++ b/bulkExportForFirefoo.js
+@@ -1,1 +1,1 @@
+-const fs = require('fs');
++const fs = require("fs");
+@@ -22,1 +22,1 @@
+-  const files = fs.readdirSync(folderPath).filter(f => f.endsWith('.docx'));
++  const files = fs.readdirSync(folderPath).filter((f) => f.endsWith(".docx"));
+@@ -49,1 +49,1 @@
+-                : 'General';
++      : "General";
+@@ -65,1 +65,1 @@
+-console.log('â Export complete: firefoo-export.json');
++console.log("â Export complete: firefoo-export.json");
+diff --git a/src/lib/firebase/loaders/getTemplateComponents.ts b/src/lib/firebase/loaders/getTemplateComponents.ts
+--- a/src/lib/firebase/loaders/getTemplateComponents.ts
++++ b/src/lib/firebase/loaders/getTemplateComponents.ts
+@@ -15,1 +15,1 @@
+-    nodes: any[];
++    nodes: unknown[];
+@@ -16,1 +16,1 @@
+-    edges: any[];
++    edges: unknown[];
+@@ -42,1 +42,1 @@
+-    violations: any[];
++    violations: unknown[];
+@@ -45,1 +45,1 @@
+-  variables?: any[];
++  variables?: unknown[];
+@@ -46,1 +46,1 @@
+-  blocks?: any[];
++  blocks?: unknown[];
+@@ -211,1 +211,1 @@
+-      (template.description && template.description.toLowerCase().includes(lowercaseQuery)) ||
++      (template.description && template.description.toLowerCase().includes(lowercaseQuery)) ??
+@@ -212,1 +212,1 @@
+-      (template.tags && template.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery)))
++      (template.tags?.some(tag => tag.toLowerCase().includes(lowercaseQuery)))
+@@ -306,1 +306,1 @@
+-      withLogic: allTemplates.filter(t => t.logic?.nodes?.length > 0).length,
++      withLogic: allTemplates.filter(t => t.logic?.nodes.length > 0).length,
+@@ -307,1 +307,1 @@
+-      withViolations: allTemplates.filter(t => t.complianceStatus?.violations?.length > 0).length,
++      withViolations: allTemplates.filter(t => t.complianceStatus?.violations.length > 0).length,
+@@ -316,1 +316,1 @@
+-      const category = template.category || 'Uncategorized';
++      const category = template.category ?? 'Uncategorized';
+@@ -322,1 +322,1 @@
+-      sum + (t.templateComponents?.variables?.length || 0), 0
++      sum + (t.templateComponents?.variables?.length ?? 0), 0
+@@ -325,1 +325,1 @@
+-      sum + (t.templateComponents?.components?.length || 0), 0
++      sum + (t.templateComponents?.components.length || 0), 0
+diff --git a/src/types/user-profile.ts b/src/types/user-profile.ts
+--- a/src/types/user-profile.ts
++++ b/src/types/user-profile.ts
+@@ -12,1 +12,1 @@
+-    lastLoginAt?: any; // Firestore timestamp
++    lastLoginAt?: unknown; // Firestore timestamp
+@@ -13,1 +13,1 @@
+-    createdAt?: any; // Firestore timestamp
++    createdAt?: unknown; // Firestore timestamp
+@@ -14,1 +14,1 @@
+-    updatedAt?: any; // Firestore timestamp
++    updatedAt?: unknown; // Firestore timestamp
+@@ -35,1 +35,1 @@
+-    user: any | null; // Firebase User type
++    user: unknown | null; // Firebase User type
+diff --git a/src/components/template-builder/ResizableImageView.tsx b/src/components/template-builder/ResizableImageView.tsx
+--- a/src/components/template-builder/ResizableImageView.tsx
++++ b/src/components/template-builder/ResizableImageView.tsx
+@@ -16,1 +16,1 @@
+-  updateAttributes: (attrs: any) => void;
++  updateAttributes: (attrs: unknown) => void;
+@@ -150,1 +150,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 'nw')}
++              onMouseDown={(e) => { handleMouseDown(e, 'nw'); }}
+@@ -154,1 +154,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 'ne')}
++              onMouseDown={(e) => { handleMouseDown(e, 'ne'); }}
+@@ -158,1 +158,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 'sw')}
++              onMouseDown={(e) => { handleMouseDown(e, 'sw'); }}
+@@ -162,1 +162,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 'se')}
++              onMouseDown={(e) => { handleMouseDown(e, 'se'); }}
+@@ -168,1 +168,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 'n')}
++              onMouseDown={(e) => { handleMouseDown(e, 'n'); }}
+@@ -172,1 +172,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 's')}
++              onMouseDown={(e) => { handleMouseDown(e, 's'); }}
+@@ -176,1 +176,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 'w')}
++              onMouseDown={(e) => { handleMouseDown(e, 'w'); }}
+@@ -180,1 +180,1 @@
+-              onMouseDown={(e) => handleMouseDown(e, 'e')}
++              onMouseDown={(e) => { handleMouseDown(e, 'e'); }}
+diff --git a/src/app/(dashboard)/templates/variables/page.tsx b/src/app/(dashboard)/templates/variables/page.tsx
+--- a/src/app/(dashboard)/templates/variables/page.tsx
++++ b/src/app/(dashboard)/templates/variables/page.tsx
+@@ -68,1 +68,1 @@
+-  createdAt?: any;
++  createdAt?: unknown;
+@@ -69,1 +69,1 @@
+-  updatedAt?: any;
++  updatedAt?: unknown;
+@@ -163,1 +163,1 @@
+-    loadVariables();
++    void loadVariables();
+@@ -170,1 +170,1 @@
+-        description: editingVariable.description || '',
++        description: editingVariable.description ?? '',
+@@ -174,1 +174,1 @@
+-        defaultValue: editingVariable.defaultValue || '',
++        defaultValue: editingVariable.defaultValue ?? '',
+@@ -176,1 +176,1 @@
+-          dateFormat: editingVariable.formatOptions?.dateFormat || 'MM/DD/YYYY',
++          dateFormat: editingVariable.formatOptions?.dateFormat ?? 'MM/DD/YYYY',
+@@ -177,1 +177,1 @@
+-          currencyCode: editingVariable.formatOptions?.currencyCode || 'USD',
++          currencyCode: editingVariable.formatOptions?.currencyCode ?? 'USD',
+@@ -178,1 +178,1 @@
+-          addressFormat: editingVariable.formatOptions?.addressFormat || 'standard',
++          addressFormat: editingVariable.formatOptions?.addressFormat ?? 'standard',
+@@ -179,1 +179,1 @@
+-          phoneFormat: editingVariable.formatOptions?.phoneFormat || '(XXX) XXX-XXXX',
++          phoneFormat: editingVariable.formatOptions?.phoneFormat ?? '(XXX) XXX-XXXX',
+@@ -180,1 +180,1 @@
+-          numberFormat: editingVariable.formatOptions?.numberFormat || '0,0',
++          numberFormat: editingVariable.formatOptions?.numberFormat ?? '0,0',
+@@ -181,1 +181,1 @@
+-          textCase: editingVariable.formatOptions?.textCase || 'default'
++          textCase: editingVariable.formatOptions?.textCase ?? 'default'
+@@ -183,1 +183,1 @@
+-        tags: editingVariable.tags || [],
++        tags: editingVariable.tags ?? [],
+@@ -185,1 +185,1 @@
+-        isRequired: editingVariable.isRequired || false
++        isRequired: editingVariable.isRequired ?? false
+@@ -383,1 +383,1 @@
+-                         variable.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
++                         (variable.description?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+@@ -398,1 +398,1 @@
+-    return colorConfig?.class || 'bg-gray-50 text-gray-800 ring-gray-600/20';
++    return colorConfig?.class ?? 'bg-gray-50 text-gray-800 ring-gray-600/20';
+@@ -423,1 +423,1 @@
+-  const formatDate = (timestamp: any) => {
++  const formatDate = (timestamp: unknown) => {
+@@ -442,1 +442,1 @@
+-        return formatOptions?.dateFormat || 'MM/DD/YYYY';
++        return formatOptions?.dateFormat ?? 'MM/DD/YYYY';
+@@ -444,1 +444,1 @@
+-        return formatOptions?.currencyCode || 'USD';
++        return formatOptions?.currencyCode ?? 'USD';
+@@ -446,1 +446,1 @@
+-        return formatOptions?.phoneFormat || '(XXX) XXX-XXXX';
++        return formatOptions?.phoneFormat ?? '(XXX) XXX-XXXX';
+@@ -448,1 +448,1 @@
+-        return formatOptions?.addressFormat || 'Standard';
++        return formatOptions?.addressFormat ?? 'Standard';
+@@ -450,1 +450,1 @@
+-        return formatOptions?.numberFormat || '0,0';
++        return formatOptions?.numberFormat ?? '0,0';
+diff --git a/src/components/template-builder/EditCollectionModal.tsx b/src/components/template-builder/EditCollectionModal.tsx
+--- a/src/components/template-builder/EditCollectionModal.tsx
++++ b/src/components/template-builder/EditCollectionModal.tsx
+@@ -117,1 +117,1 @@
+-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
++              onChange={(e) => { setFormData(prev => ({ ...prev, name: e.target.value })); }}
+@@ -131,1 +131,1 @@
+-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
++              onChange={(e) => { setFormData(prev => ({ ...prev, description: e.target.value })); }}
+@@ -148,1 +148,1 @@
+-                  onClick={() => setFormData(prev => ({ ...prev, color }))}
++                  onClick={() => { setFormData(prev => ({ ...prev, color })); }}
+diff --git a/src/app/(dashboard)/templates/blocks/page.tsx b/src/app/(dashboard)/templates/blocks/page.tsx
+--- a/src/app/(dashboard)/templates/blocks/page.tsx
++++ b/src/app/(dashboard)/templates/blocks/page.tsx
+@@ -68,1 +68,1 @@
+-  createdAt?: any;
++  createdAt?: unknown;
+@@ -69,1 +69,1 @@
+-  updatedAt?: any;
++  updatedAt?: unknown;
+@@ -246,1 +246,1 @@
+-    loadBlocks();
++    void loadBlocks();
+@@ -254,1 +254,1 @@
+-        description: editingBlock.description || '',
++        description: editingBlock.description ?? '',
+@@ -257,1 +257,1 @@
+-        tags: editingBlock.tags || [],
++        tags: editingBlock.tags ?? [],
+@@ -259,1 +259,1 @@
+-        usedVariables: editingBlock.usedVariables || []
++        usedVariables: editingBlock.usedVariables ?? []
+@@ -434,1 +434,1 @@
+-                         block.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
++                         block.description?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+@@ -472,1 +472,1 @@
+-  const formatDate = (timestamp: any) => {
++  const formatDate = (timestamp: unknown) => {
+@@ -512,1 +512,1 @@
+-                onClick={() => router.push('/templates')}
++                onClick={() => { router.push('/templates'); }}
+@@ -550,1 +550,1 @@
+-                onChange={(e) => setSearchTerm(e.target.value)}
++                onChange={(e) => { setSearchTerm(e.target.value); }}
+@@ -554,1 +554,1 @@
+-              onClick={() => setShowCreateModal(true)}
++              onClick={() => { setShowCreateModal(true); }}
+@@ -575,1 +575,1 @@
+-                      onClick={() => setSelectedCategory(category.value)}
++                      onClick={() => { setSelectedCategory(category.value); }}
+@@ -682,1 +682,1 @@
+-                                    onClick={() => handleEditBlock(block)}
++                                    onClick={() => { handleEditBlock(block); }}
+@@ -741,1 +741,1 @@
+-                        {DEFAULT_LOCATIONS.find(loc => loc.value === block.defaultLocation)?.label || 'Body'}
++                        {DEFAULT_LOCATIONS.find(loc => loc.value === block.defaultLocation)?.label ?? 'Body'}
+@@ -754,1 +754,1 @@
+-                          <span>{block.usedVariables?.length || 0} variables</span>
++                          <span>{block.usedVariables.length || 0} variables</span>
+@@ -828,1 +828,1 @@
+-                          onChange={(e) => setBlockForm(prev => ({ ...prev, name: e.target.value }))}
++                          onChange={(e) => { setBlockForm(prev => ({ ...prev, name: e.target.value })); }}
+@@ -844,1 +844,1 @@
+-                          onChange={(e) => setBlockForm(prev => ({ ...prev, description: e.target.value }))}
++                          onChange={(e) => { setBlockForm(prev => ({ ...prev, description: e.target.value })); }}
+@@ -859,1 +859,1 @@
+-                          onChange={(e) => setBlockForm(prev => ({ ...prev, category: e.target.value }))}
++                          onChange={(e) => { setBlockForm(prev => ({ ...prev, category: e.target.value })); }}
+@@ -879,1 +879,1 @@
+-                          onChange={(e) => setBlockForm(prev => ({ ...prev, defaultLocation: e.target.value }))}
++                          onChange={(e) => { setBlockForm(prev => ({ ...prev, defaultLocation: e.target.value })); }}
+@@ -901,1 +901,1 @@
+-                            onChange={(e) => setBlockForm(prev => ({ ...prev, isActive: e.target.checked }))}
++                            onChange={(e) => { setBlockForm(prev => ({ ...prev, isActive: e.target.checked })); }}
+@@ -918,1 +918,1 @@
+-                        onClick={() => setShowVariablesPanel(!showVariablesPanel)}
++                        onClick={() => { setShowVariablesPanel(!showVariablesPanel); }}
+@@ -947,1 +947,1 @@
+-                              onClick={() => toggleGroupExpansion(group.name)}
++                              onClick={() => { toggleGroupExpansion(group.name); }}
+@@ -965,1 +965,1 @@
+-                                    onClick={() => handleVariableInsert(variable)}
++                                    onClick={() => { handleVariableInsert(variable); }}
+diff --git a/src/app/api/casper-logic/route.ts b/src/app/api/casper-logic/route.ts
+--- a/src/app/api/casper-logic/route.ts
++++ b/src/app/api/casper-logic/route.ts
+@@ -135,1 +135,1 @@
+-    if (!json || !json.nodes || !json.edges) {
++    if (!json?.nodes || !json.edges) {
+@@ -186,1 +186,1 @@
+-  } catch (err: any) {
++  } catch (err: unknown) {
+diff --git a/migration/migrate-simple.js b/migration/migrate-simple.js
+--- a/migration/migrate-simple.js
++++ b/migration/migrate-simple.js
+@@ -66,1 +66,1 @@
+-        const blockDocRef = doc(collection(db, 'blocks'), id);
++        const blockDocRef = doc(collection(db, "blocks"), id);
+diff --git a/src/components/logic/custom/ifNode.tsx b/src/components/logic/custom/ifNode.tsx
+--- a/src/components/logic/custom/ifNode.tsx
++++ b/src/components/logic/custom/ifNode.tsx
+@@ -46,1 +46,1 @@
+-                onChange={(e) => setCondition(e.target.value)}
++                onChange={(e) => { setCondition(e.target.value); }}
+@@ -53,1 +53,1 @@
+-              <button onClick={() => setIsEditing(false)} className="text-red-600 hover:text-red-700">
++              <button onClick={() => { setIsEditing(false); }} className="text-red-600 hover:text-red-700">
+@@ -58,1 +58,1 @@
+-            <div className="text-xs text-yellow-700 mt-1 cursor-pointer" onClick={() => setIsEditing(true)}>
++            <div className="text-xs text-yellow-700 mt-1 cursor-pointer" onClick={() => { setIsEditing(true); }}>
+diff --git a/src/components/ui/button.jsx b/src/components/ui/button.jsx
+--- a/src/components/ui/button.jsx
++++ b/src/components/ui/button.jsx
+@@ -4,1 +4,1 @@
+-import { Link } from './link'
++import { Link } from "./link";
+@@ -25,1 +25,1 @@
+-    'before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-(--btn-bg)',
++    "before:absolute before:inset-0 before:-z-10 before:rounded-[calc(var(--radius-lg)-1px)] before:bg-(--btn-bg)",
+@@ -66,1 +66,1 @@
+-      'text-zinc-950 [--btn-bg:white] [--btn-border:var(--color-zinc-950)]/10 [--btn-hover-overlay:var(--color-zinc-950)]/2.5 data-active:[--btn-border:var(--color-zinc-950)]/15 data-hover:[--btn-border:var(--color-zinc-950)]/15',
++      "text-zinc-950 [--btn-bg:white] [--btn-border:var(--color-zinc-950)]/10 [--btn-hover-overlay:var(--color-zinc-950)]/2.5 data-active:[--btn-border:var(--color-zinc-950)]/15 data-hover:[--btn-border:var(--color-zinc-950)]/15",
+diff --git a/src/app/api/fax-send/route.ts b/src/app/api/fax-send/route.ts
+--- a/src/app/api/fax-send/route.ts
++++ b/src/app/api/fax-send/route.ts
+@@ -58,1 +58,1 @@
+-  } catch (error: any) {
++  } catch (error: unknown) {
+diff --git a/src/app/(dashboard)/user-settings/page.tsx b/src/app/(dashboard)/user-settings/page.tsx
+--- a/src/app/(dashboard)/user-settings/page.tsx
++++ b/src/app/(dashboard)/user-settings/page.tsx
+@@ -32,1 +32,1 @@
+-  [key: string]: any;
++  [key: string]: unknown;
+@@ -88,1 +88,1 @@
+-    onClick={() => onChange(!checked)}
++    onClick={() => { onChange(!checked); }}
+@@ -119,1 +119,1 @@
+-  updatedAt?: any;
++  updatedAt?: unknown;
+@@ -145,1 +145,1 @@
+-  const [user, setUser] = useState<any>(null);
++  const [user, setUser] = useState<unknown>(null);
+@@ -191,1 +191,1 @@
+-        loadUserProfile(currentUser.uid);
++        void loadUserProfile(currentUser.uid);
+@@ -207,1 +207,1 @@
+-    setTimeout(() => setMessage(null), 5000);
++    setTimeout(() => { setMessage(null); }, 5000);
+@@ -221,1 +221,1 @@
+-          phoneNumber: data.phoneNumber || '',
++          phoneNumber: data.phoneNumber ?? '',
+@@ -222,1 +222,1 @@
+-          jobTitle: data.jobTitle || '',
++          jobTitle: data.jobTitle ?? '',
+@@ -223,1 +223,1 @@
+-          department: data.department || '',
++          department: data.department ?? '',
+@@ -224,1 +224,1 @@
+-          bio: data.bio || '',
++          bio: data.bio ?? '',
+@@ -514,1 +514,1 @@
+-                    onClick={() => setActiveTab(tab.id)}
++                    onClick={() => { setActiveTab(tab.id); }}
+@@ -594,1 +594,1 @@
+-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, displayName: e.target.value })}
++                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setProfile({ ...profile, displayName: e.target.value }); }}
+@@ -612,1 +612,1 @@
+-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, phoneNumber: e.target.value })}
++                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setProfile({ ...profile, phoneNumber: e.target.value }); }}
+@@ -620,1 +620,1 @@
+-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, jobTitle: e.target.value })}
++                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setProfile({ ...profile, jobTitle: e.target.value }); }}
+@@ -628,1 +628,1 @@
+-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProfile({ ...profile, department: e.target.value })}
++                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setProfile({ ...profile, department: e.target.value }); }}
+@@ -637,1 +637,1 @@
+-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProfile({ ...profile, bio: e.target.value })}
++                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => { setProfile({ ...profile, bio: e.target.value }); }}
+@@ -662,1 +662,1 @@
+-                      onChange={(checked: boolean) => setNotifications({ ...notifications, emailNotifications: checked })}
++                      onChange={(checked: boolean) => { setNotifications({ ...notifications, emailNotifications: checked }); }}
+@@ -673,1 +673,1 @@
+-                      onChange={(checked: boolean) => setNotifications({ ...notifications, letterDeliveryAlerts: checked })}
++                      onChange={(checked: boolean) => { setNotifications({ ...notifications, letterDeliveryAlerts: checked }); }}
+@@ -684,1 +684,1 @@
+-                      onChange={(checked: boolean) => setNotifications({ ...notifications, weeklyReports: checked })}
++                      onChange={(checked: boolean) => { setNotifications({ ...notifications, weeklyReports: checked }); }}
+@@ -695,1 +695,1 @@
+-                      onChange={(checked: boolean) => setNotifications({ ...notifications, systemUpdates: checked })}
++                      onChange={(checked: boolean) => { setNotifications({ ...notifications, systemUpdates: checked }); }}
+@@ -706,1 +706,1 @@
+-                      onChange={(checked: boolean) => setNotifications({ ...notifications, failureAlerts: checked })}
++                      onChange={(checked: boolean) => { setNotifications({ ...notifications, failureAlerts: checked }); }}
+@@ -717,1 +717,1 @@
+-                      onChange={(checked: boolean) => setNotifications({ ...notifications, successAlerts: checked })}
++                      onChange={(checked: boolean) => { setNotifications({ ...notifications, successAlerts: checked }); }}
+@@ -743,1 +743,1 @@
+-                        onChange={(checked: boolean) => setSecurity({ ...security, twoFactorEnabled: checked })}
++                        onChange={(checked: boolean) => { setSecurity({ ...security, twoFactorEnabled: checked }); }}
+@@ -754,1 +754,1 @@
+-                        onChange={(checked: boolean) => setSecurity({ ...security, loginAlerts: checked })}
++                        onChange={(checked: boolean) => { setSecurity({ ...security, loginAlerts: checked }); }}
+@@ -762,1 +762,1 @@
+-                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSecurity({ ...security, sessionTimeout: parseInt(e.target.value) })}
++                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => { setSecurity({ ...security, sessionTimeout: parseInt(e.target.value) }); }}
+@@ -793,1 +793,1 @@
+-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPasswords({ ...passwords, currentPassword: e.target.value })}
++                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setPasswords({ ...passwords, currentPassword: e.target.value }); }}
+@@ -802,1 +802,1 @@
+-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPasswords({ ...passwords, newPassword: e.target.value })}
++                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setPasswords({ ...passwords, newPassword: e.target.value }); }}
+@@ -811,1 +811,1 @@
+-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
++                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setPasswords({ ...passwords, confirmPassword: e.target.value }); }}
+diff --git a/src/lib/services/delivery-test-service.ts b/src/lib/services/delivery-test-service.ts
+--- a/src/lib/services/delivery-test-service.ts
++++ b/src/lib/services/delivery-test-service.ts
+@@ -25,1 +25,1 @@
+-    result?: any;
++    result?: unknown;
+@@ -27,1 +27,1 @@
+-    timestamp: any;
++    timestamp: unknown;
+@@ -31,1 +31,1 @@
+-    createdAt?: any;
++    createdAt?: unknown;
+@@ -315,1 +315,1 @@
+-          totalCost: allData.reduce((sum, d) => sum + (d.costCents || 0), 0),
++          totalCost: allData.reduce((sum, d) => sum + (d.costCents ?? 0), 0),
+@@ -327,1 +327,1 @@
+-    async getRecentDeliveries(limit: number = 10): Promise<DeliveryStatusTestData[]> {
++    async getRecentDeliveries(limit = 10): Promise<DeliveryStatusTestData[]> {
+diff --git a/src/components/logic/LogicSidebar.tsx b/src/components/logic/LogicSidebar.tsx
+--- a/src/components/logic/LogicSidebar.tsx
++++ b/src/components/logic/LogicSidebar.tsx
+@@ -131,1 +131,1 @@
+-        onClick={() => setIsOpen(!isOpen)}
++        onClick={() => { setIsOpen(!isOpen); }}
+@@ -217,1 +217,1 @@
+-    loadCasperData();
++    void loadCasperData();
+diff --git a/src/components/ui/alert.jsx b/src/components/ui/alert.jsx
+--- a/src/components/ui/alert.jsx
++++ b/src/components/ui/alert.jsx
+@@ -8,1 +8,1 @@
+-  sm: 'sm:max-w-sm',
++  sm: "sm:max-w-sm",
+@@ -13,1 +13,1 @@
+-  '3xl': 'sm:max-w-3xl',
++  "3xl": "sm:max-w-3xl",
+diff --git a/src/components/template-builder/VariablePanel.tsx b/src/components/template-builder/VariablePanel.tsx
+--- a/src/components/template-builder/VariablePanel.tsx
++++ b/src/components/template-builder/VariablePanel.tsx
+@@ -30,1 +30,1 @@
+-  createdAt?: any;
++  createdAt?: unknown;
+@@ -31,1 +31,1 @@
+-  updatedAt?: any;
++  updatedAt?: unknown;
+@@ -67,1 +67,1 @@
+-      displayName: variable.displayName || variable.name,
++      displayName: variable.displayName ?? variable.name,
+@@ -93,1 +93,1 @@
+-            {`{{${variable.displayName || variable.name}}}`}
++            {`{{${variable.displayName ?? variable.name}}}`}
+@@ -130,1 +130,1 @@
+-      content: block.content?.replace(/<img[^>]*>/gi, '').trim() || '',
++      content: block.content.replace(/<img[^>]*>/gi, '').trim() || '',
+@@ -224,1 +224,1 @@
+-    loadVariables();
++    void loadVariables();
+@@ -230,1 +230,1 @@
+-      loadBlocks();
++      void loadBlocks();
+@@ -311,1 +311,1 @@
+-    const groupedData: { [key: string]: Variable[] } = {};
++    const groupedData: Record<string, Variable[]> = {};
+@@ -360,1 +360,1 @@
+-          (a.displayName || a.name).localeCompare(b.displayName || b.name)
++          (a.displayName ?? a.name).localeCompare(b.displayName || b.name)
+@@ -433,1 +433,1 @@
+-        (variable.displayName || variable.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
++        (variable.displayName ?? variable.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+@@ -443,1 +443,1 @@
+-      (block.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
++      (block.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+@@ -461,1 +461,1 @@
+-              onClick={() => setActiveTab('variables')}
++              onClick={() => { setActiveTab('variables'); }}
+@@ -475,1 +475,1 @@
+-              onClick={() => setActiveTab('blocks')}
++              onClick={() => { setActiveTab('blocks'); }}
+@@ -501,1 +501,1 @@
+-            onChange={(e) => setSearchTerm(e.target.value)}
++            onChange={(e) => { setSearchTerm(e.target.value); }}
+@@ -535,1 +535,1 @@
+-                      onClick={() => toggleGroup(group.name)}
++                      onClick={() => { toggleGroup(group.name); }}
+@@ -587,1 +587,1 @@
+-                      onClick={() => toggleCategory(category.id)}
++                      onClick={() => { toggleCategory(category.id); }}
+diff --git a/src/app/(dashboard)/api-docs/page.tsx b/src/app/(dashboard)/api-docs/page.tsx
+--- a/src/app/(dashboard)/api-docs/page.tsx
++++ b/src/app/(dashboard)/api-docs/page.tsx
+@@ -100,1 +100,1 @@
+-    setTimeout(() => setCopied(false), 2000);
++    setTimeout(() => { setCopied(false); }, 2000);
+@@ -145,1 +145,1 @@
+-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
++      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+@@ -174,1 +174,1 @@
+-        onClick={() => setIsExpanded(!isExpanded)}
++        onClick={() => { setIsExpanded(!isExpanded); }}
+@@ -213,1 +213,1 @@
+-                    onChange={(e) => setAuthToken(e.target.value)}
++                    onChange={(e) => { setAuthToken(e.target.value); }}
+@@ -226,1 +226,1 @@
+-                      onChange={(e) => setRequestBody(e.target.value)}
++                      onChange={(e) => { setRequestBody(e.target.value); }}
+@@ -262,1 +262,1 @@
+-  "${process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.ghostwriter.health'}${endpoint.path}" \\
++  "${process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.ghostwriter.health'}${endpoint.path}" \\
+@@ -382,1 +382,1 @@
+-                  onClick={() => scrollToSection(item.id)}
++                  onClick={() => { scrollToSection(item.id); }}
+diff --git a/src/app/api/lob-send/route.ts b/src/app/api/lob-send/route.ts
+--- a/src/app/api/lob-send/route.ts
++++ b/src/app/api/lob-send/route.ts
+@@ -78,1 +78,1 @@
+-  } catch (error: any) {
++  } catch (error: unknown) {
+diff --git a/src/app/api/tiptap-auth/route.ts b/src/app/api/tiptap-auth/route.ts
+--- a/src/app/api/tiptap-auth/route.ts
++++ b/src/app/api/tiptap-auth/route.ts
+@@ -13,1 +13,1 @@
+-function createJWT(payload: any, secret: string): string {
++function createJWT(payload: unknown, secret: string): string {
+diff --git a/src/components/ui/stacked-layout.tsx b/src/components/ui/stacked-layout.tsx
+--- a/src/components/ui/stacked-layout.tsx
++++ b/src/components/ui/stacked-layout.tsx
+@@ -57,1 +57,1 @@
+-      <MobileSidebar open={showSidebar} close={() => setShowSidebar(false)}>
++      <MobileSidebar open={showSidebar} close={() => { setShowSidebar(false); }}>
+@@ -64,1 +64,1 @@
+-          <NavbarItem onClick={() => setShowSidebar(true)} aria-label="Open navigation">
++          <NavbarItem onClick={() => { setShowSidebar(true); }} aria-label="Open navigation">
+diff --git a/src/components/logic/CasperLogicWidget.tsx b/src/components/logic/CasperLogicWidget.tsx
+--- a/src/components/logic/CasperLogicWidget.tsx
++++ b/src/components/logic/CasperLogicWidget.tsx
+@@ -38,1 +38,1 @@
+-    params?.id || 
++    params.id || 
+@@ -39,1 +39,1 @@
+-    searchParams?.get('id') || 
++    searchParams.get('id') || 
+@@ -40,1 +40,1 @@
+-    searchParams?.get('templateId') ||
++    searchParams.get('templateId') ||
+@@ -63,1 +63,1 @@
+-      console.warn('â ï¸ Casper: No templateId found. Params:', { params, searchParams: searchParams?.toString() });
++      console.warn('â ï¸ Casper: No templateId found. Params:', { params, searchParams: searchParams.toString() });
+@@ -128,1 +128,1 @@
+-    } catch (err: any) {
++    } catch (err: unknown) {
+@@ -146,1 +146,1 @@
+-      handleSubmit();
++      void handleSubmit();
+@@ -191,1 +191,1 @@
+-        onClick={() => setOpen((prev) => !prev)}
++        onClick={() => { setOpen((prev) => !prev); }}
+@@ -229,1 +229,1 @@
+-                  onClick={() => setInput(action.prompt)}
++                  onClick={() => { setInput(action.prompt); }}
+@@ -278,1 +278,1 @@
+-              onChange={(e) => setInput(e.target.value)}
++              onChange={(e) => { setInput(e.target.value); }}
+diff --git a/src/components/ui/input.jsx b/src/components/ui/input.jsx
+--- a/src/components/ui/input.jsx
++++ b/src/components/ui/input.jsx
+@@ -1,1 +1,1 @@
+-import * as Headless from '@headlessui/react'
++import * as Headless from "@headlessui/react";
+@@ -11,1 +11,1 @@
+-        'has-[[data-slot=icon]:first-child]:[&_input]:pl-10 has-[[data-slot=icon]:last-child]:[&_input]:pr-10 sm:has-[[data-slot=icon]:first-child]:[&_input]:pl-8 sm:has-[[data-slot=icon]:last-child]:[&_input]:pr-8',
++        "has-[[data-slot=icon]:first-child]:[&_input]:pl-10 has-[[data-slot=icon]:last-child]:[&_input]:pr-10 sm:has-[[data-slot=icon]:first-child]:[&_input]:pl-8 sm:has-[[data-slot=icon]:last-child]:[&_input]:pr-8",
+@@ -81,1 +81,1 @@
+-          'data-disabled:border-zinc-950/20 dark:data-disabled:border-white/15 dark:data-disabled:bg-white/2.5 dark:data-hover:data-disabled:border-white/15',
++          "data-disabled:border-zinc-950/20 dark:data-disabled:border-white/15 dark:data-disabled:bg-white/2.5 dark:data-hover:data-disabled:border-white/15",
+diff --git a/src/app/templates/[id]/logic/page.tsx b/src/app/templates/[id]/logic/page.tsx
+--- a/src/app/templates/[id]/logic/page.tsx
++++ b/src/app/templates/[id]/logic/page.tsx
+@@ -45,1 +45,1 @@
+-    params?.id || 
++    params.id || 
+@@ -46,1 +46,1 @@
+-    searchParams?.get('id') || 
++    searchParams.get('id') || 
+@@ -47,1 +47,1 @@
+-    searchParams?.get('templateId');
++    searchParams.get('templateId');
+@@ -119,1 +119,1 @@
+-    loadCasperData();
++    void loadCasperData();
+@@ -258,1 +258,1 @@
+-          <Button onClick={() => router.push('/templates')} variant="outline">
++          <Button onClick={() => { router.push('/templates'); }} variant="outline">
+diff --git a/src/types/tiptap.d.ts b/src/types/tiptap.d.ts
+--- a/src/types/tiptap.d.ts
++++ b/src/types/tiptap.d.ts
+@@ -20,1 +20,1 @@
+-      lowlight: any;
++      lowlight: unknown;
+@@ -22,1 +22,1 @@
+-      HTMLAttributes?: Record<string, any>;
++      HTMLAttributes?: Record<string, unknown>;
+diff --git a/src/components/ui/switch.jsx b/src/components/ui/switch.jsx
+--- a/src/components/ui/switch.jsx
++++ b/src/components/ui/switch.jsx
+@@ -84,1 +84,1 @@
+-    '[--switch-bg-ring:var(--color-green-700)]/90 [--switch-bg:var(--color-green-600)] dark:[--switch-bg-ring:transparent]',
++    "[--switch-bg-ring:var(--color-green-700)]/90 [--switch-bg:var(--color-green-600)] dark:[--switch-bg-ring:transparent]",
+@@ -93,1 +93,1 @@
+-    '[--switch:white] [--switch-ring:var(--color-teal-700)]/90 [--switch-shadow:var(--color-teal-900)]/20',
++    "[--switch:white] [--switch-ring:var(--color-teal-700)]/90 [--switch-shadow:var(--color-teal-900)]/20",
+diff --git a/src/lib/tiptap/cloud-config.ts b/src/lib/tiptap/cloud-config.ts
+--- a/src/lib/tiptap/cloud-config.ts
++++ b/src/lib/tiptap/cloud-config.ts
+@@ -5,1 +5,1 @@
+-  appId: process.env.TIPTAP_APP_ID || 'w9ne2v89',
++  appId: process.env.TIPTAP_APP_ID ?? 'w9ne2v89',
+@@ -6,1 +6,1 @@
+-  appSecret: process.env.TIPTAP_APP_SECRET || '05cff228724828845c69f7a6f6397397574acc89590f438aac87c6fe39a9d48d',
++  appSecret: process.env.TIPTAP_APP_SECRET ?? '05cff228724828845c69f7a6f6397397574acc89590f438aac87c6fe39a9d48d',
+@@ -9,1 +9,1 @@
+-  docManagementId: process.env.TIPTAP_DOC_MANAGEMENT_ID || '24964a9d372c048b1784a53a5f5b59de890a5069d41c3439359aa3062437963b',
++  docManagementId: process.env.TIPTAP_DOC_MANAGEMENT_ID ?? '24964a9d372c048b1784a53a5f5b59de890a5069d41c3439359aa3062437963b',
+@@ -12,1 +12,1 @@
+-  aiAppId: process.env.TIPTAP_AI_APP_ID || 'e976rxjm',
++  aiAppId: process.env.TIPTAP_AI_APP_ID ?? 'e976rxjm',
+@@ -13,1 +13,1 @@
+-  aiSecret: process.env.TIPTAP_AI_SECRET || 'GNVLBYqJiRsk3NZHPsjpAl9m0Fgeqgzcwj5L2uiSp1obHR64TjV6CrRJVRY6w5to',
++  aiSecret: process.env.TIPTAP_AI_SECRET ?? 'GNVLBYqJiRsk3NZHPsjpAl9m0Fgeqgzcwj5L2uiSp1obHR64TjV6CrRJVRY6w5to',
+@@ -16,1 +16,1 @@
+-  conversionAppId: process.env.TIPTAP_CONVERSION_APP_ID || 'e976rxjm',
++  conversionAppId: process.env.TIPTAP_CONVERSION_APP_ID ?? 'e976rxjm',
+@@ -17,1 +17,1 @@
+-  conversionSecret: process.env.TIPTAP_CONVERSION_SECRET || 'VgwMIjOaJItlLLEzoJMY5ePZbE0cllm1X34DXlJnGaKqIEqqzNVYP5ybZudfa7eF',
++  conversionSecret: process.env.TIPTAP_CONVERSION_SECRET ?? 'VgwMIjOaJItlLLEzoJMY5ePZbE0cllm1X34DXlJnGaKqIEqqzNVYP5ybZudfa7eF',
+diff --git a/src/types/logic.ts b/src/types/logic.ts
+--- a/src/types/logic.ts
++++ b/src/types/logic.ts
+@@ -13,1 +13,1 @@
+-  defaultValue?: any;
++  defaultValue?: unknown;
+@@ -170,1 +170,1 @@
+-    public context?: any
++    public context?: unknown
+diff --git a/src/components/ui/badge.jsx b/src/components/ui/badge.jsx
+--- a/src/components/ui/badge.jsx
++++ b/src/components/ui/badge.jsx
+@@ -22,1 +22,1 @@
+-  sky: 'bg-sky-500/15 text-sky-700 group-data-hover:bg-sky-500/25 dark:bg-sky-500/10 dark:text-sky-300 dark:group-data-hover:bg-sky-500/20',
++  sky: "bg-sky-500/15 text-sky-700 group-data-hover:bg-sky-500/25 dark:bg-sky-500/10 dark:text-sky-300 dark:group-data-hover:bg-sky-500/20",
+diff --git a/src/app/(dashboard)/templates/page.tsx b/src/app/(dashboard)/templates/page.tsx
+--- a/src/app/(dashboard)/templates/page.tsx
++++ b/src/app/(dashboard)/templates/page.tsx
+@@ -69,1 +69,1 @@
+-  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
++  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+@@ -72,1 +72,1 @@
+-    loadData();
++    void loadData();
+@@ -102,1 +102,1 @@
+-    return () => document.removeEventListener('click', handleClickOutside);
++    return () => { document.removeEventListener('click', handleClickOutside); };
+@@ -139,1 +139,1 @@
+-                       (template.tags && filters.tags.some(tag => template.tags!.includes(tag)));
++                       (template.tags && filters.tags.some(tag => template.tags?.includes(tag)));
+@@ -173,1 +173,1 @@
+-    let aValue: any;
++    let aValue: unknown;
+@@ -174,1 +174,1 @@
+-    let bValue: any;
++    let bValue: unknown;
+@@ -180,1 +180,1 @@
+-      aValue = a[sortConfig.key as keyof Template];
++      aValue = a[sortConfig.key];
+@@ -181,1 +181,1 @@
+-      bValue = b[sortConfig.key as keyof Template];
++      bValue = b[sortConfig.key];
+@@ -253,1 +253,1 @@
+-      await templateService.updateTemplate(template.id!, { 
++      await templateService.updateTemplate(template.id, { 
+@@ -296,1 +296,1 @@
+-        await templateService.deleteTemplate(template.id!);
++        await templateService.deleteTemplate(template.id);
+@@ -314,1 +314,1 @@
+-    setEditingCollectionName(collection.id!);
++    setEditingCollectionName(collection.id);
+@@ -342,1 +342,1 @@
+-        await templateService.deleteCollection(collection.id!);
++        await templateService.deleteCollection(collection.id);
+@@ -364,1 +364,1 @@
+-  const formatDate = (date: Date | string | Timestamp | any): string => {
++  const formatDate = (date: Date | string | Timestamp | unknown): string => {
+@@ -477,1 +477,1 @@
+-                  onClick={() => router.push('/templates/variables')}
++                  onClick={() => { router.push('/templates/variables'); }}
+@@ -484,1 +484,1 @@
+-                  onClick={() => router.push('/templates/blocks')}
++                  onClick={() => { router.push('/templates/blocks'); }}
+@@ -491,1 +491,1 @@
+-                  onClick={() => router.push('/template-builder')}
++                  onClick={() => { router.push('/template-builder'); }}
+@@ -512,1 +512,1 @@
+-                    onClick={() => setShowCollectionSettings(true)}
++                    onClick={() => { setShowCollectionSettings(true); }}
+@@ -522,1 +522,1 @@
+-                  onClick={() => setSelectedCollection('all')}
++                  onClick={() => { setSelectedCollection('all'); }}
+@@ -557,1 +557,1 @@
+-                              handleSaveCollectionName(collection.id!, e.currentTarget.value);
++                              void handleSaveCollectionName(collection.id!, e.currentTarget.value);
+@@ -562,1 +562,1 @@
+-                          onBlur={(e) => handleSaveCollectionName(collection.id!, e.target.value)}
++                          onBlur={(e) => handleSaveCollectionName(collection.id, e.target.value)}
+diff --git a/src/components/ui/avatar.tsx b/src/components/ui/avatar.tsx
+--- a/src/components/ui/avatar.tsx
++++ b/src/components/ui/avatar.tsx
+@@ -7,1 +7,1 @@
+-type AvatarProps = {
++interface AvatarProps {
+diff --git a/src/components/ui/heading.jsx b/src/components/ui/heading.jsx
+--- a/src/components/ui/heading.jsx
++++ b/src/components/ui/heading.jsx
+@@ -4,1 +4,1 @@
+-  let Element = `h${level}`
++  let Element = `h${level}`;
+diff --git a/src/components/ui/combobox.tsx b/src/components/ui/combobox.tsx
+--- a/src/components/ui/combobox.tsx
++++ b/src/components/ui/combobox.tsx
+@@ -38,1 +38,1 @@
+-    <Headless.Combobox {...props} multiple={false} virtual={{ options: filteredOptions }} onClose={() => setQuery('')}>
++    <Headless.Combobox {...props} multiple={false} virtual={{ options: filteredOptions }} onClose={() => { setQuery(''); }}>
+@@ -62,1 +62,1 @@
+-          onChange={(event) => setQuery(event.target.value)}
++          onChange={(event) => { setQuery(event.target.value); }}
+diff --git a/src/lib/utils/blockUtils.ts b/src/lib/utils/blockUtils.ts
+--- a/src/lib/utils/blockUtils.ts
++++ b/src/lib/utils/blockUtils.ts
+@@ -102,1 +102,1 @@
+-    const matches = content.match(variableRegex) || [];
++    const matches = content.match(variableRegex) ?? [];
+@@ -215,1 +215,1 @@
+-    const htmlTags = content.match(/<[^>]*>/g) || [];
++    const htmlTags = content.match(/<[^>]*>/g) ?? [];
+@@ -333,1 +333,1 @@
+-    const template = templates[category]?.[location] || `
++    const template = templates[category][location] || `
+@@ -348,1 +348,1 @@
+-    const x = (placement.position.x || 0) * containerWidth / 100;
++    const x = (placement.position.x ?? 0) * containerWidth / 100;
+@@ -349,1 +349,1 @@
+-    const y = (placement.position.y || 0) * containerHeight / 100;
++    const y = (placement.position.y ?? 0) * containerHeight / 100;
+@@ -356,1 +356,1 @@
+-      zIndex: placement.position.zIndex || 1
++      zIndex: placement.position.zIndex ?? 1
+@@ -361,1 +361,1 @@
+-  export const formatBlockForInsertion = (block: any, targetLocation?: string): {
++  export const formatBlockForInsertion = (block: unknown, targetLocation?: string): {
+@@ -366,1 +366,1 @@
+-    const location = targetLocation || block.defaultLocation || 'body';
++    const location = (targetLocation ?? block.defaultLocation) || 'body';

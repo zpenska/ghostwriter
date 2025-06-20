@@ -1,5 +1,6 @@
 'use client';
 
+
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -22,8 +23,8 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase/config';
 import useLayout from '@/hooks/useLayout';
 
-import nodeTypes from './custom/nodeTypes';
-import edgeTypes from './custom/edgeTypes';
+import nodeTypes from './custom/reactflowNodeTypes'; // ✅ React component map
+import edgeTypes from './custom/edgeTypes'; // ✅ Optional but included
 
 const proOptions = {
   account: 'paid-pro',
@@ -44,7 +45,6 @@ type NodeData = {
 function LogicCanvasInner({ templateId }: LogicCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<NodeData>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge<any>>([]);
-  const [hasLogic, setHasLogic] = useState(false);
 
   useLayout({ nodes, edges, setNodes });
 
@@ -54,14 +54,18 @@ function LogicCanvasInner({ templateId }: LogicCanvasProps) {
     const unsubNodes = onSnapshot(
       collection(db, 'templates', templateId, 'logic-nodes'),
       (snapshot) => {
-        const nodeData: Node<NodeData>[] = snapshot.docs.map((doc) => ({
+        const logicNodes: Node<NodeData>[] = snapshot.docs.map((doc) => ({
           id: doc.id,
           type: doc.data().type || 'BlockNode',
           position: { x: 0, y: 0 },
           data: doc.data() as NodeData,
         }));
-        setNodes(nodeData);
-        setHasLogic(nodeData.length > 0);
+
+        setNodes(logicNodes);
+
+        if (logicNodes.length === 0) {
+          loadTemplateBlocks(templateId, setNodes);
+        }
       }
     );
 
@@ -80,40 +84,7 @@ function LogicCanvasInner({ templateId }: LogicCanvasProps) {
       unsubNodes();
       unsubEdges();
     };
-  }, [templateId, setNodes, setEdges]);
-
-  useEffect(() => {
-    if (hasLogic || !templateId) return;
-
-    const loadTemplateBlocks = async () => {
-      try {
-        const ref = doc(db, 'templates', templateId);
-        const snap = await getDoc(ref);
-
-        if (snap.exists()) {
-          const template = snap.data() as DocumentData;
-
-          if (Array.isArray(template.blocks)) {
-            const blockNodes: Node<NodeData>[] = template.blocks.map((block: any, i: number) => ({
-              id: block.id,
-              type: 'BlockNode',
-              position: { x: 0, y: i * 160 },
-              data: {
-                label: block.label || block.id,
-                blockId: block.id,
-                isVisualOnly: true,
-              },
-            }));
-            setNodes(blockNodes);
-          }
-        }
-      } catch (err) {
-        console.error('❌ Failed to load blocks:', err);
-      }
-    };
-
-    loadTemplateBlocks();
-  }, [hasLogic, templateId, setNodes]);
+  }, [templateId]);
 
   return (
     <div className="w-full h-full bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -122,7 +93,7 @@ function LogicCanvasInner({ templateId }: LogicCanvasProps) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes as any}
+        nodeTypes={nodeTypes} // ✅ actual React components
         edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
@@ -141,6 +112,35 @@ function LogicCanvasInner({ templateId }: LogicCanvasProps) {
       </ReactFlow>
     </div>
   );
+}
+
+async function loadTemplateBlocks(
+  templateId: string,
+  setNodes: (nodes: Node<NodeData>[]) => void
+) {
+  try {
+    const ref = doc(db, 'templates', templateId);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      const template = snap.data() as DocumentData;
+      if (Array.isArray(template.blocks)) {
+        const blockNodes: Node<NodeData>[] = template.blocks.map((block: any, i: number) => ({
+          id: block.id,
+          type: 'BlockNode',
+          position: { x: 0, y: i * 160 },
+          data: {
+            label: block.label || block.id,
+            blockId: block.id,
+            isVisualOnly: true,
+          },
+        }));
+        setNodes(blockNodes);
+      }
+    }
+  } catch (err) {
+    console.error('❌ Failed to load blocks:', err);
+  }
 }
 
 export default function LogicCanvas({ templateId }: LogicCanvasProps) {
