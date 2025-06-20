@@ -1,9 +1,12 @@
 // src/lib/firebase/config.ts
+import 'dotenv/config'; // ✅ Ensures .env is loaded in CLI scripts
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
+// ✅ Firebase config from .env
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -14,36 +17,36 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Debugging: Log the config to make sure env vars are loaded
+// 🧪 Log which env vars were found
 console.log('🔧 Firebase Config:', {
-  apiKey: firebaseConfig.apiKey ? 'Found' : 'Missing',
-  authDomain: firebaseConfig.authDomain ? 'Found' : 'Missing',
-  projectId: firebaseConfig.projectId ? 'Found' : 'Missing',
-  storageBucket: firebaseConfig.storageBucket ? 'Found' : 'Missing',
+  apiKey: firebaseConfig.apiKey ? '✅ Found' : '❌ Missing',
+  authDomain: firebaseConfig.authDomain ? '✅ Found' : '❌ Missing',
+  projectId: firebaseConfig.projectId ? '✅ Found' : '❌ Missing',
+  storageBucket: firebaseConfig.storageBucket ? '✅ Found' : '❌ Missing'
 });
 
-// Initialize Firebase
+// ✅ Initialize Firebase app
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize services
+// ✅ Initialize services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Optional: Connect to Firestore emulator in development
-// Uncomment the lines below if you want to use Firestore emulator for local development
+// 🌐 Optional: Firestore emulator (browser-only)
+// Uncomment if needed:
 /*
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   try {
     connectFirestoreEmulator(db, 'localhost', 8080);
     console.log('🔧 Connected to Firestore emulator');
   } catch (error) {
-    console.log('⚠️ Firestore emulator connection skipped (already connected or not available)');
+    console.log('⚠️ Firestore emulator connection skipped');
   }
 }
 */
 
-// Development mode check
+// 🧭 Helpful browser debug info
 if (typeof window !== 'undefined') {
   console.log('🌐 Running in browser');
   console.log('🔑 API Key available:', !!firebaseConfig.apiKey);

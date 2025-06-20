@@ -14,6 +14,10 @@ import { EditorContext } from '@/hooks/useEditorContext';
 import { templateService } from '@/lib/services/template-service';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+// NEW: Block syncing imports
+import { getBlocksAndTagsFromContent } from '@/lib/utils/syncBlocksFromContent';
+import { saveTemplate as saveTemplateWithBlocks } from '@/lib/firebase/saveTemplate';
+import { db } from '@/lib/firebase/config';
 
 function classNames(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ');
@@ -78,7 +82,7 @@ export default function TemplateBuilderPage() {
     });
   };
 
-  // Enhanced handleDragEnd with better content insertion
+  // Fixed handleDragEnd - properly uses VariableExtension, no raw HTML
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -86,10 +90,7 @@ export default function TemplateBuilderPage() {
       activeId: active.id,
       activeData: active.data.current, 
       overId: over?.id,
-      overData: over?.data,
       hasEditor: !!editorRef,
-      editorIsEditable: editorRef?.isEditable,
-      editorIsFocused: editorRef?.isFocused,
     });
 
     if (over && over.id === 'editor-droppable' && editorRef) {
@@ -100,85 +101,93 @@ export default function TemplateBuilderPage() {
         return;
       }
 
-      console.log('📝 Processing drop for:', draggedData);
+      console.log('📝 Processing drop for:', draggedData.type, draggedData);
 
-      if (draggedData.type === 'component') {
-        // Handle block insertion
-        console.log('🧩 Inserting block:', draggedData.name);
-        console.log('🧩 Block content preview:', draggedData.content?.substring(0, 100) + '...');
-        
-        // Simplified HTML for testing
-        const simpleContent = `
-          <div style="border-left: 4px solid #10b981; padding: 16px; margin: 16px 0; background-color: #ecfdf5; border-radius: 8px;">
-            <h4 style="margin: 0 0 8px 0; color: #065f46;">📄 ${draggedData.name}</h4>
-            <div style="color: #374151;">
-              ${draggedData.content || 'Block content'}
-            </div>
-          </div>
-          <p></p>
-        `;
-        
-        console.log('🧩 Attempting to insert simplified block HTML...');
-        try {
-          // Try to focus first
-          editorRef.commands.focus();
-          console.log('📍 Editor focused, now inserting...');
+      try {
+        // Focus the editor first
+        editorRef.commands.focus();
+
+        if (draggedData.type === 'variable') {
+          // Handle variable insertion using the VariableExtension - this creates clean pills
+          console.log('🏷️ Inserting variable using VariableExtension:', draggedData.displayName || draggedData.name);
           
-          const result = editorRef.chain().insertContent(simpleContent).run();
-          console.log('✅ Block insertion result:', result);
+          const variableResult = editorRef.chain()
+            .insertContent({
+              type: 'variable',
+              attrs: {
+                name: draggedData.displayName || draggedData.name,
+                type: draggedData.variableType || 'text',
+                healthcareCategory: draggedData.category === 'member' || draggedData.category === 'patient' ? 'member' : null,
+                dataType: draggedData.variableType || 'string',
+                required: draggedData.required || false,
+                sensitive: false,
+              }
+            })
+            .insertContent(' ') // Add space after variable
+            .run();
+
+          if (variableResult) {
+            console.log('✅ Variable inserted successfully using VariableExtension');
+            setHasUnsavedChanges(true);
+          } else {
+            // Fallback: insert as simple text - let the VariableExtension handle rendering
+            console.log('🔄 Using text fallback for variable...');
+            editorRef.commands.insertContent(`{{${draggedData.displayName || draggedData.name}}} `);
+            setHasUnsavedChanges(true);
+          }
+
+        } else if (draggedData.type === 'block') {
+          // Handle block insertion with clean content (no headers)
+          console.log('🧩 Inserting block:', draggedData.name);
           
-          if (result) {
+          // Use the cleaned content from the block
+          const contentToInsert = draggedData.content || `<p>${draggedData.name}</p>`;
+          
+          const blockResult = editorRef.chain()
+            .insertContent(contentToInsert)
+            .insertContent('<p></p>') // Add paragraph after block
+            .run();
+
+          if (blockResult) {
             console.log('✅ Block inserted successfully!');
             setHasUnsavedChanges(true);
           } else {
-            console.log('❌ Block insertion failed - result was false');
-            // Try alternative method
-            console.log('🔄 Trying alternative insertion method...');
-            editorRef.commands.insertContent('<p>Block: ' + draggedData.name + '</p>');
-          }
-        } catch (error) {
-          console.error('❌ Block insertion error:', error);
-          // Ultimate fallback
-          try {
-            editorRef.commands.insertContent('<p>📄 ' + draggedData.name + '</p>');
-            console.log('✅ Fallback insertion successful');
+            // Fallback: insert simple text
+            console.log('🔄 Using fallback block insertion...');
+            editorRef.commands.insertContent(`<p>${draggedData.name} content</p>`);
             setHasUnsavedChanges(true);
-          } catch (fallbackError) {
-            console.error('❌ Even fallback failed:', fallbackError);
+          }
+
+        } else {
+          // Legacy handling for old drag data formats
+          console.log('🔄 Legacy drag handling for:', draggedData);
+          
+          if (draggedData.displayName || draggedData.name) {
+            // Assume it's a variable - let VariableExtension handle rendering
+            editorRef.commands.insertContent(`{{${draggedData.displayName || draggedData.name}}} `);
+            setHasUnsavedChanges(true);
+          } else if (draggedData.content) {
+            // Assume it's a block - clean the content
+            const cleanedContent = draggedData.content.replace(/<img[^>]*>/gi, '').replace(/<h[1-6][^>]*>.*?<\/h[1-6]>/gi, '').trim();
+            editorRef.commands.insertContent(cleanedContent || `<p>Block content</p>`);
+            setHasUnsavedChanges(true);
           }
         }
-          
-      } else {
-        // Handle variable insertion
-        console.log('🏷️ Inserting variable:', draggedData.displayName || draggedData.name);
         
-        // Simplified variable HTML
-        const simpleVariableHtml = `<span style="background-color: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 14px;">{{${draggedData.displayName || draggedData.name}}}</span> `;
+      } catch (error) {
+        console.error('❌ Drag insertion error:', error);
         
-        console.log('🏷️ Attempting to insert simplified variable HTML...');
+        // Ultimate fallback - simple text insertion
         try {
-          editorRef.commands.focus();
-          const result = editorRef.chain().insertContent(simpleVariableHtml).run();
-          console.log('✅ Variable insertion result:', result);
-          
-          if (result) {
-            console.log('✅ Variable inserted successfully!');
-            setHasUnsavedChanges(true);
+          if (draggedData.type === 'variable') {
+            editorRef.commands.insertContent(`{{${draggedData.displayName || draggedData.name}}} `);
           } else {
-            console.log('❌ Variable insertion failed - result was false');
-            // Try alternative
-            editorRef.commands.insertContent('{{' + (draggedData.displayName || draggedData.name) + '}} ');
+            editorRef.commands.insertContent(`<p>${draggedData.name || 'Dropped content'}</p>`);
           }
-        } catch (error) {
-          console.error('❌ Variable insertion error:', error);
-          // Ultimate fallback
-          try {
-            editorRef.commands.insertContent('{{' + (draggedData.displayName || draggedData.name) + '}} ');
-            console.log('✅ Variable fallback insertion successful');
-            setHasUnsavedChanges(true);
-          } catch (fallbackError) {
-            console.error('❌ Variable fallback failed:', fallbackError);
-          }
+          setHasUnsavedChanges(true);
+          console.log('✅ Fallback insertion successful');
+        } catch (fallbackError) {
+          console.error('❌ Even fallback failed:', fallbackError);
         }
       }
       
@@ -188,11 +197,6 @@ export default function TemplateBuilderPage() {
         overId: over?.id,
         correctDropZone: over?.id === 'editor-droppable',
         hasEditor: !!editorRef,
-        editorState: editorRef ? {
-          isDestroyed: editorRef.isDestroyed,
-          isEditable: editorRef.isEditable,
-          isFocused: editorRef.isFocused,
-        } : null
       });
     }
   };
@@ -249,33 +253,57 @@ export default function TemplateBuilderPage() {
     }
   };
 
-  // Centralized save function
+  // ENHANCED: Centralized save function with block syncing
   const saveTemplate = async (templateData: any) => {
     setSaving(true);
     
     try {
-      // Extract variables from content
+      // Extract variables from content (existing logic)
       const variables = templateService.extractVariables(templateContent);
+      
+      // NEW: Extract blocks and tags from content
+      console.log('🔍 Extracting blocks and tags from template content...');
+      const { blocks, tags } = await getBlocksAndTagsFromContent(templateContent, db);
+      console.log('📄 Found blocks:', blocks);
+      console.log('🏷️ Found tags:', tags);
       
       const saveData = {
         ...templateData,
         content: templateContent,
         variables,
+        blocks, // NEW: Add blocks metadata
+        tags,   // NEW: Add tags metadata
         createdBy: currentTemplate?.createdBy || 'current-user',
         lastModifiedBy: 'current-user'
       };
 
       if (currentTemplate?.id) {
-        // Update existing template
-        await templateService.updateTemplate(currentTemplate.id, saveData, true);
+        // Update existing template using the new saveTemplate function
+        console.log('🔄 Updating existing template with block metadata...');
+        await saveTemplateWithBlocks({
+          templateId: currentTemplate.id,
+          content: templateContent,
+          otherData: saveData
+        });
         
         // Update current template state
-        setCurrentTemplate({ ...currentTemplate, ...saveData, version: (currentTemplate.version || 1) + 1 });
+        setCurrentTemplate({ 
+          ...currentTemplate, 
+          ...saveData, 
+          version: (currentTemplate.version || 1) + 1,
+          blocks,
+          tags
+        });
         
-        console.log('✅ Template updated successfully');
+        console.log('✅ Template updated successfully with blocks and tags');
       } else {
-        // Create new template
-        const templateId = await templateService.saveTemplate(saveData);
+        // Create new template using the new saveTemplate function
+        console.log('🆕 Creating new template with block metadata...');
+        const templateId = await saveTemplateWithBlocks({
+          templateId: null, // Will generate new ID
+          content: templateContent,
+          otherData: saveData
+        });
         
         // Update URL to reflect the new template ID without page refresh
         const newUrl = `/template-builder?id=${templateId}`;
@@ -285,16 +313,58 @@ export default function TemplateBuilderPage() {
         const newTemplate = await templateService.getTemplate(templateId);
         setCurrentTemplate(newTemplate);
         
-        console.log('✅ Template saved successfully');
+        console.log('✅ Template created successfully with blocks and tags');
       }
       
       setHasUnsavedChanges(false);
       return true;
       
     } catch (error) {
-      console.error('Error saving template:', error);
+      console.error('❌ Error saving template with blocks:', error);
       alert('Failed to save template. Please try again.');
       return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // NEW: Manual block sync function
+  const handleSyncBlocks = async () => {
+    if (!currentTemplate?.id) {
+      alert('Please save the template first.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      console.log('🔄 Manually syncing blocks for existing template...');
+      
+      const { blocks, tags } = await getBlocksAndTagsFromContent(templateContent, db);
+      
+      await saveTemplateWithBlocks({
+        templateId: currentTemplate.id,
+        content: templateContent,
+        otherData: {
+          ...currentTemplate,
+          blocks,
+          tags,
+          lastModifiedBy: 'current-user'
+        }
+      });
+
+      // Update local state
+      setCurrentTemplate({
+        ...currentTemplate,
+        blocks,
+        tags
+      });
+
+      alert(`Successfully synced ${blocks.length} blocks and ${tags.length} tags!`);
+      console.log('✅ Blocks synced successfully');
+      
+    } catch (error) {
+      console.error('❌ Error syncing blocks:', error);
+      alert('Failed to sync blocks. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -430,10 +500,21 @@ export default function TemplateBuilderPage() {
                           {currentTemplate.status}
                         </span>
                       )}
+                      {/* NEW: Show block/tag counts */}
+                      {currentTemplate?.blocks && currentTemplate.blocks.length > 0 && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                          🧩 {currentTemplate.blocks.length} blocks
+                        </span>
+                      )}
+                      {currentTemplate?.tags && currentTemplate.tags.length > 0 && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          🏷️ {currentTemplate.tags.length} tags
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center space-x-3">
                       <Button
-                        outline
+                        variant="outline"
                         onClick={handleSaveDraft}
                         disabled={saving}
                         className="text-zinc-700 border-zinc-300 hover:bg-zinc-50"
@@ -510,6 +591,10 @@ export default function TemplateBuilderPage() {
                         onEditorReady={handleEditorReady}
                         onContentChange={handleContentChange}
                         headerCollapsed={headerCollapsed}
+                        currentTemplate={currentTemplate}
+                        activeTab={activeTab}
+                        showComplianceIndicators={true}
+                        enableLogicIntegration={true}
                       />
                     </div>
                   )}
@@ -543,6 +628,7 @@ export default function TemplateBuilderPage() {
                     </div>
                   )}
                   
+                  {/* ENHANCED: Properties tab with blocks and tags */}
                   {!headerCollapsed && activeTab === 'Properties' && (
                     <div className="h-full bg-zinc-50 rounded-lg border border-zinc-200 p-6">
                       <h3 className="text-lg font-medium text-zinc-900 mb-4">Template Properties</h3>
@@ -567,28 +653,81 @@ export default function TemplateBuilderPage() {
                                 <p className="text-zinc-700">{currentTemplate.version}</p>
                               </div>
                             </div>
-                            <div>
-                              <label className="font-medium text-zinc-900">Variables Used:</label>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {currentTemplate.variables?.map((variable: string, index: number) => (
-                                  <span
-                                    key={index}
-                                    className="inline-flex items-center px-2 py-1 bg-zinc-100 text-zinc-800 text-xs rounded-full border border-zinc-300"
-                                  >
-                                    {variable}
-                                  </span>
-                                ))}
+                            
+                            {/* Variables Section */}
+                            {currentTemplate.variables && currentTemplate.variables.length > 0 && (
+                              <div>
+                                <label className="font-medium text-zinc-900">Variables Used:</label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {currentTemplate.variables.map((variable: string, index: number) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full border border-blue-300"
+                                    >
+                                      📊 {variable}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
+                            )}
+
+                            {/* NEW: Blocks Section */}
+                            {currentTemplate.blocks && currentTemplate.blocks.length > 0 && (
+                              <div>
+                                <label className="font-medium text-zinc-900">Blocks Used:</label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {currentTemplate.blocks.map((block: any, index: number) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full border border-emerald-300"
+                                    >
+                                      🧩 {block.label || block.id}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* NEW: Tags Section */}
+                            {currentTemplate.tags && currentTemplate.tags.length > 0 && (
+                              <div>
+                                <label className="font-medium text-zinc-900">Tags:</label>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {currentTemplate.tags.map((tag: string, index: number) => (
+                                    <span
+                                      key={index}
+                                      className="inline-flex items-center px-2 py-1 bg-zinc-100 text-zinc-800 text-xs rounded-full border border-zinc-300"
+                                    >
+                                      🏷️ {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
-                        <Button
-                          outline
-                          onClick={handleSaveDraft}
-                          className="text-zinc-700 border-zinc-300 hover:bg-zinc-50"
-                        >
-                          Edit Properties
-                        </Button>
+                        
+                        <div className="flex space-x-3">
+                          <Button
+                            variant="outline"
+                            onClick={handleSaveDraft}
+                            className="text-zinc-700 border-zinc-300 hover:bg-zinc-50"
+                          >
+                            Edit Properties
+                          </Button>
+                          
+                          {/* NEW: Sync Blocks Button */}
+                          {currentTemplate?.id && (
+                            <Button
+                              variant="outline"
+                              onClick={handleSyncBlocks}
+                              disabled={saving}
+                              className="text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                            >
+                              {saving ? 'Syncing...' : 'Sync Blocks'}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -601,6 +740,7 @@ export default function TemplateBuilderPage() {
                         <div className="border rounded-lg p-6 bg-white border-zinc-200">
                           <div 
                             className="prose max-w-none"
+                            style={{ fontFamily: 'Arial, sans-serif', fontSize: '12pt', lineHeight: '1.5' }}
                             dangerouslySetInnerHTML={{ __html: templateContent || '<p>No content yet...</p>' }}
                           />
                         </div>

@@ -18,7 +18,8 @@ import {
   UserIcon,
   ArrowRightOnRectangleIcon,
   UserCircleIcon,
-  EllipsisHorizontalIcon
+  EllipsisHorizontalIcon,
+  MegaphoneIcon  // Added for Campaigns
 } from '@heroicons/react/24/outline';
 import { CodeBracketIcon } from '@heroicons/react/24/outline';
 
@@ -45,6 +46,7 @@ const navigation = [
   { name: 'Home', href: '/home', icon: HomeIcon },
   { name: 'Templates', href: '/templates', icon: DocumentDuplicateIcon },
   { name: 'Template Builder', href: '/template-builder', icon: PencilSquareIcon },
+  { name: 'Campaigns', href: '/campaigns', icon: MegaphoneIcon }, // Added before Client Simulator
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
   { name: 'Client Simulator', href: '/client-simulator', icon: ComputerDesktopIcon },

@@ -1,0 +1,8 @@
+/* src/styles/logic-canvas.css */
+.react-flow__node {
+    font-size: 12px;
+    font-family: Inter, sans-serif;
+    border-radius: 6px;
+    padding: 4px 6px;
+  }
+  

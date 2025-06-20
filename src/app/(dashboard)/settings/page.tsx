@@ -14,7 +14,11 @@ import {
   PlusIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  CloudIcon,
+  KeyIcon,
+  EyeIcon,
+  EyeSlashIcon
 } from '@heroicons/react/24/outline';
 
 // Mock user data
@@ -48,19 +52,33 @@ export default function GhostwriterSettings() {
     notifyOnFirstFailure: true,
     notifyOnAllFailures: false
   });
+  const [destinationSettings, setDestinationSettings] = useState({
+    lobApiKey: '',
+    sendfaxApiKey: '',
+    cloudVaultEnabled: false,
+    gcpProjectId: 'ghostwriter-vault',
+    gcpBucketName: 'ghostwriter-letters',
+    gcpServiceAccountKey: ''
+  });
+  const [showApiKeys, setShowApiKeys] = useState({
+    lob: false,
+    sendfax: false,
+    gcp: false
+  });
   const [newEmail, setNewEmail] = useState('');
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'viewer' });
 
   const tabs = [
     { id: 'permissions', name: 'User Permissions', icon: UsersIcon },
+    { id: 'destinations', name: 'Delivery Destinations', icon: CloudIcon },
     { id: 'schedule', name: 'Schedule Settings', icon: ClockIcon },
     { id: 'retry', name: 'Retry & Notifications', icon: ArrowPathIcon }
   ];
 
   const handleSaveSettings = () => {
     // Implementation for saving settings
-    console.log('Saving settings:', { scheduleSettings, retrySettings });
+    console.log('Saving settings:', { scheduleSettings, retrySettings, destinationSettings });
   };
 
   const handleAddUser = () => {
@@ -103,6 +121,18 @@ export default function GhostwriterSettings() {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  const toggleApiKeyVisibility = (service: 'lob' | 'sendfax' | 'gcp') => {
+    setShowApiKeys(prev => ({
+      ...prev,
+      [service]: !prev[service]
+    }));
+  };
+
+  const testConnection = async (service: string) => {
+    console.log(`Testing connection for ${service}...`);
+    // Implementation for testing API connections
   };
 
   return (
@@ -282,6 +312,216 @@ export default function GhostwriterSettings() {
                         <p><strong>Admin:</strong> Full access to all features, settings, and user management</p>
                         <p><strong>Editor:</strong> Can create, edit, and send letters but cannot manage users or settings</p>
                         <p><strong>Viewer:</strong> Can view letters and analytics but cannot make changes</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'destinations' && (
+              <div className="space-y-6">
+                {/* Mail Service Configuration */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                  <div className="pb-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Mail Service (Lob)</h3>
+                    <p className="mt-1 text-sm text-gray-600">Configure your Lob API for physical mail delivery</p>
+                  </div>
+
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                      <div className="relative">
+                        <input
+                          type={showApiKeys.lob ? 'text' : 'password'}
+                          value={destinationSettings.lobApiKey}
+                          onChange={(e) => setDestinationSettings({ 
+                            ...destinationSettings, 
+                            lobApiKey: e.target.value 
+                          })}
+                          className="block w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+                          placeholder="Enter your Lob API key"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleApiKeyVisibility('lob')}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3"
+                        >
+                          {showApiKeys.lob ? (
+                            <EyeSlashIcon className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <EyeIcon className="h-4 w-4 text-gray-400" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => testConnection('lob')}
+                        disabled={!destinationSettings.lobApiKey}
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <KeyIcon className="w-4 h-4 mr-2" />
+                        Test Connection
+                      </button>
+                      {destinationSettings.lobApiKey && (
+                        <span className="text-sm text-green-600 font-medium">✓ API Key Configured</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fax Service Configuration */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                  <div className="pb-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900">Fax Service (SendFax)</h3>
+                    <p className="mt-1 text-sm text-gray-600">Configure your SendFax API for fax delivery</p>
+                  </div>
+
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                      <div className="relative">
+                        <input
+                          type={showApiKeys.sendfax ? 'text' : 'password'}
+                          value={destinationSettings.sendfaxApiKey}
+                          onChange={(e) => setDestinationSettings({ 
+                            ...destinationSettings, 
+                            sendfaxApiKey: e.target.value 
+                          })}
+                          className="block w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+                          placeholder="Enter your SendFax API key"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleApiKeyVisibility('sendfax')}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3"
+                        >
+                          {showApiKeys.sendfax ? (
+                            <EyeSlashIcon className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <EyeIcon className="h-4 w-4 text-gray-400" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => testConnection('sendfax')}
+                        disabled={!destinationSettings.sendfaxApiKey}
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <KeyIcon className="w-4 h-4 mr-2" />
+                        Test Connection
+                      </button>
+                      {destinationSettings.sendfaxApiKey && (
+                        <span className="text-sm text-green-600 font-medium">✓ API Key Configured</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cloud Vault Configuration */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                  <div className="pb-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Document Vault (Google Cloud Storage)</h3>
+                        <p className="mt-1 text-sm text-gray-600">Store letters in a secure cloud vault for digital delivery and archival</p>
+                      </div>
+                      <div className="flex items-center">
+                        <input
+                          id="cloud-vault-enabled"
+                          type="checkbox"
+                          checked={destinationSettings.cloudVaultEnabled}
+                          onChange={(e) => setDestinationSettings({ 
+                            ...destinationSettings, 
+                            cloudVaultEnabled: e.target.checked 
+                          })}
+                          className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="cloud-vault-enabled" className="ml-3 text-sm font-medium text-gray-900">
+                          Enable Document Vault
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {destinationSettings.cloudVaultEnabled && (
+                    <div className="mt-6 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">GCP Project ID</label>
+                          <input
+                            type="text"
+                            value={destinationSettings.gcpProjectId}
+                            onChange={(e) => setDestinationSettings({ 
+                              ...destinationSettings, 
+                              gcpProjectId: e.target.value 
+                            })}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+                            placeholder="ghostwriter-vault"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Bucket Name</label>
+                          <input
+                            type="text"
+                            value={destinationSettings.gcpBucketName}
+                            onChange={(e) => setDestinationSettings({ 
+                              ...destinationSettings, 
+                              gcpBucketName: e.target.value 
+                            })}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+                            placeholder="ghostwriter-letters"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Service Account Key (JSON)</label>
+                        <div className="relative">
+                          <textarea
+                            rows={4}
+                            value={destinationSettings.gcpServiceAccountKey}
+                            onChange={(e) => setDestinationSettings({ 
+                              ...destinationSettings, 
+                              gcpServiceAccountKey: e.target.value 
+                            })}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm font-mono"
+                            placeholder="Paste your service account JSON key here..."
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => testConnection('gcp')}
+                          disabled={!destinationSettings.gcpProjectId || !destinationSettings.gcpBucketName || !destinationSettings.gcpServiceAccountKey}
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <CloudIcon className="w-4 h-4 mr-2" />
+                          Test Connection
+                        </button>
+                        {destinationSettings.gcpProjectId && destinationSettings.gcpBucketName && destinationSettings.gcpServiceAccountKey && (
+                          <span className="text-sm text-green-600 font-medium">✓ Document Vault Configured</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
+                  <div className="flex items-start">
+                    <InformationCircleIcon className="h-5 w-5 text-blue-500 mt-0.5 mr-3" />
+                    <div>
+                      <h4 className="text-sm font-medium text-blue-900">Destination Summary</h4>
+                      <div className="mt-1 text-sm text-blue-700 space-y-1">
+                        <p>• <strong>Mail:</strong> {destinationSettings.lobApiKey ? 'Configured via Lob' : 'Not configured'}</p>
+                        <p>• <strong>Fax:</strong> {destinationSettings.sendfaxApiKey ? 'Configured via SendFax' : 'Not configured'}</p>
+                        <p>• <strong>Document Vault:</strong> {destinationSettings.cloudVaultEnabled ? 'Enabled' : 'Disabled'}</p>
                       </div>
                     </div>
                   </div>

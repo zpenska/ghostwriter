@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { collection, addDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { PaperAirplaneIcon, PhoneIcon } from '@heroicons/react/24/outline';
-import { CheckCircleIcon } from '@heroicons/react/20/solid';
+import { PaperAirplaneIcon, PhoneIcon, CloudIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, DocumentIcon } from '@heroicons/react/20/solid';
 import { classNames } from '@/lib/utils/cn';
 
 interface Template {
@@ -21,7 +21,7 @@ interface Member {
   dob?: string;
 }
 
-type DeliveryMethod = 'mail' | 'fax';
+type DeliveryMethod = 'mail' | 'fax' | 'vault';
 
 export default function ClientSimulatorPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -30,6 +30,7 @@ export default function ClientSimulatorPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('mail');
   const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
+  const [lastVaultUrl, setLastVaultUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubTemplates = onSnapshot(collection(db, 'templates'), (snap) => {
@@ -79,6 +80,7 @@ export default function ClientSimulatorPage() {
     if (!selectedTemplate || !selectedMember) return;
 
     setStatus('sending');
+    setLastVaultUrl(null);
     console.log(`✅ Sending letter via ${method} to:`, selectedMember.memberId);
 
     const filled = fillTemplate(selectedTemplate.content, selectedMember);
@@ -92,30 +94,90 @@ export default function ClientSimulatorPage() {
         timestamp: new Date(),
       });
 
-      const apiEndpoint = method === 'fax' ? '/api/fax-send' : '/api/lob-send';
+      let apiEndpoint: string;
+      switch (method) {
+        case 'fax':
+          apiEndpoint = '/api/fax-send';
+          break;
+        case 'vault':
+          apiEndpoint = '/api/vault-send';
+          break;
+        default:
+          apiEndpoint = '/api/lob-send';
+      }
       
-      await fetch(apiEndpoint, {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           html: filled,
           deliveryId: docRef.id,
+          memberName: `${selectedMember.firstName} ${selectedMember.lastName}`,
+          memberId: selectedMember.memberId,
+          templateName: selectedTemplate.name,
         }),
       });
 
+      if (method === 'vault' && response.ok) {
+        const result = await response.json();
+        if (result.vaultUrl) {
+          setLastVaultUrl(result.vaultUrl);
+        }
+      }
+
       setStatus('success');
       
-      // Reset success status after 3 seconds
+      // Reset success status after 5 seconds
       setTimeout(() => {
         setStatus('idle');
-      }, 3000);
+        setLastVaultUrl(null);
+      }, 5000);
     } catch (error) {
       console.error('Error sending letter:', error);
       setStatus('idle');
     }
   };
 
+  const openVaultDocument = () => {
+    if (lastVaultUrl) {
+      window.open(lastVaultUrl, '_blank');
+    }
+  };
+
   const isReadyToSend = selectedTemplate && selectedMember;
+
+  const getDeliveryMethodIcon = (method: DeliveryMethod) => {
+    switch (method) {
+      case 'fax':
+        return PhoneIcon;
+      case 'vault':
+        return CloudIcon;
+      default:
+        return PaperAirplaneIcon;
+    }
+  };
+
+  const getDeliveryMethodLabel = (method: DeliveryMethod) => {
+    switch (method) {
+      case 'fax':
+        return 'Fax Delivery';
+      case 'vault':
+        return 'Document Vault';
+      default:
+        return 'Mail Delivery';
+    }
+  };
+
+  const getDeliveryMethodDescription = (method: DeliveryMethod) => {
+    switch (method) {
+      case 'fax':
+        return 'Send via fax transmission';
+      case 'vault':
+        return 'Store securely in cloud vault';
+      default:
+        return 'Send via postal mail';
+    }
+  };
 
   return (
     <div className="bg-white">
@@ -126,7 +188,7 @@ export default function ClientSimulatorPage() {
             Client Simulator
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Select a member and a letter template to send via mail or fax
+            Select a member and a letter template to send via mail, fax, or store in Document Vault
           </p>
         </div>
 
@@ -147,6 +209,7 @@ export default function ClientSimulatorPage() {
                     const member = members.find((m) => m.id === e.target.value) || null;
                     setSelectedMember(member);
                     setStatus('idle');
+                    setLastVaultUrl(null);
                   }}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-zinc-500 sm:text-sm sm:leading-6"
                 >
@@ -173,6 +236,7 @@ export default function ClientSimulatorPage() {
                     const template = templates.find((t) => t.id === e.target.value) || null;
                     setSelectedTemplate(template);
                     setStatus('idle');
+                    setLastVaultUrl(null);
                   }}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-zinc-500 sm:text-sm sm:leading-6"
                 >
@@ -192,32 +256,32 @@ export default function ClientSimulatorPage() {
                 <fieldset>
                   <legend className="text-sm font-medium leading-6 text-gray-900">Delivery Method</legend>
                   <div className="mt-3 space-y-3">
-                    <div className="flex items-center">
-                      <input
-                        id="delivery-mail"
-                        name="delivery-method"
-                        type="radio"
-                        checked={deliveryMethod === 'mail'}
-                        onChange={() => setDeliveryMethod('mail')}
-                        className="h-4 w-4 border-gray-300 text-zinc-600 focus:ring-zinc-600"
-                      />
-                      <label htmlFor="delivery-mail" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
-                        Mail Delivery
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        id="delivery-fax"
-                        name="delivery-method"
-                        type="radio"
-                        checked={deliveryMethod === 'fax'}
-                        onChange={() => setDeliveryMethod('fax')}
-                        className="h-4 w-4 border-gray-300 text-zinc-600 focus:ring-zinc-600"
-                      />
-                      <label htmlFor="delivery-fax" className="ml-3 block text-sm font-medium leading-6 text-gray-900">
-                        Fax Delivery
-                      </label>
-                    </div>
+                    {(['mail', 'fax', 'vault'] as DeliveryMethod[]).map((method) => {
+                      const Icon = getDeliveryMethodIcon(method);
+                      return (
+                        <div key={method} className="flex items-center">
+                          <input
+                            id={`delivery-${method}`}
+                            name="delivery-method"
+                            type="radio"
+                            checked={deliveryMethod === method}
+                            onChange={() => setDeliveryMethod(method)}
+                            className="h-4 w-4 border-gray-300 text-zinc-600 focus:ring-zinc-600"
+                          />
+                          <label htmlFor={`delivery-${method}`} className="ml-3 flex items-center">
+                            <Icon className="h-4 w-4 text-gray-400 mr-2" />
+                            <div>
+                              <div className="text-sm font-medium leading-6 text-gray-900">
+                                {getDeliveryMethodLabel(method)}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {getDeliveryMethodDescription(method)}
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      );
+                    })}
                   </div>
                 </fieldset>
               </div>
@@ -260,7 +324,7 @@ export default function ClientSimulatorPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Delivery:</span>
-                      <span className="text-sm font-medium text-gray-900 capitalize">{deliveryMethod}</span>
+                      <span className="text-sm font-medium text-gray-900 capitalize">{getDeliveryMethodLabel(deliveryMethod)}</span>
                     </div>
                     <div className="mt-2">
                       <span className="text-sm text-gray-500">Preview:</span>
@@ -274,7 +338,7 @@ export default function ClientSimulatorPage() {
 
               {/* Action Buttons */}
               <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <button
                     onClick={() => sendLetter('mail')}
                     disabled={!isReadyToSend || status === 'sending'}
@@ -293,11 +357,30 @@ export default function ClientSimulatorPage() {
                     {status === 'sending' && deliveryMethod === 'fax' ? 'Sending...' : 'Send by Fax'}
                   </button>
 
+                  <button
+                    onClick={() => sendLetter('vault')}
+                    disabled={!isReadyToSend || status === 'sending'}
+                    className="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <CloudIcon className="-ml-0.5 mr-1.5 h-5 w-5" aria-hidden="true" />
+                    {status === 'sending' && deliveryMethod === 'vault' ? 'Storing...' : 'Store in Vault'}
+                  </button>
+
                   {status === 'success' && (
                     <div className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-sm font-medium text-green-800 ring-1 ring-inset ring-green-600/20">
                       <CheckCircleIcon className="-ml-0.5 mr-1.5 h-4 w-4" aria-hidden="true" />
-                      Letter sent successfully!
+                      {deliveryMethod === 'vault' ? 'Stored in vault!' : 'Letter sent successfully!'}
                     </div>
+                  )}
+
+                  {lastVaultUrl && (
+                    <button
+                      onClick={openVaultDocument}
+                      className="inline-flex items-center rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-900 shadow-sm ring-1 ring-inset ring-blue-300 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
+                    >
+                      <DocumentIcon className="-ml-0.5 mr-1.5 h-4 w-4" aria-hidden="true" />
+                      View in Vault
+                    </button>
                   )}
                 </div>
 
@@ -316,7 +399,7 @@ export default function ClientSimulatorPage() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">Letter Preview</h3>
                 <div className="text-sm text-gray-500">
-                  Delivery method: <span className="font-medium capitalize">{deliveryMethod}</span>
+                  Delivery method: <span className="font-medium">{getDeliveryMethodLabel(deliveryMethod)}</span>
                 </div>
               </div>
               
@@ -357,6 +440,24 @@ export default function ClientSimulatorPage() {
                 {!selectedMember && !selectedTemplate && "Choose a member and template to get started"}
                 {selectedMember && !selectedTemplate && "Now select a template to use"}
                 {!selectedMember && selectedTemplate && "Now select a member to send to"}
+              </div>
+            </div>
+          )}
+
+          {/* Vault Status Panel */}
+          {lastVaultUrl && (
+            <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
+              <div className="flex items-start">
+                <CloudIcon className="h-5 w-5 text-blue-500 mt-0.5 mr-3" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-blue-900">Document Vault</h4>
+                  <p className="mt-1 text-sm text-blue-700">
+                    Your letter has been securely stored in the Document Vault. Click "View in Vault" to access the PDF.
+                  </p>
+                  <div className="mt-2 text-xs text-blue-600 font-mono break-all">
+                    {lastVaultUrl}
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -1,11 +1,21 @@
+// src/app/api/casper-logic/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { getCasperVariableContext } from '@/lib/firebase/loaders/getCasperVariableContext';
 import { getBlockContext } from '@/lib/firebase/loaders/getBlockContext';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+function classifyTask(prompt: string): 'review' | 'suggest' | 'edit' | 'build' {
+  const lower = prompt.toLowerCase();
+  if (lower.includes('improve') || lower.includes('optimize') || lower.includes('recommend')) return 'suggest';
+  if (lower.includes('check') || lower.includes('compliance') || lower.includes('quality') || lower.includes('errors')) return 'review';
+  if (lower.includes('change') || lower.includes('update') || lower.includes('modify') || lower.includes('replace')) return 'edit';
+  return 'build';
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,176 +25,109 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing prompt or templateId' }, { status: 400 });
     }
 
-    // Load enhanced variables and blocks
+    const taskType = classifyTask(prompt);
     const variables = await getCasperVariableContext();
     const blocks = await getBlockContext();
 
-    const variableContext = variables
-      .map(v => `{{${v.key}}}: ${v.name} - ${v.description}`)
-      .join('\n');
-
-    const blockContext = blocks
-      .map(b => `${b.id}: ${b.name} (${b.category})`)
-      .join('\n');
+    const variableContext = variables.map(v => `{{${v.key}}}: ${v.name} - ${v.description}`).join('\n');
+    const blockContext = blocks.map(b => `${b.id}: ${b.name} (${b.category})`).join('\n');
 
     const systemPrompt = `
-You are Casper, a healthcare logic-building assistant.
-The user is building a letter rules engine using React Flow Pro.
+You are Casper, a healthcare logic-building AI assistant.
 
-Your job is to return a valid JSON of nodes[] and edges[] representing business logic.
+You support the following tasks:
+1. Build: Generate logic from plain English (default mode)
+2. Edit: Modify or replace existing logic
+3. Suggest: Recommend new rules to enhance compliance or performance
+4. Review: Identify logic quality, compliance, or redundancy issues
 
-You MUST:
-- Use only these variables:\n${variableContext}
-- Use only these blocks:\n${blockContext}
-- Use these node types: start, condition, action, stop
-- Use custom edges with label "Yes" or "No"
-- Add unique IDs like "node-1", "node-2", etc.
-- Include 'position' for each node (grid-style x/y coordinates, spacing nodes 250px apart)
-- Include a short 'label' on each node
-- Each node's .data must include 'label', and if applicable:
-  - 'condition' for condition nodes
-  - 'actionType' and 'targetId' for action nodes
-  - 'explanation' for clarity
+Use ONLY these variables:\n${variableContext}
 
-ALWAYS start with a start node and end with a stop node for complete flows.
+Use ONLY these blocks:\n${blockContext}
 
-Output ONLY JSON. No commentary or markdown.
+Use node types: start, condition, block, loop, stop, formatting, expression
 
-Example prompt: "If member.language is 'es', insert the Spanish footer block."
+Respond as follows:
+- For 'build' or 'edit': return valid JSON with nodes[] and edges[]
+- For 'review': return { "mode": "review", "issues": [ { nodeId?, description } ] }
+- For 'suggest': return { "mode": "suggest", "suggestions": [ { description, category } ] }
 
-Respond with:
-{
-  "nodes": [
-    {
-      "id": "node-1",
-      "type": "start", 
-      "position": { "x": 0, "y": 0 },
-      "data": { "label": "Start" }
-    },
-    {
-      "id": "node-2",
-      "type": "condition",
-      "position": { "x": 0, "y": 100 },
-      "data": {
-        "label": "Language Check",
-        "condition": "member.language === 'es'"
-      }
-    },
-    {
-      "id": "node-3", 
-      "type": "action",
-      "position": { "x": 250, "y": 100 },
-      "data": {
-        "label": "Insert Spanish Footer",
-        "actionType": "insertBlock",
-        "targetId": "SpanishFooter"
-      }
-    },
-    {
-      "id": "node-4",
-      "type": "stop",
-      "position": { "x": 250, "y": 200 },
-      "data": { "label": "Stop" }
-    }
-  ],
-  "edges": [
-    {
-      "id": "edge-1",
-      "source": "node-1",
-      "target": "node-2", 
-      "type": "custom",
-      "label": "→"
-    },
-    {
-      "id": "edge-2",
-      "source": "node-2",
-      "target": "node-3",
-      "type": "custom", 
-      "label": "Yes"
-    },
-    {
-      "id": "edge-3",
-      "source": "node-3", 
-      "target": "node-4",
-      "type": "custom",
-      "label": "→"
-    }
-  ]
-}
+DO NOT insert blocks or variables not listed.
+Do NOT return markdown or commentary.
 `;
 
     const chat = await openai.chat.completions.create({
       model: 'gpt-4',
+      temperature: 0.2,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
-      ],
-      temperature: 0.2
+      ]
     });
 
     const raw = chat.choices?.[0]?.message?.content?.trim();
-
     if (!raw) {
       return NextResponse.json({ error: 'No AI response' }, { status: 500 });
     }
 
-    // Extract JSON from response
-    const match = raw.match(/\{[\s\S]*\}/);
-    const json = match ? JSON.parse(match[0]) : null;
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
 
-    if (!json || !json.nodes || !json.edges) {
-      return NextResponse.json({ error: 'Invalid AI response format' }, { status: 500 });
+    if (!parsed) {
+      return NextResponse.json({ error: 'AI returned invalid JSON' }, { status: 500 });
     }
 
-    // 🔥 FIXED: Save to single document instead of separate collections
-    // OLD (4 segments - invalid): templates/{templateId}/logic/nodes
-    // NEW (3 segments - valid): templates/{templateId}
-    
-    const templateDocRef = doc(db, 'templates', templateId);
-    
-    try {
-      // Check if document exists first
-      const templateDoc = await getDoc(templateDocRef);
-      
-      if (!templateDoc.exists()) {
-        // Create the document if it doesn't exist
-        await updateDoc(templateDocRef, {
-          logic: {
-            nodes: json.nodes,
-            edges: json.edges,
-            updatedAt: new Date().toISOString(),
-            createdBy: 'casper-ai'
-          }
-        });
+    if (parsed.nodes && parsed.edges) {
+      // BUILD / EDIT LOGIC
+      const logicData = {
+        nodes: parsed.nodes,
+        edges: parsed.edges,
+        updatedAt: new Date().toISOString(),
+        lastModifiedBy: 'casper-ai'
+      };
+
+      const templateRef = doc(db, 'templates', templateId);
+      const snap = await getDoc(templateRef);
+
+      if (!snap.exists()) {
+        await setDoc(templateRef, { logic: logicData });
       } else {
-        // Update existing document
-        await updateDoc(templateDocRef, {
-          'logic.nodes': json.nodes,
-          'logic.edges': json.edges,
+        await updateDoc(templateRef, {
+          'logic.nodes': parsed.nodes,
+          'logic.edges': parsed.edges,
           'logic.updatedAt': new Date().toISOString(),
           'logic.lastModifiedBy': 'casper-ai'
         });
       }
 
-      console.log(`✅ Saved ${json.nodes.length} nodes and ${json.edges.length} edges to Firestore`);
-
-    } catch (firestoreError) {
-      console.error('❌ Firestore save error:', firestoreError);
-      return NextResponse.json({ 
-        error: 'Failed to save logic to database',
-        details: firestoreError
-      }, { status: 500 });
+      return NextResponse.json({
+        success: true,
+        message: `Saved ${parsed.nodes.length} nodes and ${parsed.edges.length} edges`,
+        nodes: parsed.nodes,
+        edges: parsed.edges
+      });
     }
 
-    return NextResponse.json({ 
-      success: true,
-      nodes: json.nodes,
-      edges: json.edges,
-      message: `Logic created with ${json.nodes.length} nodes and ${json.edges.length} edges`
-    });
+    if (parsed.mode === 'review' && parsed.issues) {
+      return NextResponse.json({
+        success: true,
+        mode: 'review',
+        issues: parsed.issues
+      });
+    }
+
+    if (parsed.mode === 'suggest' && parsed.suggestions) {
+      return NextResponse.json({
+        success: true,
+        mode: 'suggest',
+        suggestions: parsed.suggestions
+      });
+    }
+
+    return NextResponse.json({ error: 'No valid output returned by AI.' }, { status: 500 });
 
   } catch (err: any) {
-    console.error('💥 /api/casper-logic error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('💥 Casper AI error:', err);
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
   }
 }

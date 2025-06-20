@@ -303,8 +303,8 @@ export async function getTemplateStatistics() {
     
     const stats = {
       total: allTemplates.length,
-      withLogic: allTemplates.filter(t => t.logic?.nodes?.length > 0).length,
-      withViolations: allTemplates.filter(t => t.complianceStatus?.violations?.length > 0).length,
+      withLogic: allTemplates.filter(t => (t.logic?.nodes?.length ?? 0) > 0).length,
+      withViolations: allTemplates.filter(t => (t.complianceStatus?.violations?.length ?? 0) > 0).length,
       compliant: allTemplates.filter(t => t.complianceStatus?.compliant === true).length,
       categories: {} as Record<string, number>,
       averageVariables: 0,

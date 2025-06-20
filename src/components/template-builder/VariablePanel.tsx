@@ -57,18 +57,19 @@ interface VariableGroup {
   variables: Variable[];
 }
 
-// DraggableVariable component with enhanced styling
+// DraggableVariable component with ORIGINAL styling - no changes
 function DraggableVariable({ variable }: { variable: Variable }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: variable.id,
     data: {
-      id: variable.id,
+      type: 'variable', // This is the key fix - proper type
       name: variable.name,
       displayName: variable.displayName || variable.name,
-      type: variable.type,
       description: variable.description,
       category: variable.category,
       group: variable.group,
+      required: variable.required,
+      variableType: variable.type,
       format: variable.format,
       example: variable.example,
     },
@@ -119,18 +120,18 @@ function DraggableVariable({ variable }: { variable: Variable }) {
   );
 }
 
-// DraggableBlock component with cleaner styling
+// DraggableBlock component with ORIGINAL styling - no changes
 function DraggableBlock({ block }: { block: Component }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `component-${block.id}`,
     data: {
+      type: 'block', // This is the key fix - proper type
       id: block.id,
       name: block.name,
-      // Clean up the content by removing any img tags or unwanted HTML
-      content: block.content?.replace(/<img[^>]*>/gi, '').trim() || '',
-      type: 'component',
       description: block.description,
       category: block.category,
+      // Clean the content properly
+      content: cleanBlockContent(block.content),
     },
   });
 
@@ -139,11 +140,40 @@ function DraggableBlock({ block }: { block: Component }) {
     opacity: isDragging ? 0.5 : 1,
   } : undefined;
 
-  console.log('🎯 Block drag data:', {
+  // Function to clean block content - remove headers and unwanted elements
+  function cleanBlockContent(content: string): string {
+    if (!content) return '';
+    
+    let cleaned = content;
+    
+    // Remove images
+    cleaned = cleaned.replace(/<img[^>]*>/gi, '');
+    
+    // Remove any header elements that might contain the block name
+    cleaned = cleaned.replace(/<h[1-6][^>]*>.*?<\/h[1-6]>/gi, '');
+    
+    // Remove any elements with the block name specifically
+    cleaned = cleaned.replace(new RegExp(`<[^>]*>${block.name}<[^>]*>`, 'gi'), '');
+    
+    // Remove any title or label divs
+    cleaned = cleaned.replace(/<div[^>]*class[^>]*title[^>]*>.*?<\/div>/gi, '');
+    cleaned = cleaned.replace(/<div[^>]*title[^>]*>.*?<\/div>/gi, '');
+    cleaned = cleaned.replace(/<div[^>]*label[^>]*>.*?<\/div>/gi, '');
+    
+    // Remove spans that contain block metadata
+    cleaned = cleaned.replace(/<span[^>]*class[^>]*block[^>]*>.*?<\/span>/gi, '');
+    
+    // Clean up extra whitespace
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    return cleaned;
+  }
+
+  console.log('🎯 Block drag data (original styling, cleaned content):', {
     id: block.id,
     name: block.name,
-    content: block.content?.replace(/<img[^>]*>/gi, '').trim() || '',
-    type: 'component',
+    type: 'block',
+    cleanedContent: cleanBlockContent(block.content)?.substring(0, 100) + '...',
   });
 
   return (
@@ -384,8 +414,7 @@ export default function VariablePanel() {
             id: doc.id,
             name: data.name || doc.id,
             description: data.description || '',
-            // Clean up content - remove images and extra whitespace
-            content: data.content?.replace(/<img[^>]*>/gi, '').replace(/\s+/g, ' ').trim() || '',
+            content: data.content || '',
             category: data.category || 'custom',
             tags: data.tags || [],
             isActive: data.isActive !== false,
@@ -452,9 +481,9 @@ export default function VariablePanel() {
 
   return (
     <div className="h-full flex flex-col min-w-80 w-80">
-      {/* Header */}
+      {/* Header - ORIGINAL styling */}
       <div className="p-3 border-b border-zinc-200">
-        {/* Tabs */}
+        {/* Tabs - ORIGINAL styling */}
         <div className="flex border-b border-zinc-200 -mb-3 justify-center">
           <div className="flex space-x-12">
             <button
@@ -488,7 +517,7 @@ export default function VariablePanel() {
           </div>
         </div>
         
-        {/* Search */}
+        {/* Search - ORIGINAL styling */}
         <div className="relative mt-5">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <MagnifyingGlassIcon className="h-4 w-4 text-zinc-400" aria-hidden="true" />
@@ -503,7 +532,7 @@ export default function VariablePanel() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Content - ORIGINAL styling */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'variables' ? (
           <>
@@ -560,7 +589,7 @@ export default function VariablePanel() {
             )}
           </>
         ) : (
-          /* Blocks Tab */
+          /* Blocks Tab - ORIGINAL styling */
           <div className="py-1">
             {loadingBlocks ? (
               <div className="text-center py-8">
@@ -614,7 +643,7 @@ export default function VariablePanel() {
         )}
       </div>
 
-      {/* Instructions */}
+      {/* Instructions - ORIGINAL styling */}
       <div className="p-3 bg-zinc-50 border-t border-zinc-200">
         <p className="text-xs text-zinc-600">
           Drag {activeTab === 'variables' ? 'variables' : 'blocks'} into your template to {activeTab === 'variables' ? 'create dynamic content' : 'insert reusable blocks'}

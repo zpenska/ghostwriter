@@ -44,7 +44,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-// Enhanced Variable Extension with healthcare categorization
+// Enhanced Variable Extension with clean rendering (no HTML artifacts)
 const VariableExtension = Node.create({
   name: 'variable',
   group: 'inline',
@@ -71,10 +71,11 @@ const VariableExtension = Node.create({
     const isSensitive = HTMLAttributes.sensitive === 'true';
     const isRequired = HTMLAttributes.required === 'true';
     
-    const baseClasses = 'inline-flex items-center px-2 py-0.5 mx-0.5 rounded-md font-mono text-sm shadow-sm hover:shadow-md transition-all cursor-default';
+    // Clean variable styling - no HTML code visible to user
+    const baseClasses = 'inline-flex items-center px-2 py-1 mx-1 rounded-md font-mono text-sm shadow-sm hover:shadow-md transition-all cursor-default';
     const colorClasses = isHealthcare 
-      ? 'bg-green-50 text-green-800 border border-green-200 hover:bg-green-100'
-      : 'bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100';
+      ? 'bg-green-100 text-green-800 border border-green-300 hover:bg-green-200'
+      : 'bg-blue-100 text-blue-800 border border-blue-300 hover:bg-blue-200';
     
     return [
       'span',
@@ -82,19 +83,39 @@ const VariableExtension = Node.create({
         'data-variable': 'true',
         'contenteditable': 'false',
         class: `${baseClasses} ${colorClasses}`,
-        style: 'user-select: none;',
-        title: `${HTMLAttributes.name}${isHealthcare ? ` (${HTMLAttributes.healthcareCategory})` : ''}${isSensitive ? ' - Sensitive Data' : ''}${isRequired ? ' - Required' : ''}`
+        style: 'user-select: none; font-family: Arial, sans-serif; font-size: 12pt;',
+        title: `Variable: ${HTMLAttributes.name}${isHealthcare ? ` (${HTMLAttributes.healthcareCategory})` : ''}${isSensitive ? ' - Sensitive Data' : ''}${isRequired ? ' - Required' : ''}`
       }),
-      // Required indicator
-      ...(isRequired ? [['span', { class: 'text-red-500 mr-1 text-xs' }, '*']] : []),
-      // Healthcare indicator
-      ...(isHealthcare ? [['span', { class: 'text-green-600 mr-1' }, '🏥']] : []),
-      // Sensitive data indicator
-      ...(isSensitive ? [['span', { class: 'text-orange-500 mr-1' }, '🔒']] : []),
-      ['span', { class: isHealthcare ? 'text-green-600 mr-1' : 'text-blue-600 mr-1' }, '{{'],
-      ['span', { class: 'font-medium' }, HTMLAttributes.name],
-      ['span', { class: isHealthcare ? 'text-green-600 ml-1' : 'text-blue-600 ml-1' }, '}}'],
+      [
+        'span',
+        { 
+          class: 'flex items-center space-x-1',
+          style: 'font-family: Arial, sans-serif;'
+        },
+        // Required indicator
+        ...(isRequired ? [['span', { class: 'text-red-600 font-bold' }, '*']] : []),
+        // Healthcare indicator
+        ...(isHealthcare ? [['span', { class: 'text-green-700' }, '🏥']] : []),
+        // Sensitive data indicator  
+        ...(isSensitive ? [['span', { class: 'text-orange-600' }, '🔒']] : []),
+        // Variable name with clean formatting - just the variable name, no extra HTML
+        ['span', { 
+          class: 'font-medium',
+          style: 'font-family: Arial, sans-serif;'
+        }, `{{${HTMLAttributes.name}}}`],
+      ]
     ];
+  },
+
+  addCommands() {
+    return {
+      insertVariable: (attributes: any) => ({ commands }: any) => {
+        return commands.insertContent({
+          type: this.name,
+          attrs: attributes,
+        });
+      },
+    };
   },
 });
 
@@ -138,6 +159,7 @@ const ReusableBlock = Node.create({
         'data-reusable-block': 'true',
         'contenteditable': 'false',
         class: `my-4 p-4 border-l-4 ${colorClasses} rounded-r-lg shadow-sm hover:shadow-md transition-shadow`,
+        style: 'font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5;'
       }),
       [
         'div',
@@ -170,7 +192,8 @@ const ReusableBlock = Node.create({
         'div',
         { 
           class: 'prose prose-sm max-w-none text-gray-700',
-          innerHTML: HTMLAttributes.content 
+          innerHTML: HTMLAttributes.content,
+          style: 'font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5;'
         }
       ],
     ];
@@ -222,6 +245,7 @@ const HealthcareComponent = Node.create({
         'data-healthcare-component': 'true',
         'contenteditable': 'false',
         class: `my-4 p-4 border-2 ${complianceColors[complianceLevel as keyof typeof complianceColors]} rounded-lg shadow-sm hover:shadow-md transition-shadow`,
+        style: 'font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5;'
       }),
       [
         'div',
@@ -299,6 +323,102 @@ interface TemplateEditorProps {
 function classNames(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(' ');
 }
+
+// Default font styles component
+const EditorStyles = () => (
+  <style jsx>{`
+    .template-editor-content {
+      font-family: Arial, sans-serif !important;
+      font-size: 12pt !important;
+      line-height: 1.5 !important;
+    }
+
+    .template-editor-content p {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      margin: 0 0 12pt 0;
+    }
+
+    .template-editor-content h1,
+    .template-editor-content h2,
+    .template-editor-content h3,
+    .template-editor-content h4,
+    .template-editor-content h5,
+    .template-editor-content h6 {
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .template-editor-content ul,
+    .template-editor-content ol {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+
+    .template-editor-content table {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+
+    .template-editor-content td,
+    .template-editor-content th {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+
+    .template-editor-content li {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+
+    /* Ensure variables and blocks inherit the font */
+    .template-editor-content [data-variable="true"],
+    .template-editor-content [data-reusable-block="true"],
+    .template-editor-content [data-healthcare-component="true"] {
+      font-family: Arial, sans-serif;
+    }
+
+    /* Default paragraph spacing for healthcare documents */
+    .template-editor-content .ProseMirror {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+
+    /* Placeholder text styling */
+    .template-editor-content .is-editor-empty::before {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.5;
+    }
+
+    /* Clean variable styling - no visible HTML artifacts */
+    .template-editor-content [data-variable="true"] {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      margin: 0 2px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 11pt;
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      cursor: default;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .template-editor-content [data-variable="true"]:hover {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+  `}</style>
+);
 
 export default function TemplateEditor({
   documentId,
@@ -394,14 +514,14 @@ export default function TemplateEditor({
     }, 500); // 500ms debounce
   }, [onContentChange, logicSyncEnabled, enableLogicIntegration, documentId, showComplianceIndicators, currentTemplate?.id]);
 
-  // Extract template components for logic builder
+  // Extract template components for logic builder - Fixed regex iteration
   const extractTemplateComponents = (content: string) => {
     const components: any[] = [];
     
-    // Extract variables
+    // Extract variables - Fixed regex iteration issue
     const variableRegex = /\{\{([^}]+)\}\}/g;
-    let match;
-    while ((match = variableRegex.exec(content)) !== null) {
+    const variableMatches = Array.from(content.matchAll(variableRegex));
+    variableMatches.forEach((match) => {
       const variableName = match[1].trim();
       if (!components.find(c => c.name === variableName)) {
         components.push({
@@ -411,29 +531,31 @@ export default function TemplateEditor({
           position: match.index
         });
       }
-    }
+    });
     
-    // Extract reusable blocks
+    // Extract reusable blocks - Fixed regex iteration issue
     const blockRegex = /data-reusable-block="true"[^>]*data-label="([^"]+)"/g;
-    while ((match = blockRegex.exec(content)) !== null) {
+    const blockMatches = Array.from(content.matchAll(blockRegex));
+    blockMatches.forEach((match) => {
       components.push({
         type: 'block',
         name: match[1],
         content: match[0],
         position: match.index
       });
-    }
+    });
     
-    // Extract healthcare components
+    // Extract healthcare components - Fixed regex iteration issue
     const componentRegex = /data-healthcare-component="true"[^>]*data-component-id="([^"]+)"/g;
-    while ((match = componentRegex.exec(content)) !== null) {
+    const componentMatches = Array.from(content.matchAll(componentRegex));
+    componentMatches.forEach((match) => {
       components.push({
         type: 'healthcareComponent',
         name: match[1],
         content: match[0],
         position: match.index
       });
-    }
+    });
     
     return components;
   };
@@ -521,6 +643,9 @@ export default function TemplateEditor({
         history: false,
         heading: { levels: [1, 2, 3] } 
       }),
+      
+      // Font styling handled entirely through CSS for better compatibility
+      
       Collaboration.configure({ document: ydoc }),
       ...(provider ? [
         CollaborationCursor.configure({ 
@@ -606,10 +731,11 @@ export default function TemplateEditor({
     editorProps: {
       attributes: {
         class: 'template-editor-content prose prose-sm max-w-none focus:outline-none text-zinc-900 document-editor',
+        style: 'font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5;'
       },
     },
     onCreate: ({ editor }) => {
-      console.log('📝 Enhanced editor created successfully');
+      console.log('📝 Enhanced editor created successfully with clean variable rendering');
       onEditorReady?.(editor);
     },
     onUpdate: ({ editor }) => {
@@ -685,19 +811,18 @@ export default function TemplateEditor({
     setSavingBlock(true);
     
     try {
-      // Get the selected HTML content
-      const fragment = selection.content();
-      const tempDiv = document.createElement('div');
-      const serializer = editor.schema.contentSerializers.dom;
-      const domFragment = serializer(fragment.content);
-      tempDiv.appendChild(domFragment);
-      const blockContent = tempDiv.innerHTML;
+      // Get the selected HTML content - Fixed serialization issue
+      const { from, to } = selection;
+      const selectedContent = editor.getHTML().slice(
+        editor.view.state.doc.textBetween(0, from).length,
+        editor.view.state.doc.textBetween(0, to).length
+      );
 
       // Save to Firestore blocks collection with enhanced metadata
       await addDoc(collection(db, 'blocks'), {
         name: blockName,
         description: `Created from template: ${templateName}`,
-        content: blockContent,
+        content: selectedContent || selectedText,
         category: category.toLowerCase(),
         healthcareCompliant: isHealthcareCompliant,
         complianceRules: isHealthcareCompliant ? ['auto-detected'] : [],
@@ -709,7 +834,7 @@ export default function TemplateEditor({
           wordCount: selectedText.split(/\s+/).length,
           charCount: selectedText.length,
           containsVariables: /\{\{[^}]+\}\}/.test(selectedText),
-          extractedVariables: [...selectedText.matchAll(/\{\{([^}]+)\}\}/g)].map(m => m[1].trim())
+          extractedVariables: Array.from(selectedText.matchAll(/\{\{([^}]+)\}\}/g)).map(m => m[1].trim())
         }
       });
 
@@ -718,7 +843,7 @@ export default function TemplateEditor({
         name: blockName, 
         category, 
         healthcareCompliant: isHealthcareCompliant,
-        content: blockContent 
+        content: selectedContent || selectedText 
       });
       
     } catch (error) {
@@ -833,6 +958,9 @@ export default function TemplateEditor({
       "template-editor-container flex flex-col h-full bg-white rounded-lg border border-zinc-200",
       !showEditor && "opacity-0 pointer-events-none absolute inset-0"
     )}>
+      {/* Include font styles */}
+      <EditorStyles />
+      
       {/* Enhanced Toolbar with healthcare features */}
       <EditorToolbar 
         editor={editor} 
@@ -841,11 +969,15 @@ export default function TemplateEditor({
         onSaveAsBlock={handleSaveAsBlock}
         hasSelection={hasSelection}
         savingBlock={savingBlock}
-        complianceStatus={complianceStatus}
-        onToggleCompliance={() => setShowCompliancePanel(!showCompliancePanel)}
-        logicSyncEnabled={logicSyncEnabled}
-        onToggleLogicSync={toggleLogicSync}
-        onOpenLogicBuilder={openLogicBuilder}
+        {...(showComplianceIndicators && {
+          complianceStatus,
+          onToggleCompliance: () => setShowCompliancePanel(!showCompliancePanel)
+        })}
+        {...(enableLogicIntegration && {
+          logicSyncEnabled,
+          onToggleLogicSync: toggleLogicSync,
+          onOpenLogicBuilder: openLogicBuilder
+        })}
       />
       
       {/* Document Container */}
@@ -863,6 +995,9 @@ export default function TemplateEditor({
             maxWidth: '100%',
             padding: showPageMargins ? '1in 1in 1in 1in' : '0.75in',
             position: 'relative',
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '12pt',
+            lineHeight: '1.5',
           }}
         >
           {/* Enhanced Drop Zone Indicator */}
