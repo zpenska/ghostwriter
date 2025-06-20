@@ -204,9 +204,9 @@ export default function ClientSimulatorPage() {
                 </label>
                 <select
                   id="member-select"
-                  value={selectedMember?.id ?? ''}
+                  value={selectedMember?.id || ''}
                   onChange={(e) => {
-                    const member = members.find((m) => m.id === e.target.value) ?? null;
+                    const member = members.find((m) => m.id === e.target.value) || null;
                     setSelectedMember(member);
                     setStatus('idle');
                     setLastVaultUrl(null);
@@ -231,9 +231,9 @@ export default function ClientSimulatorPage() {
                 </label>
                 <select
                   id="template-select"
-                  value={selectedTemplate?.id ?? ''}
+                  value={selectedTemplate?.id || ''}
                   onChange={(e) => {
-                    const template = templates.find((t) => t.id === e.target.value) ?? null;
+                    const template = templates.find((t) => t.id === e.target.value) || null;
                     setSelectedTemplate(template);
                     setStatus('idle');
                     setLastVaultUrl(null);

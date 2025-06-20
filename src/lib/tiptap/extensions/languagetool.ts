@@ -84,7 +84,7 @@ export const LanguageTool = Extension.create<LanguageToolOptions>({
               // You can add UI to show these errors
             }
           })
-          .catch(error => {
+          .catch((error: unknown) => {
             console.error('LanguageTool error:', error);
           });
 

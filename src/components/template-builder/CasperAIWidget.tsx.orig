@@ -10,8 +10,8 @@ interface Message {
 }
 
 interface CasperAIWidgetProps {
-  editor?: unknown;
-  variables?: unknown[];
+  editor?: any;
+  variables?: any[];
   onContentInserted?: () => void;
 }
 
@@ -44,7 +44,7 @@ export default function CasperAIWidget({
     if (!variables.length) return '';
     
     const variableList = variables.flatMap(group => 
-      group.variables.map((v: unknown) => `{{${v.key}}}: ${v.name} - ${v.description}`)
+      group.variables.map((v: any) => `{{${v.key}}}: ${v.name} - ${v.description}`)
     ).join('\n');
     
     return `Available variables you can use:\n${variableList}`;
@@ -109,7 +109,7 @@ export default function CasperAIWidget({
 
       // Handle non-JSON responses
       const contentType = response.headers.get('content-type');
-      if (!contentType?.includes('application/json')) {
+      if (!contentType || !contentType.includes('application/json')) {
         const errorText = await response.text();
         console.error('❌ Non-JSON response:', errorText);
         throw new Error(`Server returned non-JSON response: ${response.status}`);
@@ -170,7 +170,7 @@ export default function CasperAIWidget({
         }
       }
 
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('💥 Casper Widget Error:', err);
       console.error('Error details:', {
         message: err.message,
@@ -338,7 +338,7 @@ export default function CasperAIWidget({
           <div className="flex items-end gap-2">
             <textarea
               value={input}
-              onChange={(e) => { setInput(e.target.value); }}
+              onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-zinc-500 resize-none min-h-[80px] max-h-[120px] bg-white"
               placeholder="Ask Casper to draft a letter, add variables, or rewrite content..."

@@ -1,0 +1,6 @@
+@@ -263,1 +263,1 @@
+-                        onChange={() => setDeliveryMethod('mail')}
++                        onChange={() => { setDeliveryMethod('mail'); }}
+@@ -276,1 +276,1 @@
+-                        onChange={() => setDeliveryMethod('fax')}
++                        onChange={() => { setDeliveryMethod('fax'); }}

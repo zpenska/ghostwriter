@@ -14,8 +14,8 @@ import {
     id?: string;
     name: string;
     description: string;
-    data: Record<string, any>;
-    createdAt?: any;
+    data: Record<string, unknown>;
+    createdAt?: unknown;
     isActive: boolean;
   }
   
@@ -294,7 +294,7 @@ import {
     async getTestDataByName(name: string): Promise<VariableTestData | null> {
       try {
         const allData = await this.getAllTestData();
-        return allData.find(data => data.name === name) || null;
+        return allData.find(data => data.name === name) ?? null;
       } catch (error) {
         console.error('❌ Error fetching test data by name:', error);
         return null;

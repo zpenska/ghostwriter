@@ -1,0 +1,9 @@
+@@ -206,1 +206,1 @@
+-      handleSubmit();
++      void handleSubmit();
+@@ -257,1 +257,1 @@
+-        onClick={() => setOpen((prev) => !prev)}
++        onClick={() => { setOpen((prev) => !prev); }}
+@@ -292,1 +292,1 @@
+-                  onClick={() => handleQuickAction(action.prompt)}
++                  onClick={() => { handleQuickAction(action.prompt); }}
